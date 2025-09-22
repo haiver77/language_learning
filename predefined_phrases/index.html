@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de archivos</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { font-size: 20px; margin-bottom: 15px; }
+    ul { list-style-type: none; padding-left: 0; }
+    li { margin: 5px 0; }
+    a { text-decoration: none; color: #007acc; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Listado de archivos</h1>
+  <ul id="file-list"></ul>
+
+  <script>
+    // Configura aquí tu usuario y repositorio
+    const user = "haiver77";       // ejemplo: "johnmalagon"
+    const repo = "language_learning";   // ejemplo: "mi-web"
+    const branch = "main";           // o "master" según tu repo
+    const path = "";                 // "" = raíz, o "carpeta/subcarpeta"
+
+    const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+
+    async function loadFiles() {
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Error cargando contenido");
+        const files = await response.json();
+
+        const list = document.getElementById("file-list");
+        files.forEach(file => {
+          const li = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = file.type === "dir" ? file.name + "/" : file.download_url;
+          link.textContent = file.name + (file.type === "dir" ? "/" : "");
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      } catch (error) {
+        console.error(error);
+        document.getElementById("file-list").textContent = "No se pudo cargar el listado.";
+      }
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
