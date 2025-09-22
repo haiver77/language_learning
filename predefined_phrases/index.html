@@ -1,48 +1,58 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Listado de archivos</title>
+  <title>Index of /</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    h1 { font-size: 20px; margin-bottom: 15px; }
-    ul { list-style-type: none; padding-left: 0; }
-    li { margin: 5px 0; }
-    a { text-decoration: none; color: #007acc; }
+    body { font-family: monospace; background: #fff; color: #000; }
+    h1 { font-size: 1.2em; }
+    pre { line-height: 1.5; }
+    a { color: blue; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>Listado de archivos</h1>
-  <ul id="file-list"></ul>
+  <h1>Index of /</h1>
+  <hr>
+  <pre id="listing">Loading...</pre>
+  <hr>
 
   <script>
+    // Replace with your info
     // Configura aquí tu usuario y repositorio
     const user = "haiver77";       // ejemplo: "johnmalagon"
     const repo = "language_learning";   // ejemplo: "mi-web"
     const branch = "main";           // o "master" según tu repo
-    const path = "predefined_phrases";                 // "" = raíz, o "carpeta/subcarpeta"
-
-    const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+    const path = "predefined_phrases";  
 
     async function loadFiles() {
+      const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+      const pre = document.getElementById("listing");
       try {
         const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Error cargando contenido");
+        if (!response.ok) throw new Error("GitHub API error");
         const files = await response.json();
 
-        const list = document.getElementById("file-list");
-        files.forEach(file => {
-          const li = document.createElement("li");
-          const link = document.createElement("a");
-          link.href = file.type === "dir" ? file.name + "/" : file.download_url;
-          link.textContent = file.name + (file.type === "dir" ? "/" : "");
-          li.appendChild(link);
-          list.appendChild(li);
-        });
-      } catch (error) {
-        console.error(error);
-        document.getElementById("file-list").textContent = "No se pudo cargar el listado.";
+        // Sort: directories first, then files
+        files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+
+        let html = "";
+        if (path !== "") {
+          const up = path.split("/").slice(0, -1).join("/");
+          html += `<a href="../">../</a>\n`;
+        }
+
+        for (const file of files) {
+          if (file.type === "dir") {
+            html += `<a href="${file.name}/">${file.name}/</a>\n`;
+          } else {
+            html += `<a href="${file.download_url}">${file.name}</a>\n`;
+          }
+        }
+        pre.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        pre.textContent = "Failed to load directory listing.";
       }
     }
 
