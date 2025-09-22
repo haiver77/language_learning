@@ -1094,8 +1094,8 @@
         opt.textContent = n;
         sel.appendChild(opt);
       }
-    } catch {
-      // Silently ignore if not listable
+    } catch (error){
+      alert(error);
     }
   }
 
