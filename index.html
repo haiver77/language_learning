@@ -1080,24 +1080,59 @@
 
   // --- Predefined sets discovery & loading ---
   async function populatePredefinedList() {
+  const sel = els.predefinedSelect;
+  sel.innerHTML = ''; // Limpiar opciones previas
+
+  try {
+    // Intento local
+    const res = await fetch('./predefined_phrases/');
+    const text = await res.text();
+    const tmp = document.createElement('div');
+    tmp.innerHTML = text;
+    const links = [...tmp.querySelectorAll('a[href$=".csv"], a[href$=".txt"]')];
+    const names = links.map(a => (a.textContent || '').trim()).filter(Boolean);
+    if (names.length === 0) throw new Error('No se encontraron archivos válidos en el servidor local.');
+    for (const n of names) {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      sel.appendChild(opt);
+    }
+  } catch (error) {
+    console.warn('Fallo la carga local:', error.message || error.toString());
+    await fallbackToGithub();
+  }
+
+  async function fallbackToGithub() {
     try {
-      const res = await fetch('./predefined_phrases/');
-      const text = await res.text();
-      const tmp = document.createElement('div');
-      tmp.innerHTML = text;
-      const links = [...tmp.querySelectorAll('a[href$=".csv"], a[href$=".txt"]')];
-      const names = links.map(a => (a.textContent || '').trim()).filter(Boolean);
-      const sel = els.predefinedSelect;
-      for (const n of names) {
+      const user = "haiver77";       // ejemplo: "johnmalagon"
+      const repo = "language_learning";   // ejemplo: "mi-web"
+      const branch = "main";           // o "master" según tu repo
+      const path = "predefined_phrases"; 
+
+      const githubApiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+      const res = await fetch(githubApiUrl);
+      const files = await res.json();
+      if (!Array.isArray(files)) throw new Error('Respuesta inesperada de GitHub');
+
+      const validFiles = files
+        .filter(f => f.name.endsWith('.csv') || f.name.endsWith('.txt'))
+        .map(f => f.name);
+
+      if (validFiles.length === 0) throw new Error('No se encontraron archivos válidos en GitHub.');
+
+      for (const name of validFiles) {
         const opt = document.createElement('option');
-        opt.value = n;
-        opt.textContent = n;
+        opt.value = name;
+        opt.textContent = name;
         sel.appendChild(opt);
       }
-    } catch (error){
-      alert(error);
+    } catch (err) {
+      alert('No se pudo cargar la lista de frases desde GitHub: ' + (err.message || err.toString()));
     }
   }
+}
+
 
   async function loadSelectedPredefined() {
     const name = els.predefinedSelect.value;
