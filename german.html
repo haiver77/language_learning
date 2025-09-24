@@ -237,17 +237,11 @@
           <div class="phrase-text" id="text-en"></div>
           <button class="replay-btn" id="replay-en" title="Play EN" aria-label="Replay EN">▶</button>
         </div>
-        <!-- IT -->
-        <div class="phrase-line" data-lang="it">
-          <div class="lang-tag">IT</div>
-          <div class="phrase-text" id="text-it"></div>
-          <button class="replay-btn" id="replay-it" title="Riproduci IT" aria-label="Replay IT">▶</button>
-        </div>
-        <!-- PT -->
-        <div class="phrase-line" data-lang="pt">
-          <div class="lang-tag">PT</div>
-          <div class="phrase-text" id="text-pt"></div>
-          <button class="replay-btn" id="replay-pt" title="Reproduzir PT" aria-label="Replay PT">▶</button>
+        <!-- DE -->
+        <div class="phrase-line" data-lang="de">
+          <div class="lang-tag">DE</div>
+          <div class="phrase-text" id="text-de"></div>
+          <button class="replay-btn" id="replay-de" title="Riproduci DE" aria-label="Replay DE">▶</button>
         </div>
       </div>
     </section>
@@ -277,8 +271,7 @@
         <div class="checks">
           <label class="check"><input type="checkbox" id="read-es" checked /> <span>ES</span></label>
           <label class="check"><input type="checkbox" id="read-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="read-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="read-pt" /> <span>PT</span></label>
+          <label class="check"><input type="checkbox" id="read-de" checked /> <span>DE</span></label>
         </div>
       </div>
     </section>
@@ -290,8 +283,7 @@
         <div class="checks">
           <label class="check"><input type="checkbox" id="show-es" checked /> <span>ES</span></label>
           <label class="check"><input type="checkbox" id="show-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="show-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="show-pt" /> <span>PT</span></label>
+          <label class="check"><input type="checkbox" id="show-de" checked /> <span>DE</span></label>
         </div>
         <div class="font-slider" style="margin-top:10px">
           <span class="badge">Font size</span>
@@ -308,7 +300,7 @@
 
     <!-- Row 4: Phrase list (CSV textbox) -->
     <section class="row" id="row-csv">
-      <div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
+      <div class="row-title">Phrases (CSV: ES,EN,DE)</div>
       <textarea class="textarea" id="csvBox"></textarea>
     </section>
 
@@ -339,11 +331,8 @@
         <label class="badge"><span>EN Voice</span>
           <select id="voice-en"></select>
         </label>
-        <label class="badge"><span>IT Voice</span>
-          <select id="voice-it"></select>
-        </label>
-        <label class="badge"><span>PT Voice</span>
-          <select id="voice-pt"></select>
+        <label class="badge"><span>DE Voice</span>
+          <select id="voice-de"></select>
         </label>
         <label class="badge"><span>Rate</span>
           <input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" />
@@ -362,26 +351,22 @@
     text: {
       es: document.getElementById('text-es'),
       en: document.getElementById('text-en'),
-      it: document.getElementById('text-it'),
-      pt: document.getElementById('text-pt'),
+      de: document.getElementById('text-de'),
     },
     replay: {
       es: document.getElementById('replay-es'),
       en: document.getElementById('replay-en'),
-      it: document.getElementById('replay-it'),
-      pt: document.getElementById('replay-pt'),
+      de: document.getElementById('replay-de'),
     },
     read: {
       es: document.getElementById('read-es'),
       en: document.getElementById('read-en'),
-      it: document.getElementById('read-it'),
-      pt: document.getElementById('read-pt'),
+      de: document.getElementById('read-de'),
     },
     show: {
       es: document.getElementById('show-es'),
       en: document.getElementById('show-en'),
-      it: document.getElementById('show-it'),
-      pt: document.getElementById('show-pt'),
+      de: document.getElementById('show-de'),
     },
     modeSelect: document.getElementById('modeSelect'),
     btnRandom: document.getElementById('btnRandom'),
@@ -396,25 +381,22 @@
     voices: {
       es: document.getElementById('voice-es'),
       en: document.getElementById('voice-en'),
-      it: document.getElementById('voice-it'),
-      pt: document.getElementById('voice-pt'),
+      de: document.getElementById('voice-de'),
     },
     rate: document.getElementById('rate'),
     pitch: document.getElementById('pitch'),
   };
 
-  const langs = ['es','en','it','pt'];
+  const langs = ['es','en','de'];
   const langMeta = {
     es: { localeGuess: ['es-ES','es-419','es-MX','es-AR','es-PE'], label: 'ES' },
     en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' },
-    it: { localeGuess: ['it-IT'], label: 'IT' },
-    pt: { localeGuess: ['pt-BR','pt-PT'], label: 'PT' },
+    de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' },
   };
 	//fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
 	//de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
-  
 
-  let parsedRows = [];               // Array of {es,en,it,pt}
+  let parsedRows = [];               // Array of {es,en,de}
   let currentIndex = -1;             // Index in parsedRows
   let phraseSessionId = 0;           // Monotonic token
   let autoTimer = null;              // Auto mode interval
@@ -482,7 +464,7 @@
     for (const line of lines) {
       const cols = parseCSVLine(line);
       if (cols.length >= 4) {
-        rows.push({ es: cols[0], en: cols[1], it: cols[2], pt: cols[3] });
+        rows.push({ es: cols[0], en: cols[1], de: cols[2] });
       }
     }
     return rows;
@@ -533,20 +515,18 @@
   function setPhraseTexts(row) {
     els.text.es.textContent = row?.es || '';
     els.text.en.textContent = row?.en || '';
-    els.text.it.textContent = row?.it || '';
-    els.text.pt.textContent = row?.pt || '';
+    els.text.de.textContent = row?.de || '';
   }
 
   function getReadOrder() {
-    return ['es','en','it','pt']; // fixed order
+    return ['es','en','de']; // fixed order
   }
 
   function getVoicesMap() {
     return {
       es: els.voices.es.value || '',
       en: els.voices.en.value || '',
-      it: els.voices.it.value || '',
-      pt: els.voices.pt.value || '',
+      de: els.voices.de.value || '',
     };
   }
 
@@ -563,8 +543,7 @@
     const readLangs = {
       es: els.read.es.checked,
       en: els.read.en.checked,
-      it: els.read.it.checked,
-      pt: els.read.pt.checked,
+      de: els.read.de.checked,
     };
     const any = Object.values(readLangs).some(Boolean);
     if (!any) return; // resolve immediately
@@ -768,8 +747,7 @@
             <select id="sp-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
+              <option value="de">DE</option>
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
@@ -809,8 +787,7 @@
             <select id="wr-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
+              <option value="de">DE</option>
             </select>
           </label>
           <button id="wr-start">Start</button>
