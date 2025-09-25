@@ -51,7 +51,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    padding: 12px;
+    padding: 1px;
     max-width: 1100px;
     margin: 0 auto;
   }
@@ -61,7 +61,7 @@
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 12px;
+    padding:4px;
   }
 
   .row-title {
@@ -167,7 +167,7 @@
   .font-slider {
     display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
   }
-  input[type="range"] { width: 50px; }
+  input[type="range"] { width: 120px; }
 
   .tiny-toggle {
     display: inline-flex; gap: 6px; align-items: center;
@@ -305,6 +305,13 @@
           <label class="check"><input type="checkbox" id="show-it" checked /> <span>IT</span></label>
           <label class="check"><input type="checkbox" id="show-pt" /> <span>PT</span></label>
         </div>
+      </div>
+    </section>
+    </div>
+
+    <div class="container">
+    <!-- Font Size -->
+      <section class="row" id="row-show">
         <div class="font-slider" style="margin-top:10px">
           <span class="badge">Font size</span>
           <input type="range" min="14" max="100" value="26" id="fontRange" />
@@ -317,10 +324,6 @@
         </div>
       </div>
     </section>
-
-    </div>
-
-    <div class="container">
 
     <!-- Row 4: Phrase list (CSV textbox) -->
     <section class="row" id="row-csv">
