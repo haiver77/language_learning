@@ -37,19 +37,9 @@
     line-height: 1.4;
   }
 
-  /* Container 1 Columna */
   .container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
- /* Container 2 Columnas */
-  .container2c {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 12px;
     padding: 12px;
     max-width: 1100px;
@@ -167,7 +157,7 @@
   .font-slider {
     display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
   }
-  input[type="range"] { width: 50px; }
+  input[type="range"] { width: 180px; }
 
   .tiny-toggle {
     display: inline-flex; gap: 6px; align-items: center;
@@ -222,8 +212,10 @@
     .checks { grid-template-columns: 1fr; }
     .phrases { gap: 8px; }
     .phrase-line { grid-template-columns: 28px 1fr 28px; }
+    .inline-controls { flex-direction: column; align-items: stretch; }
     .inline-controls .spacer { display: none; }
-    
+    select, input[type="number"], input[type="text"], button { width: 100%; }
+    input[type="range"] { width: 100%; }
   }
 </style>
 </head>
@@ -278,10 +270,6 @@
       </div>
     </section>
 
-    </div>
-
-    <div class="container2c">
-
     <!-- Row 3: Language Reading Checkboxes -->
     <section class="row" id="row-read">
       <div class="panel">
@@ -317,10 +305,6 @@
         </div>
       </div>
     </section>
-
-    </div>
-
-    <div class="container">
 
     <!-- Row 4: Phrase list (CSV textbox) -->
     <section class="row" id="row-csv">
@@ -780,7 +764,7 @@
       div.innerHTML = `
         <div class="panel-title">Speaking practice</div>
         <div class="inline-controls">
-          <label class="badge" width="100px"><span></span>
+          <label class="badge"><span>Practice language</span>
             <select id="sp-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
@@ -789,7 +773,7 @@
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
-            <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:30px" />
+            <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:90px" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
