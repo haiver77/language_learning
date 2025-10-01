@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Language Practice App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="language-selector">
+    <button onclick="setLanguage('ES')">ES ▶</button>
+    <button onclick="setLanguage('EN')">EN ▶</button>
+    <button onclick="setLanguage('IT')">IT ▶</button>
+    <button onclick="setLanguage('PT')">PT ▶</button>
+  </div>
+
+  <div id="mode-selector">
+    <button>Manual Mode</button>
+    <button>Auto Mode</button>
+    <button>Speaking Practice Mode</button>
+    <button>Writing Practice Mode</button>
+    <button>Random Phrase</button>
+  </div>
+
+  <div id="language-options">
+    <p>Read Language</p>
+    <label><input type="checkbox" value="ES"> ES</label>
+    <label><input type="checkbox" value="EN"> EN</label>
+    <label><input type="checkbox" value="IT"> IT</label>
+    <label><input type="checkbox" value="PT"> PT</label>
+
+    <p>Show Language</p>
+    <label><input type="checkbox" value="ES"> ES</label>
+    <label><input type="checkbox" value="EN"> EN</label>
+    <label><input type="checkbox" value="IT"> IT</label>
+    <label><input type="checkbox" value="PT"> PT</label>
+  </div>
+
+  <div id="settings">
+    <label>Font size <input type="number" value="26"> px</label>
+    <label><input type="checkbox"> Dark theme</label>
+  </div>
+
+  <div id="phrases">
+    <p>Phrases (CSV: ES,EN,IT,PT)</p>
+    <p>Predefined sets (Select a set)</p>
+    <button>Load selected</button>
+    <button>Load from file</button>
+  </div>
+
+  <div id="voice-settings">
+    <p>ES Voice</p>
+    <p>EN Voice</p>
+    <p>IT Voice</p>
+    <p>PT Voice</p>
+    <label>Rate <input type="range" min="0.5" max="2" step="0.1"></label>
+    <label>Pitch <input type="range" min="0" max="2" step="0.1"></label>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

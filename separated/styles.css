@@ -1,0 +1,13 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+button {
+  margin: 5px;
+  padding: 10px;
+}
+
+#language-selector, #mode-selector, #language-options, #settings, #phrases, #voice-settings {
+  margin-bottom: 20px;
+}

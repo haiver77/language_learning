@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Index of /</title>
+  <style>
+    body { font-family: monospace; background: #fff; color: #000; }
+    h1 { font-size: 1.2em; }
+    pre { line-height: 1.5; }
+    a { color: blue; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Index of /</h1>
+  <hr>
+  <pre id="listing">Loading...</pre>
+  <hr>
+
+  <script>
+    // Replace with your info
+    // Configura aquí tu usuario y repositorio
+    const user = "haiver77";       // ejemplo: "johnmalagon"
+    const repo = "language_learning";   // ejemplo: "mi-web"
+    const branch = "main";           // o "master" según tu repo
+    const path = "predefined_phrases";  
+
+    async function loadFiles() {
+      const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+      const pre = document.getElementById("listing");
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("GitHub API error");
+        const files = await response.json();
+
+        // Sort: directories first, then files
+        files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+
+        let html = "";
+        if (path !== "") {
+          const up = path.split("/").slice(0, -1).join("/");
+          html += `<a href="../">../</a>\n`;
+        }
+
+        for (const file of files) {
+          if (file.type === "dir") {
+            html += `<a href="${file.name}/">${file.name}/</a>\n`;
+          } else {
+            html += `<a href="${file.download_url}">${file.name}</a>\n`;
+          }
+        }
+        pre.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        pre.textContent = "Failed to load directory listing.";
+      }
+    }
+
+    loadFiles();
+  </script>
+</body>
+</html>
