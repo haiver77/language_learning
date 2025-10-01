@@ -1,61 +1,368 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Language Practice App</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<style>
+  :root {
+    --bg: #111;
+    --fg: #e8e8e8;
+    --muted: #b3b3b3;
+    --card: #1a1a1a;
+    --accent: #4da3ff;
+    --border: #2a2a2a;
+    --danger: #ff5a5a;
+    --ok: #3ccf7a;
+    --control-bg: #151515;
+    --control-fg: #e8e8e8;
+    --focus: 0 0 0 3px rgba(77,163,255,0.35);
+  }
+  .theme-light {
+    --bg: #ffffff;
+    --fg: #1d1d1f;
+    --muted: #555;
+    --card: #f5f5f7;
+    --accent: #1f6feb;
+    --border: #e5e5ea;
+    --danger: #d7263d;
+    --ok: #228b22;
+    --control-bg: #fff;
+    --control-fg: #1d1d1f;
+    --focus: 0 0 0 3px rgba(31,111,235,0.25);
+  }
+
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    line-height: 1.4;
+  }
+
+  /* Container 1 Columna */
+  .container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+ /* Container 2 Columnas */
+  .container2c {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 1px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Card rows */
+  .row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding:4px;
+  }
+
+  .row-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 0 0 10px 0;
+  }
+
+  .phrases {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .phrase-line {
+    display: grid;
+    grid-template-columns: 30px 1fr 28px;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--control-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .lang-tag {
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    user-select: none;
+  }
+  .phrase-text {
+    font-size: clamp(14px, var(--phrase-font, 26px), 100px);
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  .replay-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: inline-grid; place-items: center;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .replay-btn:focus { outline: none; box-shadow: var(--focus); }
+  .replay-btn:hover { background: rgba(255,255,255,0.06); }
+
+  /* Inline compact controls */
+  .inline-controls {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .inline-controls .spacer { flex: 1; }
+
+  select, input[type="text"], input[type="number"], input[type="file"] {
+    background: var(--control-bg);
+    color: var(--control-fg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+  /* Combo boxes compact width, adapt to content */
+  select { width: auto; max-width: 100%; }
+
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  button.secondary {
+    background: transparent; color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  button:focus { outline: none; box-shadow: var(--focus); }
+
+  /* Panels inside rows */
+  .panel {
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 8px;
+  }
+  .panel-title {
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .checks {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(60px, auto));
+    gap: 8px 14px;
+    align-items: center;
+  }
+  .check {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  input[type="checkbox"] { width: 18px; height: 18px; }
+
+  .font-slider {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  input[type="range"] { width: 45%; }
+
+  .tiny-toggle {
+    display: inline-flex; gap: 6px; align-items: center;
+    font-size: 13px;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 10px;
+    color: var(--muted);
+  }
+
+  .textarea {
+    width: 100%;
+    min-height: 160px;
+    max-height: 380px;
+    background: var(--control-bg);
+    color: var(--control-fg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  .progress-line {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  progress {
+    width: 220px; height: 14px;
+    accent-color: var(--accent);
+  }
+  .status {
+    font-size: 13px; color: var(--muted);
+  }
+  .status.ok { color: var(--ok); }
+  .status.error { color: var(--danger); }
+
+  /* Mobile-first spacing and tap targets */
+  .inline-controls > * { min-height: 0px; }
+  .checks input[type="checkbox"] { width: 22px; height: 22px; }
+
+  /* Responsive layout */
+  @media (min-width: 900px) {
+    .container { gap: 14px; padding: 16px; }
+  }
+  @media (max-width: 600px) {
+    .checks { grid-template-columns: 1fr; }
+    .phrases { gap: 8px; }
+    .phrase-line { grid-template-columns: 28px 1fr 28px; }
+    .inline-controls .spacer { display: none; }
+    
+  }
+</style>
 </head>
-<body>
-  <div id="language-selector">
-    <button onclick="setLanguage('ES')">ES ▶</button>
-    <button onclick="setLanguage('EN')">EN ▶</button>
-    <button onclick="setLanguage('IT')">IT ▶</button>
-    <button onclick="setLanguage('PT')">PT ▶</button>
-  </div>
+<body class="theme-dark">
+<div class="container">
+<!-- Row 1: Current phrases display -->
+<section class="row" id="row-phrases">
+<div class="phrases" id="phrasesView">
+<!-- ES -->
+<div class="phrase-line" data-lang="es">
+<div class="lang-tag">ES</div>
+<div class="phrase-text" id="text-es"></div>
+<button aria-label="Replay ES" class="replay-btn" id="replay-es" title="Reproducir ES">▶</button>
+</div>
+<!-- EN -->
+<div class="phrase-line" data-lang="en">
+<div class="lang-tag">EN</div>
+<div class="phrase-text" id="text-en"></div>
+<button aria-label="Replay EN" class="replay-btn" id="replay-en" title="Play EN">▶</button>
+</div>
+<!-- IT -->
+<div class="phrase-line" data-lang="it">
+<div class="lang-tag">IT</div>
+<div class="phrase-text" id="text-it"></div>
+<button aria-label="Replay IT" class="replay-btn" id="replay-it" title="Riproduci IT">▶</button>
+</div>
+<!-- PT -->
+<div class="phrase-line" data-lang="pt">
+<div class="lang-tag">PT</div>
+<div class="phrase-text" id="text-pt"></div>
+<button aria-label="Replay PT" class="replay-btn" id="replay-pt" title="Reproduzir PT">▶</button>
+</div>
+</div>
+</section>
+<!-- Row 2: Operation Modes -->
+<section class="row" id="row-modes">
+<div class="inline-controls">
+<label class="badge">
+<span>Mode</span>
+<select aria-label="Mode" id="modeSelect">
+<option>Manual Mode</option>
+<option>Auto Mode</option>
+<option>Speaking Practice Mode</option>
+<option>Writing Practice Mode</option>
+</select>
+</label>
+<button class="secondary" id="btnRandom" title="Show a random phrase">Random Phrase</button>
+<div class="spacer"></div>
+<div id="modeContent" style="width:100%"></div>
+</div>
+</section>
+</div>
+<div class="container2c">
+<!-- Row 3: Language Reading Checkboxes -->
+<section class="row" id="row-read">
+<div class="panel">
+<div class="panel-title">Read Language</div>
+<div class="checks">
+<label class="check"><input checked="" id="read-es" type="checkbox"/> <span>ES</span></label>
+<label class="check"><input id="read-en" type="checkbox"/> <span>EN</span></label>
+<label class="check"><input checked="" id="read-it" type="checkbox"/> <span>IT</span></label>
+<label class="check"><input id="read-pt" type="checkbox"/> <span>PT</span></label>
+</div>
+</div>
+</section>
+<!-- Row 3 (continued): Language Display Options -->
+<section class="row" id="row-show">
+<div class="panel">
+<div class="panel-title">Show Language</div>
+<div class="checks">
+<label class="check"><input checked="" id="show-es" type="checkbox"/> <span>ES</span></label>
+<label class="check"><input id="show-en" type="checkbox"/> <span>EN</span></label>
+<label class="check"><input checked="" id="show-it" type="checkbox"/> <span>IT</span></label>
+<label class="check"><input id="show-pt" type="checkbox"/> <span>PT</span></label>
+</div>
+</div>
+</section>
+</div>
+<div class="container">
+<!-- Font Size -->
+<section class="row" id="row-show">
+<div class="font-slider" style="margin-top:10px">
+<span class="badge">Font size</span>
+<input id="fontRange" max="100" min="14" type="range" value="26"/>
+<span class="status" id="fontValue">26 px</span>
+<span class="spacer"></span>
+<label class="tiny-toggle">
+<input checked="" id="themeToggle" type="checkbox"/>
+<span>Dark theme</span>
+</label>
+</div>
+</section>
+<!-- Row 4: Phrase list (CSV textbox) -->
+<section class="row" id="row-csv">
+<div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
+<textarea class="textarea" id="csvBox"></textarea>
+</section>
+<!-- Row 5: Phrases Loading Options -->
+<section class="row" id="row-load">
+<div class="inline-controls">
+<label class="badge">
+<span>Predefined sets</span>
+<select id="predefinedSelect">
+<option value="">(Select a set)</option>
+</select>
+</label>
+<button class="secondary" id="btnLoadPredefined">Load selected</button>
+<div class="spacer"></div>
+<label class="badge">
+<span>Load from file</span>
+<input accept=".csv,.txt" id="fileInput" type="file"/>
+</label>
+</div>
+</section>
+<!-- Row 6: Speech Synthesis configurations -->
+<section class="row" id="row-tts">
+<div class="inline-controls" style="gap:10px; flex-wrap:wrap">
+<label class="badge"><span>ES Voice</span>
+<select id="voice-es"></select>
+</label>
+<label class="badge"><span>EN Voice</span>
+<select id="voice-en"></select>
+</label>
+<label class="badge"><span>IT Voice</span>
+<select id="voice-it"></select>
+</label>
+<label class="badge"><span>PT Voice</span>
+<select id="voice-pt"></select>
+</label>
+<label class="badge"><span>Rate</span>
+<input id="rate" max="2" min="0.5" step="0.1" style="width:80px" type="number" value="1.0"/>
+</label>
+<label class="badge"><span>Pitch</span>
+<input id="pitch" max="2" min="0" step="0.1" style="width:80px" type="number" value="1.0"/>
+</label>
+</div>
+</section>
+</div>
 
-  <div id="mode-selector">
-    <button>Manual Mode</button>
-    <button>Auto Mode</button>
-    <button>Speaking Practice Mode</button>
-    <button>Writing Practice Mode</button>
-    <button>Random Phrase</button>
-  </div>
-
-  <div id="language-options">
-    <p>Read Language</p>
-    <label><input type="checkbox" value="ES"> ES</label>
-    <label><input type="checkbox" value="EN"> EN</label>
-    <label><input type="checkbox" value="IT"> IT</label>
-    <label><input type="checkbox" value="PT"> PT</label>
-
-    <p>Show Language</p>
-    <label><input type="checkbox" value="ES"> ES</label>
-    <label><input type="checkbox" value="EN"> EN</label>
-    <label><input type="checkbox" value="IT"> IT</label>
-    <label><input type="checkbox" value="PT"> PT</label>
-  </div>
-
-  <div id="settings">
-    <label>Font size <input type="number" value="26"> px</label>
-    <label><input type="checkbox"> Dark theme</label>
-  </div>
-
-  <div id="phrases">
-    <p>Phrases (CSV: ES,EN,IT,PT)</p>
-    <p>Predefined sets (Select a set)</p>
-    <button>Load selected</button>
-    <button>Load from file</button>
-  </div>
-
-  <div id="voice-settings">
-    <p>ES Voice</p>
-    <p>EN Voice</p>
-    <p>IT Voice</p>
-    <p>PT Voice</p>
-    <label>Rate <input type="range" min="0.5" max="2" step="0.1"></label>
-    <label>Pitch <input type="range" min="0" max="2" step="0.1"></label>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+<script src="script.js"></script></body>
 </html>
