@@ -1,5 +1,4 @@
 
-(() => {
   // --- State ---
   const els = {
     text: {
@@ -899,5 +898,4 @@
   window._trainer = { state: () => ({ currentIndex, phraseSessionId, parsedRowsCount: parsedRows.length }) };
 
   init();
-})();
 
