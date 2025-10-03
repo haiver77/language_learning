@@ -1,27 +1,30 @@
 // TO REPLACE:
-// -en --> -fr
-// en: --> fr:
-// .en. --> .fr.
-// 'en' --> 'fr'
-// en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' } --> fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' }
+// -fr --> -fr
+// fr: --> fr:
+// .fr. --> .fr.
+// 'fr' --> 'fr'
+// "fr" --> "fr"
+// FR --> FR
+// .fr --> .fr
+// fr: { localeGuess: ['en-US','en-GB','en-AU'], label: 'FR' } --> fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' }
 (() => {
   // --- State ---
   const els = {
     text: {
       es: document.getElementById('text-es'),
-      en: document.getElementById('text-en'),
+      fr: document.getElementById('text-fr'),
     },
     replay: {
       es: document.getElementById('replay-es'),
-      en: document.getElementById('replay-en'),
+      fr: document.getElementById('replay-fr'),
     },
     read: {
       es: document.getElementById('read-es'),
-      en: document.getElementById('read-en'),
+      fr: document.getElementById('read-fr'),
     },
     show: {
       es: document.getElementById('show-es'),
-      en: document.getElementById('show-en'),
+      fr: document.getElementById('show-fr'),
     },
     modeSelect: document.getElementById('modeSelect'),
     btnRandom: document.getElementById('btnRandom'),
@@ -35,29 +38,29 @@
     themeToggle: document.getElementById('themeToggle'),
     voices: {
       es: document.getElementById('voice-es'),
-      en: document.getElementById('voice-en'),
+      fr: document.getElementById('voice-fr'),
     },
     rate: document.getElementById('rate'),
     pitch: document.getElementById('pitch'),
   };
 
-  const langs = ['es','en'];
+  const langs = ['es','fr'];
   const langMeta = {
     es: { localeGuess: ['es-ES','es-419','es-MX','es-AR','es-PE'], label: 'ES' },
-    en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' },
+    fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
   };
 	//fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
 	//de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
   
 
-  let parsedRows = [];               // Array of {es,en}
+  let parsedRows = [];               // Array of {es,fr}
   let currentIndex = -1;             // Index in parsedRows
   let phraseSessionId = 0;           // Monotonic token
   let autoTimer = null;              // Auto mode interval
   let speakingPractice = {
     active: false,
     rec: null,
-    lang: 'en',
+    lang: 'fr',
     min: 90,
     liveTextEl: null,
     scoreEl: null,
@@ -66,7 +69,7 @@
   };
   let writingPractice = {
     active: false,
-    lang: 'en',
+    lang: 'fr',
     inputEl: null,
     statusEl: null,
     writingBusy: false,
@@ -118,7 +121,7 @@
     for (const line of lines) {
       const cols = parseCSVLine(line);
       if (cols.length >= 2) {
-        rows.push({ es: cols[0], en: cols[1] });
+        rows.push({ es: cols[0], fr: cols[1] });
       }
     }
     return rows;
@@ -168,17 +171,17 @@
 
   function setPhraseTexts(row) {
     els.text.es.textContent = row?.es || '';
-    els.text.en.textContent = row?.en || '';
+    els.text.fr.textContent = row?.fr || '';
   }
 
   function getReadOrder() {
-    return ['es','en']; // fixed order
+    return ['es','fr']; // fixed order
   }
 
   function getVoicesMap() {
     return {
       es: els.voices.es.value || '',
-      en: els.voices.en.value || '',
+      fr: els.voices.fr.value || '',
     };
   }
 
@@ -194,7 +197,7 @@
     // Gather settings
     const readLangs = {
       es: els.read.es.checked,
-      en: els.read.en.checked,
+      fr: els.read.fr.checked,
     };
     const any = Object.values(readLangs).some(Boolean);
     if (!any) return; // resolve immediately
@@ -401,7 +404,7 @@
           <label class="badge" width="100px"><span></span>
             <select id="sp-lang">
               <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="fr">FR</option>
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
@@ -440,7 +443,7 @@
           <label class="badge"><span>Practice language</span>
             <select id="wr-lang">
               <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="fr">FR</option>
               <option value="it">IT</option>
               <option value="pt">PT</option>
             </select>
@@ -479,7 +482,7 @@
 
   function pickRecLang(k) {
     // Use first locale guess for recognition; browsers may map internally
-    return langMeta[k].localeGuess[0] || 'en-US';
+    return langMeta[k].localeGuess[0] || 'es-ES';
   }
 
   async function startSpeakingPractice() {
@@ -850,9 +853,26 @@
   // --- Init sample data ---
   function loadSamplePhrases() {
     const sample = [
-      'Hola;Hello',
-      'Buenos días;Good morning',
-      '¿Cómo estás?;How are you?'
+      '¿Dónde está la estación de tren?;Où est la gare?',
+'¿Cuánto cuesta este boleto?;Combien coûte ce billet ?',
+'¿Podría ayudarme, por favor?;Pourriez-vous m’aider, s’il vous plaît ?',
+'Necesito un taxi.;J’ai besoin d’un taxi.',
+'La cuenta, por favor.;L’addition, s’il vous plaît.',
+'¿Dónde está el baño?;Où sont les toilettes ?',
+'Quisiera hacer una reserva.;Je voudrais faire une réservation.',
+'¿Cuál es la especialidad de la casa?;Quelle est la spécialité de la maison ?',
+'¿Aceptan tarjeta de crédito?;Acceptez-vous la carte de crédit ?',
+'¿A qué hora abre el museo?;À quelle heure ouvre le musée ?',
+'Estoy buscando un hotel económico.;Je cherche un hôtel bon marché.',
+'¿Dónde puedo cambiar dinero?;Où puis-je changer de l’argent ?',
+'Me he perdido, ¿puede indicarme el camino?;Je me suis perdu, pouvez-vous m’indiquer le chemin ?',
+'Un billete de ida y vuelta, por favor.;Un billet aller-retour, s’il vous plaît.',
+'¿Cuánto tiempo tarda en llegar?;Combien de temps faut-il pour arriver ?',
+'¿Dónde está la parada de autobús?;Où est l’arrêt de bus ?',
+'Necesito un médico.;J’ai besoin d’un médecin.',
+'¿Podría recomendarme un buen restaurante?;Pourriez-vous me recommander un bon restaurant ?',
+'¿Tiene una habitación disponible?;Avez-vous une chambre disponible ?',
+'¿Hay visitas guiadas en este lugar?;Y a-t-il des visites guidées dans cet endroit ?'
     ].join('\n');
     els.csvBox.value = sample;
     ensureParsed();
