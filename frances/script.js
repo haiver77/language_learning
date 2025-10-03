@@ -699,9 +699,7 @@
       const sel = els.voices[k];
       const prev = sel.value;
       sel.innerHTML = '';
-      const group = voices
-        .filter(v => v.lang && v.lang.toLowerCase().startsWith(k))
-        .concat(voices.filter(v => !(v.lang && v.lang.toLowerCase().startsWith(k)))); // fallback at end
+      const group = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
       for (const v of group) {
         const opt = document.createElement('option');
         opt.value = v.name;
