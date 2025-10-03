@@ -1,29 +1,27 @@
-
+// TO REPLACE:
+// -en --> -fr
+// en: --> fr:
+// .en. --> .fr.
+// 'en' --> 'fr'
+// en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' } --> fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' }
+(() => {
   // --- State ---
   const els = {
     text: {
       es: document.getElementById('text-es'),
       en: document.getElementById('text-en'),
-      it: document.getElementById('text-it'),
-      pt: document.getElementById('text-pt'),
     },
     replay: {
       es: document.getElementById('replay-es'),
       en: document.getElementById('replay-en'),
-      it: document.getElementById('replay-it'),
-      pt: document.getElementById('replay-pt'),
     },
     read: {
       es: document.getElementById('read-es'),
       en: document.getElementById('read-en'),
-      it: document.getElementById('read-it'),
-      pt: document.getElementById('read-pt'),
     },
     show: {
       es: document.getElementById('show-es'),
       en: document.getElementById('show-en'),
-      it: document.getElementById('show-it'),
-      pt: document.getElementById('show-pt'),
     },
     modeSelect: document.getElementById('modeSelect'),
     btnRandom: document.getElementById('btnRandom'),
@@ -38,32 +36,28 @@
     voices: {
       es: document.getElementById('voice-es'),
       en: document.getElementById('voice-en'),
-      it: document.getElementById('voice-it'),
-      pt: document.getElementById('voice-pt'),
     },
     rate: document.getElementById('rate'),
     pitch: document.getElementById('pitch'),
   };
 
-  const langs = ['es','en','it','pt'];
+  const langs = ['es','en'];
   const langMeta = {
     es: { localeGuess: ['es-ES','es-419','es-MX','es-AR','es-PE'], label: 'ES' },
     en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' },
-    it: { localeGuess: ['it-IT'], label: 'IT' },
-    pt: { localeGuess: ['pt-BR','pt-PT'], label: 'PT' },
   };
 	//fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
 	//de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
   
 
-  let parsedRows = [];               // Array of {es,en,it,pt}
+  let parsedRows = [];               // Array of {es,en}
   let currentIndex = -1;             // Index in parsedRows
   let phraseSessionId = 0;           // Monotonic token
   let autoTimer = null;              // Auto mode interval
   let speakingPractice = {
     active: false,
     rec: null,
-    lang: 'es',
+    lang: 'en',
     min: 90,
     liveTextEl: null,
     scoreEl: null,
@@ -72,7 +66,7 @@
   };
   let writingPractice = {
     active: false,
-    lang: 'es',
+    lang: 'en',
     inputEl: null,
     statusEl: null,
     writingBusy: false,
@@ -123,8 +117,8 @@
     const rows = [];
     for (const line of lines) {
       const cols = parseCSVLine(line);
-      if (cols.length >= 4) {
-        rows.push({ es: cols[0], en: cols[1], it: cols[2], pt: cols[3] });
+      if (cols.length >= 2) {
+        rows.push({ es: cols[0], en: cols[1] });
       }
     }
     return rows;
@@ -175,20 +169,16 @@
   function setPhraseTexts(row) {
     els.text.es.textContent = row?.es || '';
     els.text.en.textContent = row?.en || '';
-    els.text.it.textContent = row?.it || '';
-    els.text.pt.textContent = row?.pt || '';
   }
 
   function getReadOrder() {
-    return ['es','en','it','pt']; // fixed order
+    return ['es','en']; // fixed order
   }
 
   function getVoicesMap() {
     return {
       es: els.voices.es.value || '',
       en: els.voices.en.value || '',
-      it: els.voices.it.value || '',
-      pt: els.voices.pt.value || '',
     };
   }
 
@@ -205,8 +195,6 @@
     const readLangs = {
       es: els.read.es.checked,
       en: els.read.en.checked,
-      it: els.read.it.checked,
-      pt: els.read.pt.checked,
     };
     const any = Object.values(readLangs).some(Boolean);
     if (!any) return; // resolve immediately
@@ -410,8 +398,6 @@
             <select id="sp-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
@@ -798,9 +784,8 @@
   // --- Event wiring ---
   function bindEvents() {
     // Random button (global)
-    els.btnRandom.onclick = async () => { await selectAndShowRandomRow({ speak: true }); };
-
-    // Mode switching
+    els.btnRandom.onclick = async () => { populateVoices(); await selectAndShowRandomRow({ speak: true }); };
+     // Mode switching
     els.modeSelect.onchange = () => {
       // Stop timers/practices on switch
       if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
@@ -861,16 +846,9 @@
   // --- Init sample data ---
   function loadSamplePhrases() {
     const sample = [
-      'Hola;Hello;Ciao;Olá',
-      'Buenos días;Good morning;Buongiorno;Bom dia',
-      '¿Cómo estás?;How are you?;Come stai?;Como você está?',
-      'Gracias;Thank you;Grazie;Obrigado',
-      'Por favor;Please;Per favore;Por favor',
-      'Lo siento;Sorry;Mi dispiace;Desculpe',
-      '¿Dónde está el baño?;Where is the bathroom?;Dov\'è il bagno?;Onde fica o banheiro?',
-      'Me gusta aprender idiomas;I like learning languages;Mi piace imparare le lingue;Gosto de aprender línguas',
-      '¿Cuánto cuesta?;How much is it?;Quanto costa?;Quanto custa?',
-      'Hasta luego;See you later;A dopo;Até mais'
+      'Hola;Hello',
+      'Buenos días;Good morning',
+      '¿Cómo estás?;How are you?'
     ].join('\n');
     els.csvBox.value = sample;
     ensureParsed();
@@ -898,4 +876,4 @@
   window._trainer = { state: () => ({ currentIndex, phraseSessionId, parsedRowsCount: parsedRows.length }) };
 
   init();
-
+})();
