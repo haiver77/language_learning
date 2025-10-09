@@ -1,405 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  :root {
-    --bg: #111;
-    --fg: #e8e8e8;
-    --muted: #b3b3b3;
-    --card: #1a1a1a;
-    --accent: #4da3ff;
-    --border: #2a2a2a;
-    --danger: #ff5a5a;
-    --ok: #3ccf7a;
-    --control-bg: #151515;
-    --control-fg: #e8e8e8;
-    --focus: 0 0 0 3px rgba(77,163,255,0.35);
-  }
-  .theme-light {
-    --bg: #ffffff;
-    --fg: #1d1d1f;
-    --muted: #555;
-    --card: #f5f5f7;
-    --accent: #1f6feb;
-    --border: #e5e5ea;
-    --danger: #d7263d;
-    --ok: #228b22;
-    --control-bg: #fff;
-    --control-fg: #1d1d1f;
-    --focus: 0 0 0 3px rgba(31,111,235,0.25);
-  }
-
-  html, body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--fg);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    line-height: 1.4;
-  }
-
-  /* Container 1 Columna */
-  .container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
- /* Container 2 Columnas */
-  .container2c {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 1px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  /* Card rows */
-  .row {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding:4px;
-  }
-
-  .row-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--muted);
-    margin: 0 0 10px 0;
-  }
-
-  .phrases {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-  .phrase-line {
-    display: grid;
-    grid-template-columns: 30px 1fr 28px;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    background: var(--control-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-  }
-  .lang-tag {
-    font-weight: 600;
-    color: var(--muted);
-    text-align: center;
-    user-select: none;
-  }
-  .phrase-text {
-    font-size: clamp(14px, var(--phrase-font, 26px), 100px);
-    white-space: normal;
-    word-wrap: break-word;
-  }
-  .replay-btn {
-    width: 28px; height: 28px; border-radius: 6px;
-    display: inline-grid; place-items: center;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--fg);
-    cursor: pointer;
-  }
-  .replay-btn:focus { outline: none; box-shadow: var(--focus); }
-  .replay-btn:hover { background: rgba(255,255,255,0.06); }
-
-  /* Inline compact controls */
-  .inline-controls {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-  }
-  .inline-controls .spacer { flex: 1; }
-
-  select, input[type="text"], input[type="number"], input[type="file"] {
-    background: var(--control-bg);
-    color: var(--control-fg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 14px;
-  }
-  /* Combo boxes compact width, adapt to content */
-  select { width: auto; max-width: 100%; }
-
-  button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-  button.secondary {
-    background: transparent; color: var(--fg);
-    border: 1px solid var(--border);
-  }
-  button:focus { outline: none; box-shadow: var(--focus); }
-
-  /* Panels inside rows */
-  .panel {
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    margin-top: 8px;
-  }
-  .panel-title {
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .checks {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(60px, auto));
-    gap: 8px 14px;
-    align-items: center;
-  }
-  .check {
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  input[type="checkbox"] { width: 18px; height: 18px; }
-
-  .font-slider {
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-  }
-  input[type="range"] { width: 45%; }
-
-  .tiny-toggle {
-    display: inline-flex; gap: 6px; align-items: center;
-    font-size: 13px;
-  }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 10px;
-    color: var(--muted);
-  }
-
-  .textarea {
-    width: 100%;
-    min-height: 160px;
-    max-height: 380px;
-    background: var(--control-bg);
-    color: var(--control-fg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    resize: vertical;
-  }
-
-  .progress-line {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  progress {
-    width: 220px; height: 14px;
-    accent-color: var(--accent);
-  }
-  .status {
-    font-size: 13px; color: var(--muted);
-  }
-  .status.ok { color: var(--ok); }
-  .status.error { color: var(--danger); }
-
-  /* Mobile-first spacing and tap targets */
-  .inline-controls > * { min-height: 0px; }
-  .checks input[type="checkbox"] { width: 22px; height: 22px; }
-
-  /* Responsive layout */
-  @media (min-width: 900px) {
-    .container { gap: 14px; padding: 16px; }
-  }
-  @media (max-width: 600px) {
-    .checks { grid-template-columns: 1fr; }
-    .phrases { gap: 8px; }
-    .phrase-line { grid-template-columns: 28px 1fr 28px; }
-    .inline-controls .spacer { display: none; }
-    
-  }
-</style>
-</head>
-<body class="theme-dark">
-  <div class="container">
-
-    <!-- Row 1: Current phrases display -->
-    <section class="row" id="row-phrases">
-      <div class="phrases" id="phrasesView">
-        <!-- ES -->
-        <div class="phrase-line" data-lang="es">
-          <div class="lang-tag">ES</div>
-          <div class="phrase-text" id="text-es"></div>
-          <button class="replay-btn" id="replay-es" title="Reproducir ES" aria-label="Replay ES">▶</button>
-        </div>
-        <!-- EN -->
-        <div class="phrase-line" data-lang="en">
-          <div class="lang-tag">EN</div>
-          <div class="phrase-text" id="text-en"></div>
-          <button class="replay-btn" id="replay-en" title="Play EN" aria-label="Replay EN">▶</button>
-        </div>
-        <!-- IT -->
-        <div class="phrase-line" data-lang="it">
-          <div class="lang-tag">IT</div>
-          <div class="phrase-text" id="text-it"></div>
-          <button class="replay-btn" id="replay-it" title="Riproduci IT" aria-label="Replay IT">▶</button>
-        </div>
-        <!-- PT -->
-        <div class="phrase-line" data-lang="pt">
-          <div class="lang-tag">PT</div>
-          <div class="phrase-text" id="text-pt"></div>
-          <button class="replay-btn" id="replay-pt" title="Reproduzir PT" aria-label="Replay PT">▶</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Row 2: Operation Modes -->
-    <section class="row" id="row-modes">
-      <div class="inline-controls">
-        <label class="badge">
-          <span>Mode</span>
-          <select id="modeSelect" aria-label="Mode">
-            <option>Manual Mode</option>
-            <option>Auto Mode</option>
-            <option>Speaking Practice Mode</option>
-            <option>Writing Practice Mode</option>
-          </select>
-        </label>
-        <button id="btnRandom" class="secondary" title="Show a random phrase">Random Phrase</button>
-        <div class="spacer"></div>
-        <div id="modeContent" style="width:100%"></div>
-      </div>
-    </section>
-
-    </div>
-
-    <div class="container2c">
-
-    <!-- Row 3: Language Reading Checkboxes -->
-    <section class="row" id="row-read">
-      <div class="panel">
-        <div class="panel-title">Read Language</div>
-        <div class="checks">
-          <label class="check"><input type="checkbox" id="read-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="read-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="read-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="read-pt" /> <span>PT</span></label>
-        </div>
-      </div>
-    </section>
-
-    <!-- Row 3 (continued): Language Display Options -->
-    <section class="row" id="row-show">
-      <div class="panel">
-        <div class="panel-title">Show Language</div>
-        <div class="checks">
-          <label class="check"><input type="checkbox" id="show-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="show-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="show-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="show-pt" /> <span>PT</span></label>
-        </div>
-      </div>
-    </section>
-    </div>
-
-    <div class="container">
-    <!-- Font Size -->
-      <section class="row" id="row-show">
-        <div class="font-slider" style="margin-top:10px">
-          <span class="badge">Font size</span>
-          <input type="range" min="14" max="100" value="26" id="fontRange" />
-          <span id="fontValue" class="status">26 px</span>
-          <span class="spacer"></span>
-          <label class="tiny-toggle">
-            <input type="checkbox" id="themeToggle" checked />
-            <span>Dark theme</span>
-          </label>
-        </div>
-    </section>
-
-    <!-- Row 4: Phrase list (CSV textbox) -->
-    <section class="row" id="row-csv">
-      <div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
-      <textarea class="textarea" id="csvBox"></textarea>
-    </section>
-
-    <!-- Row 5: Phrases Loading Options -->
-    <section class="row" id="row-load">
-      <div class="inline-controls">
-        <label class="badge">
-          <span>Predefined sets</span>
-          <select id="predefinedSelect">
-            <option value="">(Select a set)</option>
-          </select>
-        </label>
-        <button id="btnLoadPredefined" class="secondary">Load selected</button>
-        <div class="spacer"></div>
-        <label class="badge">
-          <span>Load from file</span>
-          <input type="file" id="fileInput" accept=".csv,.txt" />
-        </label>
-      </div>
-    </section>
-
-    <!-- Row 6: Speech Synthesis configurations -->
-    <section class="row" id="row-tts">
-      <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
-        <label class="badge"><span>ES Voice</span>
-          <select id="voice-es"></select>
-        </label>
-        <label class="badge"><span>EN Voice</span>
-          <select id="voice-en"></select>
-        </label>
-        <label class="badge"><span>IT Voice</span>
-          <select id="voice-it"></select>
-        </label>
-        <label class="badge"><span>PT Voice</span>
-          <select id="voice-pt"></select>
-        </label>
-        <label class="badge"><span>Rate</span>
-          <input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" />
-        </label>
-        <label class="badge"><span>Pitch</span>
-          <input type="number" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:80px" />
-        </label>
-      </div>
-    </section>
-  </div>
-
-<script>
+// TO REPLACE:
+// -fr --> -fr
+// fr: --> fr:
+// .fr. --> .fr.
+// 'fr' --> 'fr'
+// "fr" --> "fr"
+// FR --> FR
+// .fr --> .fr
+// fr: { localeGuess: ['en-US','en-GB','en-AU'], label: 'FR' } --> fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' }
 (() => {
   // --- State ---
   const els = {
     text: {
       es: document.getElementById('text-es'),
-      en: document.getElementById('text-en'),
-      it: document.getElementById('text-it'),
-      pt: document.getElementById('text-pt'),
+      fr: document.getElementById('text-fr'),
     },
     replay: {
       es: document.getElementById('replay-es'),
-      en: document.getElementById('replay-en'),
-      it: document.getElementById('replay-it'),
-      pt: document.getElementById('replay-pt'),
+      fr: document.getElementById('replay-fr'),
     },
     read: {
       es: document.getElementById('read-es'),
-      en: document.getElementById('read-en'),
-      it: document.getElementById('read-it'),
-      pt: document.getElementById('read-pt'),
+      fr: document.getElementById('read-fr'),
     },
     show: {
       es: document.getElementById('show-es'),
-      en: document.getElementById('show-en'),
-      it: document.getElementById('show-it'),
-      pt: document.getElementById('show-pt'),
+      fr: document.getElementById('show-fr'),
     },
     modeSelect: document.getElementById('modeSelect'),
     btnRandom: document.getElementById('btnRandom'),
@@ -413,33 +38,29 @@
     themeToggle: document.getElementById('themeToggle'),
     voices: {
       es: document.getElementById('voice-es'),
-      en: document.getElementById('voice-en'),
-      it: document.getElementById('voice-it'),
-      pt: document.getElementById('voice-pt'),
+      fr: document.getElementById('voice-fr'),
     },
     rate: document.getElementById('rate'),
     pitch: document.getElementById('pitch'),
   };
 
-  const langs = ['es','en','it','pt'];
+  const langs = ['es','fr'];
   const langMeta = {
     es: { localeGuess: ['es-ES','es-419','es-MX','es-AR','es-PE'], label: 'ES' },
-    en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' },
-    it: { localeGuess: ['it-IT'], label: 'IT' },
-    pt: { localeGuess: ['pt-BR','pt-PT'], label: 'PT' },
+    fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
   };
 	//fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
 	//de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
   
 
-  let parsedRows = [];               // Array of {es,en,it,pt}
+  let parsedRows = [];               // Array of {es,fr}
   let currentIndex = -1;             // Index in parsedRows
   let phraseSessionId = 0;           // Monotonic token
   let autoTimer = null;              // Auto mode interval
   let speakingPractice = {
     active: false,
     rec: null,
-    lang: 'es',
+    lang: 'fr',
     min: 90,
     liveTextEl: null,
     scoreEl: null,
@@ -448,7 +69,7 @@
   };
   let writingPractice = {
     active: false,
-    lang: 'es',
+    lang: 'fr',
     inputEl: null,
     statusEl: null,
     writingBusy: false,
@@ -499,8 +120,8 @@
     const rows = [];
     for (const line of lines) {
       const cols = parseCSVLine(line);
-      if (cols.length >= 4) {
-        rows.push({ es: cols[0], en: cols[1], it: cols[2], pt: cols[3] });
+      if (cols.length >= 2) {
+        rows.push({ es: cols[0], fr: cols[1] });
       }
     }
     return rows;
@@ -550,21 +171,17 @@
 
   function setPhraseTexts(row) {
     els.text.es.textContent = row?.es || '';
-    els.text.en.textContent = row?.en || '';
-    els.text.it.textContent = row?.it || '';
-    els.text.pt.textContent = row?.pt || '';
+    els.text.fr.textContent = row?.fr || '';
   }
 
   function getReadOrder() {
-    return ['es','en','it','pt']; // fixed order
+    return ['es','fr']; // fixed order
   }
 
   function getVoicesMap() {
     return {
       es: els.voices.es.value || '',
-      en: els.voices.en.value || '',
-      it: els.voices.it.value || '',
-      pt: els.voices.pt.value || '',
+      fr: els.voices.fr.value || '',
     };
   }
 
@@ -580,9 +197,7 @@
     // Gather settings
     const readLangs = {
       es: els.read.es.checked,
-      en: els.read.en.checked,
-      it: els.read.it.checked,
-      pt: els.read.pt.checked,
+      fr: els.read.fr.checked,
     };
     const any = Object.values(readLangs).some(Boolean);
     if (!any) return; // resolve immediately
@@ -622,7 +237,11 @@
       const text = (row && row[k]) ? String(row[k]) : '';
       totalChars += text.length;
       const u = new SpeechSynthesisUtterance(text);
-      const v = voices.find(v => (v.name === voiceIds[k]) || (v.lang && langMeta[k].localeGuess.some(gl => v.lang.startsWith(gl.slice(0,2)))));
+
+      // Find the voice by name (from combobox)
+      let v = voices.find(v => v.name === voiceIds[k]);
+      // If not found, fallback to first voice for that language
+      if (!v) v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(k));
       if (v) u.voice = v;
       u.lang = (v && v.lang) ? v.lang : langMeta[k].localeGuess[0];
       u.rate = rate;
@@ -785,9 +404,7 @@
           <label class="badge" width="100px"><span></span>
             <select id="sp-lang">
               <option value="es">ES</option>
-              <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
+              <option value="fr">FR</option>
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
@@ -826,7 +443,7 @@
           <label class="badge"><span>Practice language</span>
             <select id="wr-lang">
               <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="fr">FR</option>
               <option value="it">IT</option>
               <option value="pt">PT</option>
             </select>
@@ -865,7 +482,7 @@
 
   function pickRecLang(k) {
     // Use first locale guess for recognition; browsers may map internally
-    return langMeta[k].localeGuess[0] || 'en-US';
+    return langMeta[k].localeGuess[0] || 'es-ES';
   }
 
   async function startSpeakingPractice() {
@@ -1082,9 +699,7 @@
       const sel = els.voices[k];
       const prev = sel.value;
       sel.innerHTML = '';
-      const group = voices
-        .filter(v => v.lang && v.lang.toLowerCase().startsWith(k))
-        .concat(voices.filter(v => !(v.lang && v.lang.toLowerCase().startsWith(k)))); // fallback at end
+      const group = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
       for (const v of group) {
         const opt = document.createElement('option');
         opt.value = v.name;
@@ -1174,9 +789,8 @@
   // --- Event wiring ---
   function bindEvents() {
     // Random button (global)
-    els.btnRandom.onclick = async () => { await selectAndShowRandomRow({ speak: true }); };
-
-    // Mode switching
+    els.btnRandom.onclick = async () => { populateVoices(); await selectAndShowRandomRow({ speak: true }); };
+     // Mode switching
     els.modeSelect.onchange = () => {
       // Stop timers/practices on switch
       if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
@@ -1237,16 +851,26 @@
   // --- Init sample data ---
   function loadSamplePhrases() {
     const sample = [
-      'Hola;Hello;Ciao;Olá',
-      'Buenos días;Good morning;Buongiorno;Bom dia',
-      '¿Cómo estás?;How are you?;Come stai?;Como você está?',
-      'Gracias;Thank you;Grazie;Obrigado',
-      'Por favor;Please;Per favore;Por favor',
-      'Lo siento;Sorry;Mi dispiace;Desculpe',
-      '¿Dónde está el baño?;Where is the bathroom?;Dov\'è il bagno?;Onde fica o banheiro?',
-      'Me gusta aprender idiomas;I like learning languages;Mi piace imparare le lingue;Gosto de aprender línguas',
-      '¿Cuánto cuesta?;How much is it?;Quanto costa?;Quanto custa?',
-      'Hasta luego;See you later;A dopo;Até mais'
+      '¿Dónde está la estación de tren?;Où est la gare?',
+'¿Cuánto cuesta este boleto?;Combien coûte ce billet ?',
+'¿Podría ayudarme, por favor?;Pourriez-vous m’aider, s’il vous plaît ?',
+'Necesito un taxi.;J’ai besoin d’un taxi.',
+'La cuenta, por favor.;L’addition, s’il vous plaît.',
+'¿Dónde está el baño?;Où sont les toilettes ?',
+'Quisiera hacer una reserva.;Je voudrais faire une réservation.',
+'¿Cuál es la especialidad de la casa?;Quelle est la spécialité de la maison ?',
+'¿Aceptan tarjeta de crédito?;Acceptez-vous la carte de crédit ?',
+'¿A qué hora abre el museo?;À quelle heure ouvre le musée ?',
+'Estoy buscando un hotel económico.;Je cherche un hôtel bon marché.',
+'¿Dónde puedo cambiar dinero?;Où puis-je changer de l’argent ?',
+'Me he perdido, ¿puede indicarme el camino?;Je me suis perdu, pouvez-vous m’indiquer le chemin ?',
+'Un billete de ida y vuelta, por favor.;Un billet aller-retour, s’il vous plaît.',
+'¿Cuánto tiempo tarda en llegar?;Combien de temps faut-il pour arriver ?',
+'¿Dónde está la parada de autobús?;Où est l’arrêt de bus ?',
+'Necesito un médico.;J’ai besoin d’un médecin.',
+'¿Podría recomendarme un buen restaurante?;Pourriez-vous me recommander un bon restaurant ?',
+'¿Tiene una habitación disponible?;Avez-vous une chambre disponible ?',
+'¿Hay visitas guiadas en este lugar?;Y a-t-il des visites guidées dans cet endroit ?'
     ].join('\n');
     els.csvBox.value = sample;
     ensureParsed();
@@ -1275,6 +899,3 @@
 
   init();
 })();
-</script>
-</body>
-</html>

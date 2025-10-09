@@ -18,10 +18,10 @@
           <button class="replay-btn" id="replay-es" title="Reproducir ES" aria-label="Replay ES">▶</button>
         </div>
         <!-- EN -->
-        <div class="phrase-line" data-lang="en">
-          <div class="lang-tag">EN</div>
-          <div class="phrase-text" id="text-en"></div>
-          <button class="replay-btn" id="replay-en" title="Play EN" aria-label="Replay EN">▶</button>
+        <div class="phrase-line" data-lang="fr">
+          <div class="lang-tag">FR</div>
+          <div class="phrase-text" id="text-fr"></div>
+          <button class="replay-btn" id="replay-fr" title="Play FR" aria-label="Replay FR">▶</button>
         </div>
       </div>
     </section>
@@ -54,7 +54,7 @@
         <div class="panel-title">Read Language</div>
         <div class="checks">
           <label class="check"><input type="checkbox" id="read-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="read-en" checked /> <span>EN</span></label>
+          <label class="check"><input type="checkbox" id="read-fr" checked /> <span>EN</span></label>
         </div>
       </div>
     </section>
@@ -65,7 +65,7 @@
         <div class="panel-title">Show Language</div>
         <div class="checks">
           <label class="check"><input type="checkbox" id="show-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="show-en" checked /> <span>EN</span></label>
+          <label class="check"><input type="checkbox" id="show-fr" checked /> <span>FR</span></label>
           </div>
       </div>
     </section>
@@ -88,7 +88,7 @@
 
     <!-- Row 4: Phrase list (CSV textbox) -->
     <section class="row" id="row-csv">
-      <div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
+      <div class="row-title">Phrases (CSV: ES,FR)</div>
       <textarea class="textarea" id="csvBox"></textarea>
     </section>
 
@@ -116,8 +116,8 @@
         <label class="badge"><span>ES Voice</span>
           <select id="voice-es"></select>
         </label>
-        <label class="badge"><span>EN Voice</span>
-          <select id="voice-en"></select>
+        <label class="badge"><span>FR Voice</span>
+          <select id="voice-fr"></select>
         </label>
         <label class="badge"><span>Rate</span>
           <input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" />
