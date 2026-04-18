@@ -392,6 +392,9 @@
           <label class="badge"><span>Topic</span>
             <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" />
           </label>
+          <label class="badge"><span>Quantity</span>
+            <input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:100px" />
+          </label>
           <div class="spacer"></div>
           <button id="btnLoadAI">Load from AI</button>
           <span id="aiStatus" class="status">Idle</span>
@@ -447,6 +450,7 @@
     openaiToken: document.getElementById('openaiToken'),
     aiLevel: document.getElementById('aiLevel'),
     aiTopic: document.getElementById('aiTopic'),
+    aiQuantity: document.getElementById('aiQuantity'),
     btnLoadAI: document.getElementById('btnLoadAI'),
     aiStatus: document.getElementById('aiStatus'),
     rate: document.getElementById('rate'),
@@ -1203,17 +1207,18 @@
     }
   }
 
-  // --- OpenAI integration ---
-  function buildAIPrompt(level, topic) {
-    return `Crea una lista de 40 frases con las siguientes características:
+  // --- Prompt - OpenAI integration ---
+  function buildAIPrompt(level, topic, quantity) {
+    const q = Number.isFinite(Number(quantity)) ? Number(quantity) : 40;
+    return `Create a list of ${q} phrases with the following characteristics:
 
-1. Cada línea debe contener 4 frases separadas por punto y coma (;).
-- La primera en español.
-- La segunda en inglés.
-- La tercera en italiano.
-- La cuarta en portugués.
-2. La lista no debe tener numeración ni viñetas.
-3. El tema de las frases debe ser:\nFases de nivel ${level} sobre ${topic}`;
+1. Each line must contain 4 phrases separated by semicolons (;).
+- The first is the translation to Spanish.
+- The second is the phrase in English.
+- The third is the translation to Italian.
+- The fourth is the translation to Portuguese.
+2. The list must not include numbering or bullet points.
+3. The topic of the phrases must be:\nLevel ${level} about ${topic}`;
   }
 
   async function callOpenAI(token, prompt) {
@@ -1244,13 +1249,14 @@
     const token = (els.openaiToken.value || '').trim();
     const level = (els.aiLevel.value || 'A1');
     const topic = (els.aiTopic.value || '').trim() || 'general';
+    const quantity = parseInt(els.aiQuantity.value || '40', 10) || 40;
     if (!token) { alert('Please enter your OpenAI token in OPEN_AI_TOKEN.'); return; }
     els.btnLoadAI.disabled = true;
     els.aiStatus.textContent = 'Loading…';
     try {
       // persist token locally for convenience
       try { localStorage.setItem('openai_token', token); } catch {}
-      const prompt = buildAIPrompt(level, topic);
+      const prompt = buildAIPrompt(level, topic, quantity);
       const content = await callOpenAI(token, prompt);
       // Put response into csvBox
       els.csvBox.value = (content || '').trim();
