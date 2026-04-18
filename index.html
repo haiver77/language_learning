@@ -371,6 +371,33 @@
         </label>
       </div>
     </section>
+    <!-- Row 7: OpenAI loader -->
+    <section class="row" id="row-ai">
+      <div class="panel">
+        <div class="panel-title">Load phrases from OpenAI</div>
+        <div class="inline-controls">
+          <label class="badge"><span>OPEN_AI_TOKEN</span>
+            <input type="text" id="openaiToken" placeholder="sk-..." style="width:220px" />
+          </label>
+          <label class="badge"><span>Level</span>
+            <select id="aiLevel">
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </label>
+          <label class="badge"><span>Topic</span>
+            <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" />
+          </label>
+          <div class="spacer"></div>
+          <button id="btnLoadAI">Load from AI</button>
+          <span id="aiStatus" class="status">Idle</span>
+        </div>
+      </div>
+    </section>
   </div>
 
 <script>
@@ -417,6 +444,11 @@
       it: document.getElementById('voice-it'),
       pt: document.getElementById('voice-pt'),
     },
+    openaiToken: document.getElementById('openaiToken'),
+    aiLevel: document.getElementById('aiLevel'),
+    aiTopic: document.getElementById('aiTopic'),
+    btnLoadAI: document.getElementById('btnLoadAI'),
+    aiStatus: document.getElementById('aiStatus'),
     rate: document.getElementById('rate'),
     pitch: document.getElementById('pitch'),
   };
@@ -1171,6 +1203,70 @@
     }
   }
 
+  // --- OpenAI integration ---
+  function buildAIPrompt(level, topic) {
+    return `Crea una lista de 40 frases con las siguientes características:
+
+1. Cada línea debe contener 4 frases separadas por punto y coma (;).
+- La primera en español.
+- La segunda en inglés.
+- La tercera en italiano.
+- La cuarta en portugués.
+2. La lista no debe tener numeración ni viñetas.
+3. El tema de las frases debe ser:\nFases de nivel ${level} sobre ${topic}`;
+  }
+
+  async function callOpenAI(token, prompt) {
+    const url = 'https://api.openai.com/v1/chat/completions';
+    const body = {
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2000,
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || `OpenAI error ${res.status}`);
+    }
+    const j = await res.json();
+    return (j.choices && j.choices[0] && (j.choices[0].message?.content || j.choices[0].text)) || '';
+  }
+
+  async function loadFromAI() {
+    const token = (els.openaiToken.value || '').trim();
+    const level = (els.aiLevel.value || 'A1');
+    const topic = (els.aiTopic.value || '').trim() || 'general';
+    if (!token) { alert('Please enter your OpenAI token in OPEN_AI_TOKEN.'); return; }
+    els.btnLoadAI.disabled = true;
+    els.aiStatus.textContent = 'Loading…';
+    try {
+      // persist token locally for convenience
+      try { localStorage.setItem('openai_token', token); } catch {}
+      const prompt = buildAIPrompt(level, topic);
+      const content = await callOpenAI(token, prompt);
+      // Put response into csvBox
+      els.csvBox.value = (content || '').trim();
+      ensureParsed();
+      // Show first item silently so UI updates
+      if (parsedRows.length) await selectAndShowRandomRow({ speak: false });
+      els.aiStatus.textContent = 'Loaded';
+    } catch (err) {
+      console.error('OpenAI load error', err);
+      alert('OpenAI error: ' + (err.message || err));
+      els.aiStatus.textContent = 'Error';
+    } finally {
+      els.btnLoadAI.disabled = false;
+    }
+  }
+
   // --- Event wiring ---
   function bindEvents() {
     // Random button (global)
@@ -1232,6 +1328,8 @@
     if ('onvoiceschanged' in speechSynthesis) {
       speechSynthesis.onvoiceschanged = () => populateVoices();
     }
+    // AI button
+    els.btnLoadAI.onclick = loadFromAI;
   }
 
   // --- Init sample data ---
@@ -1268,6 +1366,8 @@
     els.themeToggle.checked = true;
     els.fontRange.value = 26;
     els.fontValue.textContent = '26 px';
+    // restore saved token if any
+    try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch {}
   }
 
   // Expose minimal for debugging (optional)
