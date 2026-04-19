@@ -114,7 +114,7 @@
   }
   .inline-controls .spacer { flex: 1; }
 
-  select, input[type="text"], input[type="number"], input[type="file"] {
+  select, input[type="text"], input[type="password"], input[type="number"], input[type="file"] {
     background: var(--control-bg);
     color: var(--control-fg);
     border: 1px solid var(--border);
@@ -329,7 +329,44 @@
       <div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
       <textarea class="textarea" id="csvBox"></textarea>
     </section>
+    
 
+    
+    <!-- Row 7: OpenAI loader -->
+    <section class="row" id="row-ai">
+      <div class="panel">
+        <div class="panel-title">Load phrases from OpenAI</div>
+        <div class="inline-controls">
+          <label class="badge"><span>Level</span>
+            <select id="aiLevel">
+              <option value="ANY" selected>Any</option>
+              <option value="A1">A1</option>
+              <option value="A2">A2</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="C2">C2</option>
+            </select>
+          </label>
+          <label class="badge"><span>Topic</span>
+            <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" style="width:320px" />
+          </label>
+          <label class="badge"><span>Quantity</span>
+            <input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:4ch" />
+          </label>
+          <label class="badge"><span>Min words</span>
+            <input type="number" id="aiMinWords" min="1" max="500" value="15" style="width:4ch" />
+          </label>
+          <label class="badge"><span>OPEN_AI_TOKEN</span>
+            <input type="password" id="openaiToken" placeholder="sk-..." style="width:140px" />
+          </label>
+          <div class="spacer"></div>
+          <button id="btnLoadAI">Load from AI</button>
+          <span id="aiStatus" class="status">Idle</span>
+        </div>
+      </div>
+    </section>
+    
     <!-- Row 5: Phrases Loading Options -->
     <section class="row" id="row-load">
       <div class="inline-controls">
@@ -369,36 +406,6 @@
         <label class="badge"><span>Pitch</span>
           <input type="number" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:80px" />
         </label>
-      </div>
-    </section>
-    <!-- Row 7: OpenAI loader -->
-    <section class="row" id="row-ai">
-      <div class="panel">
-        <div class="panel-title">Load phrases from OpenAI</div>
-        <div class="inline-controls">
-          <label class="badge"><span>OPEN_AI_TOKEN</span>
-            <input type="text" id="openaiToken" placeholder="sk-..." style="width:220px" />
-          </label>
-          <label class="badge"><span>Level</span>
-            <select id="aiLevel">
-              <option value="A1">A1</option>
-              <option value="A2">A2</option>
-              <option value="B1">B1</option>
-              <option value="B2">B2</option>
-              <option value="C1">C1</option>
-              <option value="C2">C2</option>
-            </select>
-          </label>
-          <label class="badge"><span>Topic</span>
-            <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" />
-          </label>
-          <label class="badge"><span>Quantity</span>
-            <input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:100px" />
-          </label>
-          <div class="spacer"></div>
-          <button id="btnLoadAI">Load from AI</button>
-          <span id="aiStatus" class="status">Idle</span>
-        </div>
       </div>
     </section>
   </div>
@@ -451,6 +458,7 @@
     aiLevel: document.getElementById('aiLevel'),
     aiTopic: document.getElementById('aiTopic'),
     aiQuantity: document.getElementById('aiQuantity'),
+    aiMinWords: document.getElementById('aiMinWords'),
     btnLoadAI: document.getElementById('btnLoadAI'),
     aiStatus: document.getElementById('aiStatus'),
     rate: document.getElementById('rate'),
@@ -490,6 +498,7 @@
     writingBusy: false,
     currentWriteTarget: '',
   };
+  let savedConfig = null;
 
   // --- Utilities ---
   function normalizeForCompare(s) {
@@ -609,6 +618,54 @@
       rate: Math.max(0.5, Math.min(2, parseFloat(els.rate.value || '1') || 1)),
       pitch: Math.max(0, Math.min(2, parseFloat(els.pitch.value || '1') || 1)),
     };
+  }
+
+  // --- Local Storage: save / load UI configuration ---
+  const STORAGE_KEY = 'lang_trainer_config_v1';
+
+  function saveConfig() {
+    try {
+      const cfg = {
+        show: {}, read: {}, voices: {},
+        rate: els.rate.value, pitch: els.pitch.value,
+        font: els.fontRange.value,
+        themeDark: !!els.themeToggle.checked,
+        mode: els.modeSelect.value,
+        aiLevel: els.aiLevel.value, aiTopic: els.aiTopic.value, aiQuantity: els.aiQuantity.value, aiMinWords: els.aiMinWords?.value,
+        predefined: els.predefinedSelect.value,
+        csv: els.csvBox.value,
+        speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
+        writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
+      };
+      for (const k of langs) {
+        cfg.show[k] = !!els.show[k].checked;
+        cfg.read[k] = !!els.read[k].checked;
+        cfg.voices[k] = els.voices[k].value || '';
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+    } catch (e) { console.warn('saveConfig failed', e); }
+  }
+
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const cfg = JSON.parse(raw);
+      savedConfig = cfg; // keep for populateVoices which runs later
+      if (cfg.show) for (const k of langs) if (k in cfg.show) els.show[k].checked = !!cfg.show[k];
+      if (cfg.read) for (const k of langs) if (k in cfg.read) els.read[k].checked = !!cfg.read[k];
+      if (cfg.rate) els.rate.value = cfg.rate;
+      if (cfg.pitch) els.pitch.value = cfg.pitch;
+      if (cfg.font) { els.fontRange.value = cfg.font; document.documentElement.style.setProperty('--phrase-font', cfg.font + 'px'); els.fontValue.textContent = cfg.font + ' px'; }
+      if (typeof cfg.themeDark !== 'undefined') { els.themeToggle.checked = !!cfg.themeDark; document.body.classList.toggle('theme-light', !els.themeToggle.checked); document.body.classList.toggle('theme-dark', els.themeToggle.checked); }
+      if (cfg.mode) els.modeSelect.value = cfg.mode;
+      if (cfg.aiLevel) els.aiLevel.value = cfg.aiLevel;
+      if (cfg.aiTopic) els.aiTopic.value = cfg.aiTopic;
+      if (cfg.aiQuantity) els.aiQuantity.value = cfg.aiQuantity;
+      if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
+      if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
+      if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
+    } catch (e) { console.warn('loadConfig failed', e); }
   }
 
   // --- Speech Synthesis: robust sequence with session token and timeouts ---
@@ -851,7 +908,12 @@
 
       div.querySelector('#sp-start').onclick = startSpeakingPractice;
       div.querySelector('#sp-stop').onclick = stopSpeakingPractice;
-      div.querySelector('#sp-lang').onchange = e => { speakingPractice.lang = e.target.value; };
+      const spLangEl = div.querySelector('#sp-lang');
+      // restore saved speaking language if available
+      if (savedConfig && savedConfig.speakingLang) {
+        try { spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang; } catch {}
+      }
+      spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
       div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
     } else if (m === 'Writing Practice Mode') {
       const div = document.createElement('div');
@@ -880,10 +942,14 @@
 
       writingPractice.inputEl = div.querySelector('#wr-input');
       writingPractice.statusEl = div.querySelector('#wr-status');
-
       div.querySelector('#wr-start').onclick = startWritingPractice;
       div.querySelector('#wr-stop').onclick = stopWritingPractice;
-      div.querySelector('#wr-lang').onchange = e => { writingPractice.lang = e.target.value; };
+      const wrLangEl = div.querySelector('#wr-lang');
+      // restore saved writing language if available
+      if (savedConfig && savedConfig.writingLang) {
+        try { wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang; } catch {}
+      }
+      wrLangEl.onchange = e => { writingPractice.lang = e.target.value; saveConfig(); };
     }
   }
 
@@ -907,9 +973,12 @@
   async function startSpeakingPractice() {
     if (speakingPractice.active) return;
     speakingPractice.active = true;
-    speakingPractice.lang = (els.modeContent.querySelector('#sp-lang')?.value) || 'es';
+    speakingPractice.lang = (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang || 'es';
     speakingPractice.min = parseInt(els.modeContent.querySelector('#sp-min')?.value || '90', 10) || 90;
     speakingPractice.statusEl.textContent = 'Starting…';
+
+    // persist chosen speaking language
+    saveConfig();
 
     // User gesture initiates: select phrase and speak sequence, then start mic
     await selectAndShowRandomRow({ speak: true });
@@ -1065,7 +1134,9 @@
     if (writingPractice.active) return;
     writingPractice.active = true;
     writingPractice.statusEl.textContent = 'Starting…';
-    writingPractice.lang = (els.modeContent.querySelector('#wr-lang')?.value) || 'es';
+    writingPractice.lang = (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang || 'es';
+    // persist chosen writing language
+    saveConfig();
 
     // Select and speak once
     await selectAndShowRandomRow({ speak: true });
@@ -1132,6 +1203,11 @@
       if (guess) sel.value = guess.name;
       if (!sel.value && sel.options.length) sel.selectedIndex = 0;
       if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+      // If we have a saved config, restore voice choice from it (if available)
+      if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
+        const want = savedConfig.voices[k];
+        if ([...sel.options].some(o => o.value === want)) sel.value = want;
+      }
     }
   }
 
@@ -1208,8 +1284,9 @@
   }
 
   // --- Prompt - OpenAI integration ---
-  function buildAIPrompt(level, topic, quantity) {
+  function buildAIPrompt(level, topic, quantity, minWords) {
     const q = Number.isFinite(Number(quantity)) ? Number(quantity) : 40;
+    const m = Number.isFinite(Number(minWords)) ? Number(minWords) : 15;
     return `Create a list of ${q} phrases with the following characteristics:
 
 1. Each line must contain 4 phrases separated by semicolons (;).
@@ -1218,7 +1295,8 @@
 - The third is the translation to Italian.
 - The fourth is the translation to Portuguese.
 2. The list must not include numbering or bullet points.
-3. The topic of the phrases must be:\nLevel ${level} about ${topic}`;
+3. The topic of the phrases must be: ${topic}. (each phrase must have min ${m} words)
+4. The english level must be approximately ${level} according to the CEFR scale.`;
   }
 
   async function callOpenAI(token, prompt) {
@@ -1250,13 +1328,14 @@
     const level = (els.aiLevel.value || 'A1');
     const topic = (els.aiTopic.value || '').trim() || 'general';
     const quantity = parseInt(els.aiQuantity.value || '40', 10) || 40;
+    const minWords = parseInt(els.aiMinWords?.value || '15', 10) || 15;
     if (!token) { alert('Please enter your OpenAI token in OPEN_AI_TOKEN.'); return; }
     els.btnLoadAI.disabled = true;
     els.aiStatus.textContent = 'Loading…';
     try {
       // persist token locally for convenience
       try { localStorage.setItem('openai_token', token); } catch {}
-      const prompt = buildAIPrompt(level, topic, quantity);
+      const prompt = buildAIPrompt(level, topic, quantity, minWords);
       const content = await callOpenAI(token, prompt);
       // Put response into csvBox
       els.csvBox.value = (content || '').trim();
@@ -1285,6 +1364,7 @@
       stopSpeakingPractice();
       stopWritingPractice();
       renderModePanel();
+      saveConfig();
     };
 
     // Replay per language
@@ -1294,7 +1374,12 @@
 
     // Show/Hide languages
     for (const k of langs) {
-      els.show[k].onchange = applyShowVisibility;
+      els.show[k].onchange = () => { applyShowVisibility(); saveConfig(); };
+    }
+
+    // Read language checkboxes
+    for (const k of langs) {
+      els.read[k].onchange = () => { saveConfig(); };
     }
 
     // Font size
@@ -1303,22 +1388,22 @@
       document.documentElement.style.setProperty('--phrase-font', px + 'px');
       els.fontValue.textContent = px + ' px';
     };
-    els.fontRange.oninput = applyFont;
+    els.fontRange.oninput = () => { applyFont(); saveConfig(); };
 
     // Theme toggle
     els.themeToggle.onchange = () => {
       const isDark = els.themeToggle.checked;
       document.body.classList.toggle('theme-light', !isDark);
       document.body.classList.toggle('theme-dark', isDark);
+      saveConfig();
     };
 
     // CSV changes
-    els.csvBox.oninput = () => {
-      ensureParsed();
-    };
+    els.csvBox.oninput = () => { ensureParsed(); saveConfig(); };
 
     // Predefined
-    els.btnLoadPredefined.onclick = loadSelectedPredefined;
+    els.btnLoadPredefined.onclick = async () => { await loadSelectedPredefined(); saveConfig(); };
+    els.predefinedSelect.onchange = () => saveConfig();
 
     // File input
     els.fileInput.onchange = async (e) => {
@@ -1328,14 +1413,25 @@
       els.csvBox.value = text.trim();
       ensureParsed();
       await selectAndShowRandomRow({ speak: false });
+      saveConfig();
     };
 
     // Voices ready
+    for (const k of langs) {
+      els.voices[k].onchange = () => saveConfig();
+    }
     if ('onvoiceschanged' in speechSynthesis) {
       speechSynthesis.onvoiceschanged = () => populateVoices();
     }
+    // Rate / Pitch
+    els.rate.onchange = () => saveConfig();
+    els.pitch.onchange = () => saveConfig();
     // AI button
     els.btnLoadAI.onclick = loadFromAI;
+    els.aiLevel.onchange = () => saveConfig();
+    els.aiTopic.oninput = () => saveConfig();
+    els.aiQuantity.onchange = () => saveConfig();
+    if (els.aiMinWords) els.aiMinWords.onchange = () => saveConfig();
   }
 
   // --- Init sample data ---
@@ -1358,7 +1454,12 @@
 
   // --- Bootstrap ---
   function init() {
-    loadSamplePhrases();
+    // Load saved UI configuration first (if any)
+    loadConfig();
+
+    // Only load sample phrases when there's no saved CSV content
+    if (!savedConfig || !savedConfig.csv) loadSamplePhrases();
+
     renderModePanel();
     bindEvents();
     applyShowVisibility();
@@ -1368,11 +1469,13 @@
     // Initial phrase display (silent) so UI isn't empty
     selectAndShowRandomRow({ speak: false });
 
-    // Defaults: dark theme, font slider reflect
-    els.themeToggle.checked = true;
-    els.fontRange.value = 26;
-    els.fontValue.textContent = '26 px';
-    // restore saved token if any
+    // Defaults only when no saved configuration
+    if (!savedConfig) {
+      els.themeToggle.checked = true;
+      els.fontRange.value = 26;
+      els.fontValue.textContent = '26 px';
+    }
+    // restore saved OpenAI token if any
     try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch {}
   }
 
