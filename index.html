@@ -1321,16 +1321,16 @@
   function buildAIPrompt(level, topic, quantity, minWords) {
     const q = Number.isFinite(Number(quantity)) ? Number(quantity) : 40;
     const m = Number.isFinite(Number(minWords)) ? Number(minWords) : 15;
-    return `Create a list of ${q} phrases with the following characteristics:
+    return `Generate a plain text list of ${q} lines about "${topic}". Each line must contain four phrases separated by semicolons (";") in this exact order: Spanish; English; Italian; Portuguese. 
+Requirements:
+ - Each phrase must contain at least ${m} words.
+ - Vocabulary and grammar must match CEFR level "${level}".
+ - Do not include numbering, bullet points, blank lines, or any extra text before or after the list.
+ - Before returning the response, confirm that each line follows the exact language order: Spanish; English; Italian; Portuguese.
+ - Output only the list (no commentary, no labels, no metadata).
 
-1. Each line must contain 4 phrases separated by semicolons (;).
-- The first is the translation to Spanish.
-- The second is the phrase in English.
-- The third is the translation to Italian.
-- The fourth is the translation to Portuguese.
-2. The list must not include numbering or bullet points.
-3. The topic of the phrases must be: ${topic}. (each phrase must have min ${m} words)
-4. The english level must be approximately ${level} according to the CEFR scale.`;
+Quick examples of required line format
+- "Español ejemplo con cinco palabras; English example with five words; Esempio italiano con cinque parole; Exemplo português com cinco palavras"`;
   }
 
   async function callOpenAI(token, prompt) {
