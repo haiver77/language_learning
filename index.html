@@ -606,11 +606,30 @@
 
   function getVoicesMap() {
     return {
-      es: els.voices.es.value || '',
-      en: els.voices.en.value || '',
-      it: els.voices.it.value || '',
-      pt: els.voices.pt.value || '',
+      es: (els.voices.es.options[els.voices.es.selectedIndex]?.value) || els.voices.es.value || '',
+      en: (els.voices.en.options[els.voices.en.selectedIndex]?.value) || els.voices.en.value || '',
+      it: (els.voices.it.options[els.voices.it.selectedIndex]?.value) || els.voices.it.value || '',
+      pt: (els.voices.pt.options[els.voices.pt.selectedIndex]?.value) || els.voices.pt.value || '',
     };
+  }
+
+  // Find a matching SpeechSynthesisVoice given a desired selection (name) or language
+  function findVoiceForLang(voices, desiredName, k) {
+    if (desiredName) {
+      // Exact name match
+      let v = voices.find(vv => vv.name === desiredName || vv.voiceURI === desiredName);
+      if (v) return v;
+      // Case-insensitive contains match
+      v = voices.find(vv => (vv.name || '').toLowerCase().includes(desiredName.toLowerCase()));
+      if (v) return v;
+    }
+    // Fallback: prefer voices whose lang matches our guesses
+    const guessList = langMeta[k]?.localeGuess || [k];
+    let v = voices.find(vv => vv.lang && guessList.some(gl => vv.lang.startsWith(gl)));
+    if (v) return v;
+    // Last resort: match by language prefix (es, en, it, pt)
+    v = voices.find(vv => vv.lang && vv.lang.startsWith(k));
+    return v || null;
   }
 
   function getRatePitch() {
@@ -715,9 +734,9 @@
       const text = (row && row[k]) ? String(row[k]) : '';
       totalChars += text.length;
       const u = new SpeechSynthesisUtterance(text);
-      const v = voices.find(v => (v.name === voiceIds[k]) || (v.lang && langMeta[k].localeGuess.some(gl => v.lang.startsWith(gl.slice(0,2)))));
+      const v = findVoiceForLang(voices, voiceIds[k], k);
       if (v) u.voice = v;
-      u.lang = (v && v.lang) ? v.lang : langMeta[k].localeGuess[0];
+      u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
       u.rate = rate;
       u.pitch = pitch;
       utters.push({ k, u });
@@ -799,10 +818,10 @@
     const text = row[k] || '';
     const vmap = getVoicesMap();
     const voices = speechSynthesis.getVoices();
-    const v = voices.find(v => v.name === vmap[k]) || voices.find(v => v.lang && v.lang.startsWith(langMeta[k].localeGuess[0].slice(0,2)));
+    const v = findVoiceForLang(voices, vmap[k], k);
     const u = new SpeechSynthesisUtterance(text);
     if (v) u.voice = v;
-    u.lang = (v && v.lang) ? v.lang : langMeta[k].localeGuess[0];
+    u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
     const { rate, pitch } = getRatePitch();
     u.rate = rate; u.pitch = pitch;
     speechSynthesis.speak(u);
@@ -1189,24 +1208,39 @@
       const sel = els.voices[k];
       const prev = sel.value;
       sel.innerHTML = '';
-      const group = voices
-        .filter(v => v.lang && v.lang.toLowerCase().startsWith(k))
-        .concat(voices.filter(v => !(v.lang && v.lang.toLowerCase().startsWith(k)))); // fallback at end
-      for (const v of group) {
-        const opt = document.createElement('option');
-        opt.value = v.name;
-        opt.textContent = `${v.name} (${v.lang || '??'})`;
-        sel.appendChild(opt);
+      // Only include voices that match the configured locale guesses for this language
+      const guessList = (langMeta[k] && Array.isArray(langMeta[k].localeGuess)) ? langMeta[k].localeGuess : [k];
+      let matching = voices.filter(v => v.lang && guessList.some(gl => v.lang.startsWith(gl)));
+      // If no exact localeGuess matches, try a looser prefix match by language code (es, en, it, pt)
+      if (matching.length === 0) {
+        matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
       }
-      // Try auto-select a sensible default
-      const guess = voices.find(v => v.lang && langMeta[k].localeGuess.some(gl => v.lang.startsWith(gl)));
-      if (guess) sel.value = guess.name;
-      if (!sel.value && sel.options.length) sel.selectedIndex = 0;
-      if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
-      // If we have a saved config, restore voice choice from it (if available)
-      if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
-        const want = savedConfig.voices[k];
-        if ([...sel.options].some(o => o.value === want)) sel.value = want;
+
+      if (matching.length > 0) {
+        for (const v of matching) {
+          const opt = document.createElement('option');
+          opt.value = v.name;
+          opt.textContent = `${v.name} (${v.lang || '??'})`;
+          sel.appendChild(opt);
+        }
+        // Try auto-select a sensible default from the matching list
+        const guess = matching.find(v => langMeta[k].localeGuess.some(gl => v.lang && v.lang.startsWith(gl)));
+        if (guess) sel.value = guess.name;
+        if (!sel.value && sel.options.length) sel.selectedIndex = 0;
+        // Restore previous or saved selection only if it exists in the current options
+        if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+        if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
+          const want = savedConfig.voices[k];
+          if ([...sel.options].some(o => o.value === want)) sel.value = want;
+        }
+      } else {
+        // No matching voices for this language: present a single disabled informative option
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.disabled = true;
+        opt.selected = true;
+        opt.textContent = '(no matching voices available)';
+        sel.appendChild(opt);
       }
     }
   }
