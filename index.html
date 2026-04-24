@@ -1,263 +1,352 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="learn_bible.ico" type="image/x-icon" />
-<style>
-  :root {
-    --bg: #111;
-    --fg: #e8e8e8;
-    --muted: #b3b3b3;
-    --card: #1a1a1a;
-    --accent: #4da3ff;
-    --border: #2a2a2a;
-    --danger: #ff5a5a;
-    --ok: #3ccf7a;
-    --control-bg: #151515;
-    --control-fg: #e8e8e8;
-    --focus: 0 0 0 3px rgba(77,163,255,0.35);
-  }
-  .theme-light {
-    --bg: #ffffff;
-    --fg: #1d1d1f;
-    --muted: #555;
-    --card: #f5f5f7;
-    --accent: #1f6feb;
-    --border: #e5e5ea;
-    --danger: #d7263d;
-    --ok: #228b22;
-    --control-bg: #fff;
-    --control-fg: #1d1d1f;
-    --focus: 0 0 0 3px rgba(31,111,235,0.25);
-  }
+  <style>
+    :root {
+      --bg: #111;
+      --fg: #e8e8e8;
+      --muted: #b3b3b3;
+      --card: #1a1a1a;
+      --accent: #4da3ff;
+      --border: #2a2a2a;
+      --danger: #ff5a5a;
+      --ok: #3ccf7a;
+      --control-bg: #151515;
+      --control-fg: #e8e8e8;
+      --focus: 0 0 0 3px rgba(77, 163, 255, 0.35);
+    }
 
-  html, body {
-    margin: 0; padding: 0; background: var(--bg); color: var(--fg);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    line-height: 1.4;
-  }
+    .theme-light {
+      --bg: #ffffff;
+      --fg: #1d1d1f;
+      --muted: #555;
+      --card: #f5f5f7;
+      --accent: #1f6feb;
+      --border: #e5e5ea;
+      --danger: #d7263d;
+      --ok: #228b22;
+      --control-bg: #fff;
+      --control-fg: #1d1d1f;
+      --focus: 0 0 0 3px rgba(31, 111, 235, 0.25);
+    }
 
-  /* Container 1 Columna */
-  .container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
- /* Container 2 Columnas */
-  .container2c {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 1px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      line-height: 1.4;
+    }
 
-  /* Card rows */
-  .row {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding:4px;
-  }
+    /* Container 1 Columna */
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 12px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-  .row-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--muted);
-    margin: 0 0 10px 0;
-  }
+    /* Container 2 Columnas */
+    .container2c {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 1px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-  .phrases {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-  .phrase-line {
-    display: grid;
-    grid-template-columns: 30px 1fr 28px;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    background: var(--control-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-  }
-  .lang-tag {
-    font-weight: 600;
-    color: var(--muted);
-    text-align: center;
-    user-select: none;
-  }
-  .phrase-text {
-    font-size: clamp(14px, var(--phrase-font, 26px), 100px);
-    white-space: normal;
-    word-wrap: break-word;
-  }
-  .replay-btn {
-    width: 28px; height: 28px; border-radius: 6px;
-    display: inline-grid; place-items: center;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--fg);
-    cursor: pointer;
-  }
-  .replay-btn:focus { outline: none; box-shadow: var(--focus); }
-  .replay-btn:hover { background: rgba(255,255,255,0.06); }
+    /* Card rows */
+    .row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+    }
 
-  /* Inline compact controls */
-  .inline-controls {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-  }
-  .inline-controls .spacer { flex: 1; }
+    .row-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 0 0 10px 0;
+    }
 
-  select, input[type="text"], input[type="password"], input[type="number"], input[type="file"] {
-    background: var(--control-bg);
-    color: var(--control-fg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 14px;
-  }
-  /* Combo boxes compact width, adapt to content */
-  select { width: auto; max-width: 100%; }
+    .phrases {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
 
-  button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-  button.secondary {
-    background: transparent; color: var(--fg);
-    border: 1px solid var(--border);
-  }
-  button:focus { outline: none; box-shadow: var(--focus); }
+    .phrase-line {
+      display: grid;
+      grid-template-columns: 30px 1fr 28px;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--control-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
 
-  /* Panels inside rows */
-  .panel {
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    margin-top: 8px;
-  }
-  .panel-title {
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .checks {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(60px, auto));
-    gap: 8px 14px;
-    align-items: center;
-  }
-  .check {
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  input[type="checkbox"] { width: 18px; height: 18px; }
+    .lang-tag {
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      user-select: none;
+    }
 
-  .font-slider {
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-  }
-  input[type="range"] { width: 45%; }
+    .phrase-text {
+      font-size: clamp(14px, var(--phrase-font, 26px), 100px);
+      white-space: normal;
+      word-wrap: break-word;
+    }
 
-  .tiny-toggle {
-    display: inline-flex; gap: 6px; align-items: center;
-    font-size: 13px;
-  }
-  .badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 5px 10px;
-    color: var(--muted);
-  }
+    .replay-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      cursor: pointer;
+    }
 
-  .textarea {
-    width: 100%;
-    min-height: 160px;
-    max-height: 380px;
-    background: var(--control-bg);
-    color: var(--control-fg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    resize: vertical;
-  }
+    .replay-btn:focus {
+      outline: none;
+      box-shadow: var(--focus);
+    }
 
-  .progress-line {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  progress {
-    width: 220px; height: 14px;
-    accent-color: var(--accent);
-  }
-  .status {
-    font-size: 13px; color: var(--muted);
-  }
-  .status.ok { color: var(--ok); }
-  .status.error { color: var(--danger); }
+    .replay-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
 
-  /* Mobile-first spacing and tap targets */
-  .inline-controls > * { min-height: 0px; }
-  .checks input[type="checkbox"] { width: 22px; height: 22px; }
+    /* Inline compact controls */
+    .inline-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
 
-  /* Responsive layout */
-  @media (min-width: 900px) {
-    .container { gap: 14px; padding: 16px; }
-  }
-  @media (max-width: 600px) {
-    .checks { grid-template-columns: 1fr; }
-    .phrases { gap: 8px; }
-    .phrase-line { grid-template-columns: 28px 1fr 28px; }
-    .inline-controls .spacer { display: none; }
-    
-  }
-</style>
+    .inline-controls .spacer {
+      flex: 1;
+    }
+
+    select,
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="file"] {
+      background: var(--control-bg);
+      color: var(--control-fg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    /* Combo boxes compact width, adapt to content */
+    select {
+      width: auto;
+      max-width: 100%;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    /* Panels inside rows */
+    .panel {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .panel-title {
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .checks {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(60px, auto));
+      gap: 8px 14px;
+      align-items: center;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+
+    .font-slider {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input[type="range"] {
+      width: 45%;
+    }
+
+    .tiny-toggle {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--muted);
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 160px;
+      max-height: 380px;
+      background: var(--control-bg);
+      color: var(--control-fg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .progress-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    progress {
+      width: 220px;
+      height: 14px;
+      accent-color: var(--accent);
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    /* Mobile-first spacing and tap targets */
+    .inline-controls>* {
+      min-height: 0px;
+    }
+
+    .checks input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Responsive layout */
+    @media (min-width: 900px) {
+      .container {
+        gap: 14px;
+        padding: 16px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .checks {
+        grid-template-columns: 1fr;
+      }
+
+      .phrases {
+        gap: 8px;
+      }
+
+      .phrase-line {
+        grid-template-columns: 28px 1fr 28px;
+      }
+
+      .inline-controls .spacer {
+        display: none;
+      }
+
+    }
+  </style>
 </head>
+
 <body class="theme-dark">
   <div class="container">
 
     <!-- Row 1: Current phrases display -->
     <section class="row" id="row-phrases">
       <div class="phrases" id="phrasesView">
-        <!-- ES -->
-        <div class="phrase-line" data-lang="es">
-          <div class="lang-tag">ES</div>
-          <div class="phrase-text" id="text-es"></div>
-          <button class="replay-btn" id="replay-es" title="Reproducir ES" aria-label="Replay ES">▶</button>
+        <!-- Language slot 1 -->
+        <div class="phrase-line" data-pos="1">
+          <div class="lang-tag" id="lang-tag-1">ES</div>
+          <div class="phrase-text" id="text-1"></div>
+          <button class="replay-btn" id="replay-1" title="Replay 1" aria-label="Replay 1">▶</button>
         </div>
-        <!-- EN -->
-        <div class="phrase-line" data-lang="en">
-          <div class="lang-tag">EN</div>
-          <div class="phrase-text" id="text-en"></div>
-          <button class="replay-btn" id="replay-en" title="Play EN" aria-label="Replay EN">▶</button>
+        <!-- Language slot 2 -->
+        <div class="phrase-line" data-pos="2">
+          <div class="lang-tag" id="lang-tag-2">EN</div>
+          <div class="phrase-text" id="text-2"></div>
+          <button class="replay-btn" id="replay-2" title="Replay 2" aria-label="Replay 2">▶</button>
         </div>
-        <!-- IT -->
-        <div class="phrase-line" data-lang="it">
-          <div class="lang-tag">IT</div>
-          <div class="phrase-text" id="text-it"></div>
-          <button class="replay-btn" id="replay-it" title="Riproduci IT" aria-label="Replay IT">▶</button>
-        </div>
-        <!-- PT -->
-        <div class="phrase-line" data-lang="pt">
-          <div class="lang-tag">PT</div>
-          <div class="phrase-text" id="text-pt"></div>
-          <button class="replay-btn" id="replay-pt" title="Reproduzir PT" aria-label="Replay PT">▶</button>
-        </div>
+        <!-- Only ES and EN supported (IT/PT removed) -->
       </div>
     </section>
 
@@ -279,19 +368,49 @@
       </div>
     </section>
 
-    </div>
+  </div>
 
-    <div class="container2c">
 
+  <div class="container">
+    <!-- Row 2.5: Languages -->
+    <section class="row" id="row-languages">
+      <div class="panel">
+        <div class="panel-title">Languages</div>
+        <div class="inline-controls">
+          <label class="badge"><span>Language 1</span>
+            <select id="lang1Select">
+              <option value="es" selected>Spanish</option>
+              <option value="en">English</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="de">German</option>
+              <option value="fr">French</option>
+            </select>
+          </label>
+          <label class="badge"><span>Language 2</span>
+            <select id="lang2Select">
+              <option value="es">Spanish</option>
+              <option value="en" selected>English</option>
+              <option value="it">Italian</option>
+              <option value="pt">Portuguese</option>
+              <option value="de">German</option>
+              <option value="fr">French</option>
+            </select>
+          </label>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="container2c">
     <!-- Row 3: Language Reading Checkboxes -->
     <section class="row" id="row-read">
       <div class="panel">
         <div class="panel-title">Read Language</div>
         <div class="checks">
-          <label class="check"><input type="checkbox" id="read-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="read-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="read-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="read-pt" /> <span>PT</span></label>
+          <label class="check"><input type="checkbox" id="read-1" checked /> <span id="read-label-1">L1</span></label>
+          <label class="check"><input type="checkbox" id="read-2" /> <span id="read-label-2">L2</span></label>
         </div>
       </div>
     </section>
@@ -301,38 +420,36 @@
       <div class="panel">
         <div class="panel-title">Show Language</div>
         <div class="checks">
-          <label class="check"><input type="checkbox" id="show-es" checked /> <span>ES</span></label>
-          <label class="check"><input type="checkbox" id="show-en" /> <span>EN</span></label>
-          <label class="check"><input type="checkbox" id="show-it" checked /> <span>IT</span></label>
-          <label class="check"><input type="checkbox" id="show-pt" /> <span>PT</span></label>
+          <label class="check"><input type="checkbox" id="show-1" checked /> <span id="show-label-1">L1</span></label>
+          <label class="check"><input type="checkbox" id="show-2" /> <span id="show-label-2">L2</span></label>
         </div>
       </div>
     </section>
-    </div>
+  </div>
 
-    <div class="container">
+  <div class="container">
     <!-- Font Size -->
-      <section class="row" id="row-show">
-        <div class="font-slider" style="margin-top:10px">
-          <span class="badge">Font size</span>
-          <input type="range" min="14" max="100" value="26" id="fontRange" />
-          <span id="fontValue" class="status">26 px</span>
-          <span class="spacer"></span>
-          <label class="tiny-toggle">
-            <input type="checkbox" id="themeToggle" checked />
-            <span>Dark theme</span>
-          </label>
-        </div>
+    <section class="row" id="row-show">
+      <div class="font-slider" style="margin-top:10px">
+        <span class="badge">Font size</span>
+        <input type="range" min="14" max="100" value="26" id="fontRange" />
+        <span id="fontValue" class="status">26 px</span>
+        <span class="spacer"></span>
+        <label class="tiny-toggle">
+          <input type="checkbox" id="themeToggle" checked />
+          <span>Dark theme</span>
+        </label>
+      </div>
     </section>
 
     <!-- Row 4: Phrase list (CSV textbox) -->
     <section class="row" id="row-csv">
-      <div class="row-title">Phrases (CSV: ES,EN,IT,PT)</div>
+      <div class="row-title">Phrases (CSV: ES,EN)</div>
       <textarea class="textarea" id="csvBox"></textarea>
     </section>
-    
 
-    
+
+
     <!-- Row 7: OpenAI loader -->
     <section class="row" id="row-ai">
       <div class="panel">
@@ -367,7 +484,7 @@
         </div>
       </div>
     </section>
-    
+
     <!-- Row 5: Phrases Loading Options -->
     <section class="row" id="row-load">
       <div class="inline-controls">
@@ -389,17 +506,11 @@
     <!-- Row 6: Speech Synthesis configurations -->
     <section class="row" id="row-tts">
       <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
-        <label class="badge"><span>ES Voice</span>
-          <select id="voice-es"></select>
+        <label class="badge"><span>Voice 1</span>
+          <select id="voice-1"></select>
         </label>
-        <label class="badge"><span>EN Voice</span>
-          <select id="voice-en"></select>
-        </label>
-        <label class="badge"><span>IT Voice</span>
-          <select id="voice-it"></select>
-        </label>
-        <label class="badge"><span>PT Voice</span>
-          <select id="voice-pt"></select>
+        <label class="badge"><span>Voice 2</span>
+          <select id="voice-2"></select>
         </label>
         <label class="badge"><span>Rate</span>
           <input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" />
@@ -411,454 +522,482 @@
     </section>
   </div>
 
-<script>
-(() => {
-  // --- State ---
-  const els = {
-    text: {
-      es: document.getElementById('text-es'),
-      en: document.getElementById('text-en'),
-      it: document.getElementById('text-it'),
-      pt: document.getElementById('text-pt'),
-    },
-    replay: {
-      es: document.getElementById('replay-es'),
-      en: document.getElementById('replay-en'),
-      it: document.getElementById('replay-it'),
-      pt: document.getElementById('replay-pt'),
-    },
-    read: {
-      es: document.getElementById('read-es'),
-      en: document.getElementById('read-en'),
-      it: document.getElementById('read-it'),
-      pt: document.getElementById('read-pt'),
-    },
-    show: {
-      es: document.getElementById('show-es'),
-      en: document.getElementById('show-en'),
-      it: document.getElementById('show-it'),
-      pt: document.getElementById('show-pt'),
-    },
-    modeSelect: document.getElementById('modeSelect'),
-    btnRandom: document.getElementById('btnRandom'),
-    modeContent: document.getElementById('modeContent'),
-    csvBox: document.getElementById('csvBox'),
-    predefinedSelect: document.getElementById('predefinedSelect'),
-    btnLoadPredefined: document.getElementById('btnLoadPredefined'),
-    fileInput: document.getElementById('fileInput'),
-    fontRange: document.getElementById('fontRange'),
-    fontValue: document.getElementById('fontValue'),
-    themeToggle: document.getElementById('themeToggle'),
-    voices: {
-      es: document.getElementById('voice-es'),
-      en: document.getElementById('voice-en'),
-      it: document.getElementById('voice-it'),
-      pt: document.getElementById('voice-pt'),
-    },
-    openaiToken: document.getElementById('openaiToken'),
-    aiLevel: document.getElementById('aiLevel'),
-    aiTopic: document.getElementById('aiTopic'),
-    aiQuantity: document.getElementById('aiQuantity'),
-    aiMinWords: document.getElementById('aiMinWords'),
-    btnLoadAI: document.getElementById('btnLoadAI'),
-    aiStatus: document.getElementById('aiStatus'),
-    rate: document.getElementById('rate'),
-    pitch: document.getElementById('pitch'),
-  };
+  <script>
+    (() => {
+      // --- State ---
+      const els = {
+        text: {
+          1: document.getElementById('text-1'),
+          2: document.getElementById('text-2'),
+        },
+        replay: {
+          1: document.getElementById('replay-1'),
+          2: document.getElementById('replay-2'),
+        },
+        read: {
+          1: document.getElementById('read-1'),
+          2: document.getElementById('read-2'),
+        },
+        show: {
+          1: document.getElementById('show-1'),
+          2: document.getElementById('show-2'),
+        },
+        modeSelect: document.getElementById('modeSelect'),
+        btnRandom: document.getElementById('btnRandom'),
+        modeContent: document.getElementById('modeContent'),
+        csvBox: document.getElementById('csvBox'),
+        predefinedSelect: document.getElementById('predefinedSelect'),
+        btnLoadPredefined: document.getElementById('btnLoadPredefined'),
+        fileInput: document.getElementById('fileInput'),
+        fontRange: document.getElementById('fontRange'),
+        fontValue: document.getElementById('fontValue'),
+        themeToggle: document.getElementById('themeToggle'),
+        voices: {
+          1: document.getElementById('voice-1'),
+          2: document.getElementById('voice-2'),
+        },
+        lang1Select: document.getElementById('lang1Select'),
+        lang2Select: document.getElementById('lang2Select'),
+        langTag: {
+          1: document.getElementById('lang-tag-1'),
+          2: document.getElementById('lang-tag-2'),
+        },
+        readLabel: { 1: document.getElementById('read-label-1'), 2: document.getElementById('read-label-2') },
+        showLabel: { 1: document.getElementById('show-label-1'), 2: document.getElementById('show-label-2') },
+        openaiToken: document.getElementById('openaiToken'),
+        aiLevel: document.getElementById('aiLevel'),
+        aiTopic: document.getElementById('aiTopic'),
+        aiQuantity: document.getElementById('aiQuantity'),
+        aiMinWords: document.getElementById('aiMinWords'),
+        btnLoadAI: document.getElementById('btnLoadAI'),
+        aiStatus: document.getElementById('aiStatus'),
+        rate: document.getElementById('rate'),
+        pitch: document.getElementById('pitch'),
+      };
 
-  const langs = ['es','en','it','pt'];
-  const langMeta = {
-    es: { localeGuess: ['es-ES','es-419','es-MX','es-AR','es-PE'], label: 'ES' },
-    en: { localeGuess: ['en-US','en-GB','en-AU'], label: 'EN' },
-    it: { localeGuess: ['it-IT'], label: 'IT' },
-    pt: { localeGuess: ['pt-BR','pt-PT'], label: 'PT' },
-  };
-	//fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
-	//de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
-  
+      const langMeta = {
+        es: { localeGuess: ['es-ES', 'es-419', 'es-MX', 'es-AR', 'es-PE'], label: 'ES' },
+        en: { localeGuess: ['en-US', 'en-GB', 'en-AU'], label: 'EN' },
+        it: { localeGuess: ['it-IT'], label: 'IT' },
+        pt: { localeGuess: ['pt-BR', 'pt-PT'], label: 'PT' },
+        de: { localeGuess: ['de-DE', 'de-AT', 'de-CH'], label: 'DE' },
+        fr: { localeGuess: ['fr-FR', 'fr-CA', 'fr-BE', 'fr-CH'], label: 'FR' },
+      };
+      //fr: { localeGuess: ['fr-FR','fr-CA','fr-BE','fr-CH'], label: 'FR' },
+      //de: { localeGuess: ['de-DE','de-AT','de-CH'], label: 'DE' }
 
-  let parsedRows = [];               // Array of {es,en,it,pt}
-  let currentIndex = -1;             // Index in parsedRows
-  let phraseSessionId = 0;           // Monotonic token
-  let autoTimer = null;              // Auto mode interval
-  let speakingPractice = {
-    active: false,
-    rec: null,
-    lang: 'es',
-    min: 90,
-    liveTextEl: null,
-    scoreEl: null,
-    progressEl: null,
-    statusEl: null,
-  };
-  let writingPractice = {
-    active: false,
-    lang: 'es',
-    inputEl: null,
-    statusEl: null,
-    writingBusy: false,
-    currentWriteTarget: '',
-  };
-  let savedConfig = null;
 
-  // --- Utilities ---
-  function normalizeForCompare(s) {
-    return (s || '')
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip diacritics
-      .replace(/[^\p{L}\p{N}\s]/gu, ' ')               // remove punctuation
-      .replace(/\s+/g, ' ')                            // collapse spaces
-      .trim();
-  }
+      let parsedRows = [];               // Array of objects keyed by selected language codes
+      let currentIndex = -1;             // Index in parsedRows
+      let phraseSessionId = 0;           // Monotonic token
+      let autoTimer = null;              // Auto mode interval
+      let speakingPractice = {
+        active: false,
+        rec: null,
+        lang: 'es',
+        min: 90,
+        liveTextEl: null,
+        scoreEl: null,
+        progressEl: null,
+        statusEl: null,
+      };
+      let writingPractice = {
+        active: false,
+        lang: 'es',
+        inputEl: null,
+        statusEl: null,
+        writingBusy: false,
+        currentWriteTarget: '',
+      };
+      let savedConfig = null;
 
-  function levenshtein(a, b) {
-    const m = a.length, n = b.length;
-    if (m === 0) return n;
-    if (n === 0) return m;
-    const v0 = new Array(n + 1);
-    const v1 = new Array(n + 1);
-    for (let i = 0; i <= n; i++) v0[i] = i;
-    for (let i = 0; i < m; i++) {
-      v1[0] = i + 1;
-      const ai = a.charCodeAt(i);
-      for (let j = 0; j < n; j++) {
-        const cost = ai === b.charCodeAt(j) ? 0 : 1;
-        v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+      // --- Utilities ---
+      function normalizeForCompare(s) {
+        return (s || '')
+          .toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip diacritics
+          .replace(/[^\p{L}\p{N}\s]/gu, ' ')               // remove punctuation
+          .replace(/\s+/g, ' ')                            // collapse spaces
+          .trim();
       }
-      for (let j = 0; j <= n; j++) v0[j] = v1[j];
-    }
-    return v0[n];
-  }
 
-  function similarityPercent(a, b) {
-    const A = normalizeForCompare(a);
-    const B = normalizeForCompare(b);
-    if (!A && !B) return 100;
-    const dist = levenshtein(A, B);
-    const base = Math.max(A.length, B.length);
-    const pct = Math.max(0, Math.round((1 - dist / base) * 100));
-    return pct;
-  }
-
-  function parseCSV(text) {
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-    const rows = [];
-    for (const line of lines) {
-      const cols = parseCSVLine(line);
-      if (cols.length >= 4) {
-        rows.push({ es: cols[0], en: cols[1], it: cols[2], pt: cols[3] });
+      function levenshtein(a, b) {
+        const m = a.length, n = b.length;
+        if (m === 0) return n;
+        if (n === 0) return m;
+        const v0 = new Array(n + 1);
+        const v1 = new Array(n + 1);
+        for (let i = 0; i <= n; i++) v0[i] = i;
+        for (let i = 0; i < m; i++) {
+          v1[0] = i + 1;
+          const ai = a.charCodeAt(i);
+          for (let j = 0; j < n; j++) {
+            const cost = ai === b.charCodeAt(j) ? 0 : 1;
+            v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+          }
+          for (let j = 0; j <= n; j++) v0[j] = v1[j];
+        }
+        return v0[n];
       }
-    }
-    return rows;
-  }
 
-  // Basic CSV line parser supporting double-quoted fields and escaped quotes "".
-  function parseCSVLine(line) {
-    const out = [];
-    let cur = '';
-    let inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQ) {
-        if (ch === '"') {
-          if (i + 1 < line.length && line[i + 1] === '"') {
-            cur += '"'; i++;
+      function similarityPercent(a, b) {
+        const A = normalizeForCompare(a);
+        const B = normalizeForCompare(b);
+        if (!A && !B) return 100;
+        const dist = levenshtein(A, B);
+        const base = Math.max(A.length, B.length);
+        const pct = Math.max(0, Math.round((1 - dist / base) * 100));
+        return pct;
+      }
+
+      function getSelectedLangCodes() {
+        return [els.lang1Select.value, els.lang2Select.value];
+      }
+
+      function updateLangLabels() {
+        const [l1, l2] = getSelectedLangCodes();
+        els.langTag[1].textContent = (langMeta[l1] && langMeta[l1].label) || l1.toUpperCase();
+        els.langTag[2].textContent = (langMeta[l2] && langMeta[l2].label) || l2.toUpperCase();
+        els.readLabel[1].textContent = (langMeta[l1] && langMeta[l1].label) || l1.toUpperCase();
+        els.readLabel[2].textContent = (langMeta[l2] && langMeta[l2].label) || l2.toUpperCase();
+        els.showLabel[1].textContent = (langMeta[l1] && langMeta[l1].label) || l1.toUpperCase();
+        els.showLabel[2].textContent = (langMeta[l2] && langMeta[l2].label) || l2.toUpperCase();
+      }
+
+      function parseCSV(text) {
+        const [l1, l2] = getSelectedLangCodes();
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+        const rows = [];
+        for (const line of lines) {
+          const cols = parseCSVLine(line);
+          if (cols.length >= 2) {
+            const obj = {};
+            obj[l1] = cols[0];
+            obj[l2] = cols[1];
+            rows.push(obj);
+          }
+        }
+        return rows;
+      }
+
+      // Basic CSV line parser supporting double-quoted fields and escaped quotes "".
+      function parseCSVLine(line) {
+        const out = [];
+        let cur = '';
+        let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (inQ) {
+            if (ch === '"') {
+              if (i + 1 < line.length && line[i + 1] === '"') {
+                cur += '"'; i++;
+              } else {
+                inQ = false;
+              }
+            } else {
+              cur += ch;
+            }
           } else {
-            inQ = false;
+            if (ch === ';') {
+              out.push(cur); cur = '';
+            } else if (ch === '"') {
+              inQ = true;
+            } else {
+              cur += ch;
+            }
           }
-        } else {
-          cur += ch;
         }
-      } else {
-        if (ch === ';') {
-          out.push(cur); cur = '';
-        } else if (ch === '"') {
-          inQ = true;
-        } else {
-          cur += ch;
+        out.push(cur);
+        return out.map(s => s.trim());
+      }
+
+      function pickRandomIndex(len) {
+        return len > 0 ? Math.floor(Math.random() * len) : -1;
+      }
+
+      function applyShowVisibility() {
+        // Show/hide by slot (1/2)
+        for (const pos of [1, 2]) {
+          const show = !!els.show[pos].checked;
+          const el = document.querySelector(`.phrase-line[data-pos="${pos}"]`);
+          if (el) el.style.display = show ? 'grid' : 'none';
         }
       }
-    }
-    out.push(cur);
-    return out.map(s => s.trim());
-  }
 
-  function pickRandomIndex(len) {
-    return len > 0 ? Math.floor(Math.random() * len) : -1;
-  }
-
-  function applyShowVisibility() {
-    for (const k of langs) {
-      const show = els.show[k].checked;
-      document.querySelector(`.phrase-line[data-lang="${k}"]`).style.display = show ? 'grid' : 'none';
-    }
-  }
-
-  function setPhraseTexts(row) {
-    els.text.es.textContent = row?.es || '';
-    els.text.en.textContent = row?.en || '';
-    els.text.it.textContent = row?.it || '';
-    els.text.pt.textContent = row?.pt || '';
-  }
-
-  function getReadOrder() {
-    return ['es','en','it','pt']; // fixed order
-  }
-
-  function getVoicesMap() {
-    return {
-      es: (els.voices.es.options[els.voices.es.selectedIndex]?.value) || els.voices.es.value || '',
-      en: (els.voices.en.options[els.voices.en.selectedIndex]?.value) || els.voices.en.value || '',
-      it: (els.voices.it.options[els.voices.it.selectedIndex]?.value) || els.voices.it.value || '',
-      pt: (els.voices.pt.options[els.voices.pt.selectedIndex]?.value) || els.voices.pt.value || '',
-    };
-  }
-
-  // Find a matching SpeechSynthesisVoice given a desired selection (name) or language
-  function findVoiceForLang(voices, desiredName, k) {
-    if (desiredName) {
-      // Exact name match
-      let v = voices.find(vv => vv.name === desiredName || vv.voiceURI === desiredName);
-      if (v) return v;
-      // Case-insensitive contains match
-      v = voices.find(vv => (vv.name || '').toLowerCase().includes(desiredName.toLowerCase()));
-      if (v) return v;
-    }
-    // Fallback: prefer voices whose lang matches our guesses
-    const guessList = langMeta[k]?.localeGuess || [k];
-    let v = voices.find(vv => vv.lang && guessList.some(gl => vv.lang.startsWith(gl)));
-    if (v) return v;
-    // Last resort: match by language prefix (es, en, it, pt)
-    v = voices.find(vv => vv.lang && vv.lang.startsWith(k));
-    return v || null;
-  }
-
-  function getRatePitch() {
-    return {
-      rate: Math.max(0.5, Math.min(2, parseFloat(els.rate.value || '1') || 1)),
-      pitch: Math.max(0, Math.min(2, parseFloat(els.pitch.value || '1') || 1)),
-    };
-  }
-
-  // --- Local Storage: save / load UI configuration ---
-  const STORAGE_KEY = 'lang_trainer_config_v1';
-
-  function saveConfig() {
-    try {
-      const cfg = {
-        show: {}, read: {}, voices: {},
-        rate: els.rate.value, pitch: els.pitch.value,
-        font: els.fontRange.value,
-        themeDark: !!els.themeToggle.checked,
-        mode: els.modeSelect.value,
-        aiLevel: els.aiLevel.value, aiTopic: els.aiTopic.value, aiQuantity: els.aiQuantity.value, aiMinWords: els.aiMinWords?.value,
-        predefined: els.predefinedSelect.value,
-        csv: els.csvBox.value,
-        speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
-        writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
-      };
-      for (const k of langs) {
-        cfg.show[k] = !!els.show[k].checked;
-        cfg.read[k] = !!els.read[k].checked;
-        cfg.voices[k] = els.voices[k].value || '';
+      function setPhraseTexts(row) {
+        const [l1, l2] = getSelectedLangCodes();
+        els.text[1].textContent = row?.[l1] || '';
+        els.text[2].textContent = row?.[l2] || '';
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
-    } catch (e) { console.warn('saveConfig failed', e); }
-  }
 
-  function loadConfig() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const cfg = JSON.parse(raw);
-      savedConfig = cfg; // keep for populateVoices which runs later
-      if (cfg.show) for (const k of langs) if (k in cfg.show) els.show[k].checked = !!cfg.show[k];
-      if (cfg.read) for (const k of langs) if (k in cfg.read) els.read[k].checked = !!cfg.read[k];
-      if (cfg.rate) els.rate.value = cfg.rate;
-      if (cfg.pitch) els.pitch.value = cfg.pitch;
-      if (cfg.font) { els.fontRange.value = cfg.font; document.documentElement.style.setProperty('--phrase-font', cfg.font + 'px'); els.fontValue.textContent = cfg.font + ' px'; }
-      if (typeof cfg.themeDark !== 'undefined') { els.themeToggle.checked = !!cfg.themeDark; document.body.classList.toggle('theme-light', !els.themeToggle.checked); document.body.classList.toggle('theme-dark', els.themeToggle.checked); }
-      if (cfg.mode) els.modeSelect.value = cfg.mode;
-      if (cfg.aiLevel) els.aiLevel.value = cfg.aiLevel;
-      if (cfg.aiTopic) els.aiTopic.value = cfg.aiTopic;
-      if (cfg.aiQuantity) els.aiQuantity.value = cfg.aiQuantity;
-      if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
-      if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
-      if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
-    } catch (e) { console.warn('loadConfig failed', e); }
-  }
+      function getReadOrder() {
+        return [1, 2]; // read slot order
+      }
 
-  // --- Speech Synthesis: robust sequence with session token and timeouts ---
-  async function speakCurrentRowSequence(sessionToken, row) {
-    // Gather settings
-    const readLangs = {
-      es: els.read.es.checked,
-      en: els.read.en.checked,
-      it: els.read.it.checked,
-      pt: els.read.pt.checked,
-    };
-    const any = Object.values(readLangs).some(Boolean);
-    if (!any) return; // resolve immediately
+      function getVoicesMap() {
+        const map = {};
+        const [l1, l2] = getSelectedLangCodes();
+        map[l1] = (els.voices[1].options[els.voices[1].selectedIndex]?.value) || els.voices[1].value || '';
+        map[l2] = (els.voices[2].options[els.voices[2].selectedIndex]?.value) || els.voices[2].value || '';
+        return map;
+      }
 
-    // Wait for voices to be ready (up to 1000ms)
-    await new Promise(res => {
-      const start = performance.now();
-      const done = () => res();
-      const tryNow = () => {
-        if (speechSynthesis.getVoices().length > 0 || performance.now() - start > 1000) {
-          done();
-        } else {
-          setTimeout(tryNow, 100);
+      // Find a matching SpeechSynthesisVoice given a desired selection (name) or language
+      function findVoiceForLang(voices, desiredName, k) {
+        if (desiredName) {
+          // Exact name match
+          let v = voices.find(vv => vv.name === desiredName || vv.voiceURI === desiredName);
+          if (v) return v;
+          // Case-insensitive contains match
+          v = voices.find(vv => (vv.name || '').toLowerCase().includes(desiredName.toLowerCase()));
+          if (v) return v;
         }
-      };
-      if ('onvoiceschanged' in speechSynthesis) {
-        let fired = false;
-        const handler = () => { if (!fired) { fired = true; speechSynthesis.onvoiceschanged = null; done(); } };
-        speechSynthesis.onvoiceschanged = handler;
-        setTimeout(() => { if (!fired) { speechSynthesis.onvoiceschanged = null; done(); } }, 1000);
-      } else {
-        tryNow();
+        // Fallback: prefer voices whose lang matches our guesses
+        const guessList = langMeta[k]?.localeGuess || [k];
+        let v = voices.find(vv => vv.lang && guessList.some(gl => vv.lang.startsWith(gl)));
+        if (v) return v;
+        // Last resort: match by language prefix (es, en, it, pt)
+        v = voices.find(vv => vv.lang && vv.lang.startsWith(k));
+        return v || null;
       }
-    });
 
-    // Cancel anything pending, then enqueue sequence
-    try { speechSynthesis.cancel(); } catch {}
-
-    const voices = speechSynthesis.getVoices();
-    const voiceIds = getVoicesMap();
-    const { rate, pitch } = getRatePitch();
-    const order = getReadOrder().filter(k => readLangs[k]);
-
-    let totalChars = 0;
-    const utters = [];
-    for (const k of order) {
-      const text = (row && row[k]) ? String(row[k]) : '';
-      totalChars += text.length;
-      const u = new SpeechSynthesisUtterance(text);
-      const v = findVoiceForLang(voices, voiceIds[k], k);
-      if (v) u.voice = v;
-      u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
-      u.rate = rate;
-      u.pitch = pitch;
-      utters.push({ k, u });
-    }
-
-    let endedCount = 0;
-    let resolved = false;
-
-    const finishResolve = () => {
-      if (resolved) return;
-      resolved = true;
-      // no return (Promise resolved by outer async)
-    };
-
-    const hardTimeoutMs = Math.max(12000, 12000 + Math.ceil(totalChars / 100) * 2000);
-    const hardTimer = setTimeout(() => {
-      if (document.hidden) {
-        try { speechSynthesis.cancel(); } catch {}
-        finishResolve();
-      } else {
-        try { speechSynthesis.cancel(); } catch {}
-        finishResolve();
+      function getRatePitch() {
+        return {
+          rate: Math.max(0.5, Math.min(2, parseFloat(els.rate.value || '1') || 1)),
+          pitch: Math.max(0, Math.min(2, parseFloat(els.pitch.value || '1') || 1)),
+        };
       }
-    }, hardTimeoutMs);
 
-    // Poll speaking becomes false for >=300ms before resolve
-    let lastSpeakingFalse = null;
-    const poll = setInterval(() => {
-      if (resolved) { clearInterval(poll); return; }
-      if (!speechSynthesis.speaking) {
-        if (lastSpeakingFalse == null) lastSpeakingFalse = performance.now();
-        if (performance.now() - lastSpeakingFalse >= 300) {
-          clearInterval(poll);
-          clearTimeout(hardTimer);
-          finishResolve();
-        }
-      } else {
-        lastSpeakingFalse = null;
+      // --- Local Storage: save / load UI configuration ---
+      const STORAGE_KEY = 'lang_trainer_config_v1';
+
+      function saveConfig() {
+        try {
+          const cfg = {
+            show: {}, read: {}, voices: {},
+            rate: els.rate.value, pitch: els.pitch.value,
+            font: els.fontRange.value,
+            themeDark: !!els.themeToggle.checked,
+            mode: els.modeSelect.value,
+            aiLevel: els.aiLevel.value, aiTopic: els.aiTopic.value, aiQuantity: els.aiQuantity.value, aiMinWords: els.aiMinWords?.value,
+            predefined: els.predefinedSelect.value,
+            csv: els.csvBox.value,
+            speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
+            writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
+          };
+          const [l1, l2] = getSelectedLangCodes();
+          cfg.lang1 = l1; cfg.lang2 = l2;
+          cfg.show[l1] = !!els.show[1].checked; cfg.show[l2] = !!els.show[2].checked;
+          cfg.read[l1] = !!els.read[1].checked; cfg.read[l2] = !!els.read[2].checked;
+          cfg.voices[l1] = els.voices[1].value || ''; cfg.voices[l2] = els.voices[2].value || '';
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+        } catch (e) { console.warn('saveConfig failed', e); }
       }
-    }, 100);
 
-    await new Promise(resolve => {
-      // Attach handlers and speak sequentially (enqueue lets them play in order)
-      for (const { u } of utters) {
-        u.onend = () => {
-          if (resolved) return;
-          if (sessionToken !== phraseSessionId) return;
-          endedCount++;
-          if (endedCount === utters.length) {
-            // Let poll/300ms rule finalize; if nothing fires, poll will resolve
+      function loadConfig() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const cfg = JSON.parse(raw);
+          savedConfig = cfg; // keep for populateVoices which runs later
+          // restore selected languages first
+          if (cfg.lang1) els.lang1Select.value = cfg.lang1;
+          if (cfg.lang2) els.lang2Select.value = cfg.lang2;
+          updateLangLabels();
+          if (cfg.show) {
+            const l1 = cfg.lang1 || els.lang1Select.value; const l2 = cfg.lang2 || els.lang2Select.value;
+            els.show[1].checked = !!cfg.show[l1]; els.show[2].checked = !!cfg.show[l2];
           }
-        };
-        u.onerror = () => {
+          if (cfg.read) {
+            const l1 = cfg.lang1 || els.lang1Select.value; const l2 = cfg.lang2 || els.lang2Select.value;
+            els.read[1].checked = !!cfg.read[l1]; els.read[2].checked = !!cfg.read[l2];
+          }
+          if (cfg.rate) els.rate.value = cfg.rate;
+          if (cfg.pitch) els.pitch.value = cfg.pitch;
+          if (cfg.font) { els.fontRange.value = cfg.font; document.documentElement.style.setProperty('--phrase-font', cfg.font + 'px'); els.fontValue.textContent = cfg.font + ' px'; }
+          if (typeof cfg.themeDark !== 'undefined') { els.themeToggle.checked = !!cfg.themeDark; document.body.classList.toggle('theme-light', !els.themeToggle.checked); document.body.classList.toggle('theme-dark', els.themeToggle.checked); }
+          if (cfg.mode) els.modeSelect.value = cfg.mode;
+          if (cfg.aiLevel) els.aiLevel.value = cfg.aiLevel;
+          if (cfg.aiTopic) els.aiTopic.value = cfg.aiTopic;
+          if (cfg.aiQuantity) els.aiQuantity.value = cfg.aiQuantity;
+          if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
+          if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
+          if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
+        } catch (e) { console.warn('loadConfig failed', e); }
+      }
+
+      // --- Speech Synthesis: robust sequence with session token and timeouts ---
+      async function speakCurrentRowSequence(sessionToken, row) {
+        // Gather settings per slot
+        const readSlots = { 1: !!els.read[1].checked, 2: !!els.read[2].checked };
+        const any = readSlots[1] || readSlots[2];
+        if (!any) return; // resolve immediately
+
+        // Wait for voices to be ready (up to 1000ms)
+        await new Promise(res => {
+          const start = performance.now();
+          const done = () => res();
+          const tryNow = () => {
+            if (speechSynthesis.getVoices().length > 0 || performance.now() - start > 1000) {
+              done();
+            } else {
+              setTimeout(tryNow, 100);
+            }
+          };
+          if ('onvoiceschanged' in speechSynthesis) {
+            let fired = false;
+            const handler = () => { if (!fired) { fired = true; speechSynthesis.onvoiceschanged = null; done(); } };
+            speechSynthesis.onvoiceschanged = handler;
+            setTimeout(() => { if (!fired) { speechSynthesis.onvoiceschanged = null; done(); } }, 1000);
+          } else {
+            tryNow();
+          }
+        });
+
+        // Cancel anything pending, then enqueue sequence
+        try { speechSynthesis.cancel(); } catch { }
+
+        const voices = speechSynthesis.getVoices();
+        const voiceIds = getVoicesMap();
+        const { rate, pitch } = getRatePitch();
+        const order = getReadOrder().filter(pos => readSlots[pos]);
+
+        let totalChars = 0;
+        const utters = [];
+        const [l1, l2] = getSelectedLangCodes();
+        const slotToLang = { 1: l1, 2: l2 };
+        for (const pos of order) {
+          const k = slotToLang[pos];
+          const text = (row && row[k]) ? String(row[k]) : '';
+          totalChars += text.length;
+          const u = new SpeechSynthesisUtterance(text);
+          const v = findVoiceForLang(voices, voiceIds[k], k);
+          if (v) u.voice = v;
+          u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
+          u.rate = rate;
+          u.pitch = pitch;
+          utters.push({ pos, k, u });
+        }
+
+        let endedCount = 0;
+        let resolved = false;
+
+        const finishResolve = () => {
           if (resolved) return;
-          if (sessionToken !== phraseSessionId) return;
-          endedCount++;
-          // keep going; if all error/end, poll/timeout will settle
+          resolved = true;
+          // no return (Promise resolved by outer async)
         };
+
+        const hardTimeoutMs = Math.max(12000, 12000 + Math.ceil(totalChars / 100) * 2000);
+        const hardTimer = setTimeout(() => {
+          if (document.hidden) {
+            try { speechSynthesis.cancel(); } catch { }
+            finishResolve();
+          } else {
+            try { speechSynthesis.cancel(); } catch { }
+            finishResolve();
+          }
+        }, hardTimeoutMs);
+
+        // Poll speaking becomes false for >=300ms before resolve
+        let lastSpeakingFalse = null;
+        const poll = setInterval(() => {
+          if (resolved) { clearInterval(poll); return; }
+          if (!speechSynthesis.speaking) {
+            if (lastSpeakingFalse == null) lastSpeakingFalse = performance.now();
+            if (performance.now() - lastSpeakingFalse >= 300) {
+              clearInterval(poll);
+              clearTimeout(hardTimer);
+              finishResolve();
+            }
+          } else {
+            lastSpeakingFalse = null;
+          }
+        }, 100);
+
+        await new Promise(resolve => {
+          // Attach handlers and speak sequentially (enqueue lets them play in order)
+          for (const { u } of utters) {
+            u.onend = () => {
+              if (resolved) return;
+              if (sessionToken !== phraseSessionId) return;
+              endedCount++;
+              if (endedCount === utters.length) {
+                // Let poll/300ms rule finalize; if nothing fires, poll will resolve
+              }
+            };
+            u.onerror = () => {
+              if (resolved) return;
+              if (sessionToken !== phraseSessionId) return;
+              endedCount++;
+              // keep going; if all error/end, poll/timeout will settle
+            };
+            speechSynthesis.speak(u);
+          }
+          // The resolution is managed by polling + hard timeout; to "await" until resolve:
+          const watcher = setInterval(() => {
+            if (resolved) {
+              clearInterval(watcher);
+              clearInterval(poll);
+              clearTimeout(hardTimer);
+              resolve();
+            }
+          }, 50);
+        });
+      }
+
+      // Single-language replay (row scope only)
+      function replaySlot(pos) {
+        if (currentIndex < 0 || !parsedRows[currentIndex]) return;
+        const sessionToken = ++phraseSessionId;
+        try { speechSynthesis.cancel(); } catch { }
+        const row = parsedRows[currentIndex];
+        const [l1, l2] = getSelectedLangCodes();
+        const slotToLang = { 1: l1, 2: l2 };
+        const k = slotToLang[pos];
+        const text = row[k] || '';
+        const vmap = getVoicesMap();
+        const voices = speechSynthesis.getVoices();
+        const v = findVoiceForLang(voices, vmap[k], k);
+        const u = new SpeechSynthesisUtterance(text);
+        if (v) u.voice = v;
+        u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
+        const { rate, pitch } = getRatePitch();
+        u.rate = rate; u.pitch = pitch;
         speechSynthesis.speak(u);
       }
-      // The resolution is managed by polling + hard timeout; to "await" until resolve:
-      const watcher = setInterval(() => {
-        if (resolved) {
-          clearInterval(watcher);
-          clearInterval(poll);
-          clearTimeout(hardTimer);
-          resolve();
+
+      // --- Selection & Display ---
+      function ensureParsed() {
+        parsedRows = parseCSV(els.csvBox.value);
+      }
+
+      function selectAndShowRandomRow({ speak = true } = {}) {
+        ensureParsed();
+        if (!parsedRows.length) return Promise.resolve();
+        currentIndex = pickRandomIndex(parsedRows.length);
+        const row = parsedRows[currentIndex];
+        setPhraseTexts(row);
+        applyShowVisibility();
+        const sessionToken = ++phraseSessionId;
+        if (speak) {
+          return speakCurrentRowSequence(sessionToken, row);
         }
-      }, 50);
-    });
-  }
+        return Promise.resolve();
+      }
 
-  // Single-language replay (row scope only)
-  function replayLanguage(k) {
-    if (currentIndex < 0 || !parsedRows[currentIndex]) return;
-    const sessionToken = ++phraseSessionId;
-    try { speechSynthesis.cancel(); } catch {}
-    const row = parsedRows[currentIndex];
-    const text = row[k] || '';
-    const vmap = getVoicesMap();
-    const voices = speechSynthesis.getVoices();
-    const v = findVoiceForLang(voices, vmap[k], k);
-    const u = new SpeechSynthesisUtterance(text);
-    if (v) u.voice = v;
-    u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
-    const { rate, pitch } = getRatePitch();
-    u.rate = rate; u.pitch = pitch;
-    speechSynthesis.speak(u);
-  }
+      // --- Modes UI ---
+      function renderModePanel() {
+        const m = els.modeSelect.value;
+        els.modeContent.innerHTML = '';
+        if (m === 'Manual Mode') {
+          const div = document.createElement('div');
+          div.className = 'panel';
 
-  // --- Selection & Display ---
-  function ensureParsed() {
-    parsedRows = parseCSV(els.csvBox.value);
-  }
-
-  function selectAndShowRandomRow({ speak = true } = {}) {
-    ensureParsed();
-    if (!parsedRows.length) return Promise.resolve();
-    currentIndex = pickRandomIndex(parsedRows.length);
-    const row = parsedRows[currentIndex];
-    setPhraseTexts(row);
-    applyShowVisibility();
-    const sessionToken = ++phraseSessionId;
-    if (speak) {
-      return speakCurrentRowSequence(sessionToken, row);
-    }
-    return Promise.resolve();
-  }
-
-  // --- Modes UI ---
-  function renderModePanel() {
-    const m = els.modeSelect.value;
-    els.modeContent.innerHTML = '';
-    if (m === 'Manual Mode') {
-      const div = document.createElement('div');
-      div.className = 'panel';
-      
-    } else if (m === 'Auto Mode') {
-      const div = document.createElement('div');
-      div.className = 'panel';
-      div.innerHTML = `
+        } else if (m === 'Auto Mode') {
+          const div = document.createElement('div');
+          div.className = 'panel';
+          div.innerHTML = `
         <div class="panel-title">Automatic rotation</div>
         <div class="inline-controls">
           <label class="badge"><span>Interval (s)</span>
@@ -869,38 +1008,36 @@
           <span id="autoStatus" class="status">Stopped</span>
         </div>
       `;
-      els.modeContent.appendChild(div);
-      const autoStatus = div.querySelector('#autoStatus');
-      const autoStart = () => {
-        const sec = Math.max(1, parseInt(div.querySelector('#autoInterval').value || '5', 10));
-        if (autoTimer) clearInterval(autoTimer);
-        autoStatus.textContent = 'Running…';
-        selectAndShowRandomRow({ speak: true });
-        autoTimer = setInterval(() => {
-          const token = ++phraseSessionId;
-          // cancel previous speech before next cycle
-          try { speechSynthesis.cancel(); } catch {}
-          selectAndShowRandomRow({ speak: true });
-        }, sec * 1000);
-      };
-      const autoStop = () => {
-        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-        autoStatus.textContent = 'Stopped';
-      };
-      div.querySelector('#autoStart').onclick = autoStart;
-      div.querySelector('#autoStop').onclick = autoStop;
-    } else if (m === 'Speaking Practice Mode') {
-      const div = document.createElement('div');
-      div.className = 'panel';
-      div.innerHTML = `
+          els.modeContent.appendChild(div);
+          const autoStatus = div.querySelector('#autoStatus');
+          const autoStart = () => {
+            const sec = Math.max(1, parseInt(div.querySelector('#autoInterval').value || '5', 10));
+            if (autoTimer) clearInterval(autoTimer);
+            autoStatus.textContent = 'Running…';
+            selectAndShowRandomRow({ speak: true });
+            autoTimer = setInterval(() => {
+              const token = ++phraseSessionId;
+              // cancel previous speech before next cycle
+              try { speechSynthesis.cancel(); } catch { }
+              selectAndShowRandomRow({ speak: true });
+            }, sec * 1000);
+          };
+          const autoStop = () => {
+            if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+            autoStatus.textContent = 'Stopped';
+          };
+          div.querySelector('#autoStart').onclick = autoStart;
+          div.querySelector('#autoStop').onclick = autoStop;
+        } else if (m === 'Speaking Practice Mode') {
+          const div = document.createElement('div');
+          div.className = 'panel';
+          div.innerHTML = `
         <div class="panel-title">Speaking practice</div>
         <div class="inline-controls">
           <label class="badge" width="100px"><span></span>
             <select id="sp-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
             </select>
           </label>
           <label class="badge"><span>Min similarity %</span>
@@ -919,34 +1056,32 @@
           <div id="sp-live" class="status" style="margin-top:8px; font-size:15px;"></div>
         </div>
       `;
-      els.modeContent.appendChild(div);
+          els.modeContent.appendChild(div);
 
-      speakingPractice.liveTextEl = div.querySelector('#sp-live');
-      speakingPractice.progressEl = div.querySelector('#sp-progress');
-      speakingPractice.scoreEl = div.querySelector('#sp-score');
-      speakingPractice.statusEl = div.querySelector('#sp-status');
+          speakingPractice.liveTextEl = div.querySelector('#sp-live');
+          speakingPractice.progressEl = div.querySelector('#sp-progress');
+          speakingPractice.scoreEl = div.querySelector('#sp-score');
+          speakingPractice.statusEl = div.querySelector('#sp-status');
 
-      div.querySelector('#sp-start').onclick = startSpeakingPractice;
-      div.querySelector('#sp-stop').onclick = stopSpeakingPractice;
-      const spLangEl = div.querySelector('#sp-lang');
-      // restore saved speaking language if available
-      if (savedConfig && savedConfig.speakingLang) {
-        try { spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang; } catch {}
-      }
-      spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
-      div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
-    } else if (m === 'Writing Practice Mode') {
-      const div = document.createElement('div');
-      div.className = 'panel';
-      div.innerHTML = `
+          div.querySelector('#sp-start').onclick = startSpeakingPractice;
+          div.querySelector('#sp-stop').onclick = stopSpeakingPractice;
+          const spLangEl = div.querySelector('#sp-lang');
+          // restore saved speaking language if available
+          if (savedConfig && savedConfig.speakingLang) {
+            try { spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang; } catch { }
+          }
+          spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
+          div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
+        } else if (m === 'Writing Practice Mode') {
+          const div = document.createElement('div');
+          div.className = 'panel';
+          div.innerHTML = `
         <div class="panel-title">Writing practice</div>
         <div class="inline-controls">
           <label class="badge"><span>Practice language</span>
             <select id="wr-lang">
               <option value="es">ES</option>
               <option value="en">EN</option>
-              <option value="it">IT</option>
-              <option value="pt">PT</option>
             </select>
           </label>
           <button id="wr-start">Start</button>
@@ -958,567 +1093,569 @@
           <input id="wr-input" type="text" placeholder="Type here…" style="width: 100%" />
         </div>
       `;
-      els.modeContent.appendChild(div);
+          els.modeContent.appendChild(div);
 
-      writingPractice.inputEl = div.querySelector('#wr-input');
-      writingPractice.statusEl = div.querySelector('#wr-status');
-      div.querySelector('#wr-start').onclick = startWritingPractice;
-      div.querySelector('#wr-stop').onclick = stopWritingPractice;
-      const wrLangEl = div.querySelector('#wr-lang');
-      // restore saved writing language if available
-      if (savedConfig && savedConfig.writingLang) {
-        try { wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang; } catch {}
+          writingPractice.inputEl = div.querySelector('#wr-input');
+          writingPractice.statusEl = div.querySelector('#wr-status');
+          div.querySelector('#wr-start').onclick = startWritingPractice;
+          div.querySelector('#wr-stop').onclick = stopWritingPractice;
+          const wrLangEl = div.querySelector('#wr-lang');
+          // restore saved writing language if available
+          if (savedConfig && savedConfig.writingLang) {
+            try { wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang; } catch { }
+          }
+          wrLangEl.onchange = e => { writingPractice.lang = e.target.value; saveConfig(); };
+        }
       }
-      wrLangEl.onchange = e => { writingPractice.lang = e.target.value; saveConfig(); };
-    }
-  }
 
-  // --- Speaking Practice Flow ---
-  function createRecognition(lang) {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return null;
-    const rec = new SR();
-    rec.lang = pickRecLang(lang);
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.maxAlternatives = 1;
-    return rec;
-  }
-
-  function pickRecLang(k) {
-    // Use first locale guess for recognition; browsers may map internally
-    return langMeta[k].localeGuess[0] || 'en-US';
-  }
-
-  async function startSpeakingPractice() {
-    if (speakingPractice.active) return;
-    speakingPractice.active = true;
-    speakingPractice.lang = (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang || 'es';
-    speakingPractice.min = parseInt(els.modeContent.querySelector('#sp-min')?.value || '90', 10) || 90;
-    speakingPractice.statusEl.textContent = 'Starting…';
-
-    // persist chosen speaking language
-    saveConfig();
-
-    // User gesture initiates: select phrase and speak sequence, then start mic
-    await selectAndShowRandomRow({ speak: true });
-    if (!speakingPractice.active) return;
-
-    const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
-    const myToken = phraseSessionId;
-
-    if (speakingPractice.rec) {
-      try { speakingPractice.rec.abort(); } catch {}
-      speakingPractice.rec = null;
-    }
-    const rec = createRecognition(speakingPractice.lang);
-    speakingPractice.rec = rec;
-
-    if (!rec) {
-      speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
-      speakingPractice.active = false;
-      return;
-    }
-
-    speakingPractice.liveTextEl.textContent = '';
-    speakingPractice.progressEl.value = 0;
-    speakingPractice.scoreEl.textContent = '0%';
-    speakingPractice.statusEl.textContent = 'Listening…';
-
-    rec.onresult = (e) => {
-      if (!speakingPractice.active) return;
-      if (myToken !== phraseSessionId) return;
-      let interim = '';
-      let finalText = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const res = e.results[i];
-        if (res.isFinal) finalText += res[0].transcript;
-        else interim += res[0].transcript;
+      // --- Speaking Practice Flow ---
+      function createRecognition(lang) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) return null;
+        const rec = new SR();
+        rec.lang = pickRecLang(lang);
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+        return rec;
       }
-      const live = (finalText || interim || '').trim();
-      speakingPractice.liveTextEl.textContent = live;
 
-      const pct = similarityPercent(live, target);
-      speakingPractice.progressEl.value = pct;
-      speakingPractice.scoreEl.textContent = pct + '%';
-
-      if (pct >= speakingPractice.min && finalText) {
-        speakingPractice.statusEl.textContent = 'Great! ✅';
-        try { rec.abort(); } catch {}
-        // Prepare next phrase safely
-        safeAdvanceSpeakingPractice(myToken);
+      function pickRecLang(k) {
+        // Use first locale guess for recognition; browsers may map internally
+        return langMeta[k].localeGuess[0] || 'en-US';
       }
-    };
-    rec.onerror = () => {
-      if (!speakingPractice.active) return;
-      if (myToken !== phraseSessionId) return;
-      // Keep listening; status note
-      speakingPractice.statusEl.textContent = 'Listening…';
-    };
-    rec.onend = () => {
-      // If ended unexpectedly while active and token still valid, attempt to restart
-      if (speakingPractice.active && myToken === phraseSessionId) {
-        try { rec.start(); } catch {}
+
+      async function startSpeakingPractice() {
+        if (speakingPractice.active) return;
+        speakingPractice.active = true;
+        speakingPractice.lang = (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang || 'es';
+        speakingPractice.min = parseInt(els.modeContent.querySelector('#sp-min')?.value || '90', 10) || 90;
+        speakingPractice.statusEl.textContent = 'Starting…';
+
+        // persist chosen speaking language
+        saveConfig();
+
+        // User gesture initiates: select phrase and speak sequence, then start mic
+        await selectAndShowRandomRow({ speak: true });
+        if (!speakingPractice.active) return;
+
+        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
+        const myToken = phraseSessionId;
+
+        if (speakingPractice.rec) {
+          try { speakingPractice.rec.abort(); } catch { }
+          speakingPractice.rec = null;
+        }
+        const rec = createRecognition(speakingPractice.lang);
+        speakingPractice.rec = rec;
+
+        if (!rec) {
+          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
+          speakingPractice.active = false;
+          return;
+        }
+
+        speakingPractice.liveTextEl.textContent = '';
+        speakingPractice.progressEl.value = 0;
+        speakingPractice.scoreEl.textContent = '0%';
+        speakingPractice.statusEl.textContent = 'Listening…';
+
+        rec.onresult = (e) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += res[0].transcript;
+            else interim += res[0].transcript;
+          }
+          const live = (finalText || interim || '').trim();
+          speakingPractice.liveTextEl.textContent = live;
+
+          const pct = similarityPercent(live, target);
+          speakingPractice.progressEl.value = pct;
+          speakingPractice.scoreEl.textContent = pct + '%';
+
+          if (pct >= speakingPractice.min && finalText) {
+            speakingPractice.statusEl.textContent = 'Great! ✅';
+            try { rec.abort(); } catch { }
+            // Prepare next phrase safely
+            safeAdvanceSpeakingPractice(myToken);
+          }
+        };
+        rec.onerror = () => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          // Keep listening; status note
+          speakingPractice.statusEl.textContent = 'Listening…';
+        };
+        rec.onend = () => {
+          // If ended unexpectedly while active and token still valid, attempt to restart
+          if (speakingPractice.active && myToken === phraseSessionId) {
+            try { rec.start(); } catch { }
+          }
+        };
+
+        try { rec.start(); } catch { }
       }
-    };
 
-    try { rec.start(); } catch {}
-  }
-
-  async function safeAdvanceSpeakingPractice(prevToken) {
-    // Cancel all previous activities, increment session, then proceed
-    try { speechSynthesis.cancel(); } catch {}
-    if (speakingPractice.rec) {
-      try { speakingPractice.rec.abort(); } catch {}
-      speakingPractice.rec = null;
-    }
-    const newToken = ++phraseSessionId;
-    if (!speakingPractice.active) return;
-    // Move to next phrase: select + speak once, await speak, then listen again
-    await selectAndShowRandomRow({ speak: true });
-    if (!speakingPractice.active) return;
-    // Restart recognition for the new target
-    await startSpeakingPracticeCycleOnly();
-  }
-
-  async function startSpeakingPracticeCycleOnly() {
-    // Start listening for current phrase without triggering TTS again
-    const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
-    const myToken = phraseSessionId;
-
-    if (speakingPractice.rec) {
-      try { speakingPractice.rec.abort(); } catch {}
-      speakingPractice.rec = null;
-    }
-    const rec = createRecognition(speakingPractice.lang);
-    speakingPractice.rec = rec;
-    if (!rec) {
-      speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
-      speakingPractice.active = false;
-      return;
-    }
-
-    speakingPractice.liveTextEl.textContent = '';
-    speakingPractice.progressEl.value = 0;
-    speakingPractice.scoreEl.textContent = '0%';
-    speakingPractice.statusEl.textContent = 'Listening…';
-
-    rec.onresult = (e) => {
-      if (!speakingPractice.active) return;
-      if (myToken !== phraseSessionId) return;
-      let interim = '';
-      let finalText = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const res = e.results[i];
-        if (res.isFinal) finalText += res[0].transcript;
-        else interim += res[0].transcript;
+      async function safeAdvanceSpeakingPractice(prevToken) {
+        // Cancel all previous activities, increment session, then proceed
+        try { speechSynthesis.cancel(); } catch { }
+        if (speakingPractice.rec) {
+          try { speakingPractice.rec.abort(); } catch { }
+          speakingPractice.rec = null;
+        }
+        const newToken = ++phraseSessionId;
+        if (!speakingPractice.active) return;
+        // Move to next phrase: select + speak once, await speak, then listen again
+        await selectAndShowRandomRow({ speak: true });
+        if (!speakingPractice.active) return;
+        // Restart recognition for the new target
+        await startSpeakingPracticeCycleOnly();
       }
-      const live = (finalText || interim || '').trim();
-      speakingPractice.liveTextEl.textContent = live;
 
-      const pct = similarityPercent(live, target);
-      speakingPractice.progressEl.value = pct;
-      speakingPractice.scoreEl.textContent = pct + '%';
+      async function startSpeakingPracticeCycleOnly() {
+        // Start listening for current phrase without triggering TTS again
+        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
+        const myToken = phraseSessionId;
 
-      if (pct >= speakingPractice.min && finalText) {
-        speakingPractice.statusEl.textContent = 'Great! ✅';
-        try { rec.abort(); } catch {}
-        safeAdvanceSpeakingPractice(myToken);
+        if (speakingPractice.rec) {
+          try { speakingPractice.rec.abort(); } catch { }
+          speakingPractice.rec = null;
+        }
+        const rec = createRecognition(speakingPractice.lang);
+        speakingPractice.rec = rec;
+        if (!rec) {
+          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
+          speakingPractice.active = false;
+          return;
+        }
+
+        speakingPractice.liveTextEl.textContent = '';
+        speakingPractice.progressEl.value = 0;
+        speakingPractice.scoreEl.textContent = '0%';
+        speakingPractice.statusEl.textContent = 'Listening…';
+
+        rec.onresult = (e) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += res[0].transcript;
+            else interim += res[0].transcript;
+          }
+          const live = (finalText || interim || '').trim();
+          speakingPractice.liveTextEl.textContent = live;
+
+          const pct = similarityPercent(live, target);
+          speakingPractice.progressEl.value = pct;
+          speakingPractice.scoreEl.textContent = pct + '%';
+
+          if (pct >= speakingPractice.min && finalText) {
+            speakingPractice.statusEl.textContent = 'Great! ✅';
+            try { rec.abort(); } catch { }
+            safeAdvanceSpeakingPractice(myToken);
+          }
+        };
+        rec.onerror = () => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          speakingPractice.statusEl.textContent = 'Listening…';
+        };
+        rec.onend = () => {
+          if (speakingPractice.active && myToken === phraseSessionId) {
+            try { rec.start(); } catch { }
+          }
+        };
+        try { rec.start(); } catch { }
       }
-    };
-    rec.onerror = () => {
-      if (!speakingPractice.active) return;
-      if (myToken !== phraseSessionId) return;
-      speakingPractice.statusEl.textContent = 'Listening…';
-    };
-    rec.onend = () => {
-      if (speakingPractice.active && myToken === phraseSessionId) {
-        try { rec.start(); } catch {}
+
+      function stopSpeakingPractice() {
+        speakingPractice.active = false;
+        if (speakingPractice.rec) {
+          try { speakingPractice.rec.abort(); } catch { }
+          speakingPractice.rec = null;
+        }
+        try { speechSynthesis.cancel(); } catch { }
+        if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Stopped';
       }
-    };
-    try { rec.start(); } catch {}
-  }
 
-  function stopSpeakingPractice() {
-    speakingPractice.active = false;
-    if (speakingPractice.rec) {
-      try { speakingPractice.rec.abort(); } catch {}
-      speakingPractice.rec = null;
-    }
-    try { speechSynthesis.cancel(); } catch {}
-    if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Stopped';
-  }
+      // --- Writing Practice Flow ---
+      async function startWritingPractice() {
+        if (writingPractice.active) return;
+        writingPractice.active = true;
+        writingPractice.statusEl.textContent = 'Starting…';
+        writingPractice.lang = (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang || 'es';
+        // persist chosen writing language
+        saveConfig();
 
-  // --- Writing Practice Flow ---
-  async function startWritingPractice() {
-    if (writingPractice.active) return;
-    writingPractice.active = true;
-    writingPractice.statusEl.textContent = 'Starting…';
-    writingPractice.lang = (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang || 'es';
-    // persist chosen writing language
-    saveConfig();
-
-    // Select and speak once
-    await selectAndShowRandomRow({ speak: true });
-    updateCurrentWriteTarget();
-    writingPractice.statusEl.textContent = 'Type what you hear…';
-
-    // Attach oninput handler referencing mutable target
-    const input = writingPractice.inputEl;
-    input.value = '';
-    input.disabled = false;
-
-    const onInput = async (e) => {
-      if (!writingPractice.active || writingPractice.writingBusy) return;
-      const user = normalizeForCompare(e.target.value);
-      const target = normalizeForCompare(writingPractice.currentWriteTarget);
-      if (user && user === target) {
-        writingPractice.writingBusy = true;
-        // Advance to next phrase safely; ensure single playback
-        try { speechSynthesis.cancel(); } catch {}
+        // Select and speak once
         await selectAndShowRandomRow({ speak: true });
         updateCurrentWriteTarget();
-        e.target.value = '';
-        writingPractice.writingBusy = false;
-      }
-    };
-    // Store handler so we can disable/enable without stale closure
-    input.oninput = onInput;
-  }
+        writingPractice.statusEl.textContent = 'Type what you hear…';
 
-  function stopWritingPractice() {
-    writingPractice.active = false;
-    if (writingPractice.inputEl) {
-      writingPractice.inputEl.oninput = null;
-      writingPractice.inputEl.disabled = true;
-    }
-    try { speechSynthesis.cancel(); } catch {}
-    if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Stopped';
-  }
+        // Attach oninput handler referencing mutable target
+        const input = writingPractice.inputEl;
+        input.value = '';
+        input.disabled = false;
 
-  function updateCurrentWriteTarget() {
-    const row = parsedRows[currentIndex] || {};
-    const k = writingPractice.lang;
-    writingPractice.currentWriteTarget = row[k] || '';
-  }
-
-  // --- Voices population ---
-  function populateVoices() {
-    const voices = speechSynthesis.getVoices();
-    for (const k of langs) {
-      const sel = els.voices[k];
-      const prev = sel.value;
-      sel.innerHTML = '';
-      // Only include voices that match the configured locale guesses for this language
-      const guessList = (langMeta[k] && Array.isArray(langMeta[k].localeGuess)) ? langMeta[k].localeGuess : [k];
-      let matching = voices.filter(v => v.lang && guessList.some(gl => v.lang.startsWith(gl)));
-      // If no exact localeGuess matches, try a looser prefix match by language code (es, en, it, pt)
-      if (matching.length === 0) {
-        matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
+        const onInput = async (e) => {
+          if (!writingPractice.active || writingPractice.writingBusy) return;
+          const user = normalizeForCompare(e.target.value);
+          const target = normalizeForCompare(writingPractice.currentWriteTarget);
+          if (user && user === target) {
+            writingPractice.writingBusy = true;
+            // Advance to next phrase safely; ensure single playback
+            try { speechSynthesis.cancel(); } catch { }
+            await selectAndShowRandomRow({ speak: true });
+            updateCurrentWriteTarget();
+            e.target.value = '';
+            writingPractice.writingBusy = false;
+          }
+        };
+        // Store handler so we can disable/enable without stale closure
+        input.oninput = onInput;
       }
 
-      if (matching.length > 0) {
-        for (const v of matching) {
-          const opt = document.createElement('option');
-          opt.value = v.name;
-          opt.textContent = `${v.name} (${v.lang || '??'})`;
-          sel.appendChild(opt);
+      function stopWritingPractice() {
+        writingPractice.active = false;
+        if (writingPractice.inputEl) {
+          writingPractice.inputEl.oninput = null;
+          writingPractice.inputEl.disabled = true;
         }
-        // Try auto-select a sensible default from the matching list
-        const guess = matching.find(v => langMeta[k].localeGuess.some(gl => v.lang && v.lang.startsWith(gl)));
-        if (guess) sel.value = guess.name;
-        if (!sel.value && sel.options.length) sel.selectedIndex = 0;
-        // Restore previous or saved selection only if it exists in the current options
-        if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
-        if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
-          const want = savedConfig.voices[k];
-          if ([...sel.options].some(o => o.value === want)) sel.value = want;
+        try { speechSynthesis.cancel(); } catch { }
+        if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Stopped';
+      }
+
+      function updateCurrentWriteTarget() {
+        const row = parsedRows[currentIndex] || {};
+        const k = writingPractice.lang;
+        writingPractice.currentWriteTarget = row[k] || '';
+      }
+
+      // --- Voices population ---
+      function populateVoices() {
+        const voices = speechSynthesis.getVoices();
+        const [l1, l2] = getSelectedLangCodes();
+        const slots = [{ pos: 1, code: l1 }, { pos: 2, code: l2 }];
+        for (const s of slots) {
+          const sel = els.voices[s.pos];
+          const prev = sel.value;
+          sel.innerHTML = '';
+          const k = s.code;
+          const guessList = (langMeta[k] && Array.isArray(langMeta[k].localeGuess)) ? langMeta[k].localeGuess : [k];
+          let matching = voices.filter(v => v.lang && guessList.some(gl => v.lang.startsWith(gl)));
+          if (matching.length === 0) matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
+
+          if (matching.length > 0) {
+            for (const v of matching) {
+              const opt = document.createElement('option');
+              opt.value = v.name;
+              opt.textContent = `${v.name} (${v.lang || '??'})`;
+              sel.appendChild(opt);
+            }
+            const guess = matching.find(v => langMeta[k] && langMeta[k].localeGuess && langMeta[k].localeGuess.some(gl => v.lang && v.lang.startsWith(gl)));
+            if (guess) sel.value = guess.name;
+            if (!sel.value && sel.options.length) sel.selectedIndex = 0;
+            if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+            if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
+              const want = savedConfig.voices[k];
+              if ([...sel.options].some(o => o.value === want)) sel.value = want;
+            }
+          } else {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.disabled = true;
+            opt.selected = true;
+            opt.textContent = '(no matching voices available)';
+            sel.appendChild(opt);
+          }
         }
-      } else {
-        // No matching voices for this language: present a single disabled informative option
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.disabled = true;
-        opt.selected = true;
-        opt.textContent = '(no matching voices available)';
-        sel.appendChild(opt);
       }
-    }
-  }
 
-  // --- Predefined sets discovery & loading ---
-  async function populatePredefinedList() {
-  const sel = els.predefinedSelect;
-  sel.innerHTML = ''; // Limpiar opciones previas
+      // --- Predefined sets discovery & loading ---
+      async function populatePredefinedList() {
+        const sel = els.predefinedSelect;
+        sel.innerHTML = ''; // Limpiar opciones previas
 
-  try {
-    // Intento local
-    const res = await fetch('./predefined_phrases/');
-    const text = await res.text();
-    const tmp = document.createElement('div');
-    tmp.innerHTML = text;
-    const links = [...tmp.querySelectorAll('a[href$=".csv"], a[href$=".txt"]')];
-    const names = links.map(a => (a.textContent || '').trim()).filter(Boolean);
-    if (names.length === 0) throw new Error('No se encontraron archivos válidos en el servidor local.');
-    for (const n of names) {
-      const opt = document.createElement('option');
-      opt.value = n;
-      opt.textContent = n;
-      sel.appendChild(opt);
-    }
-  } catch (error) {
-    console.warn('Fallo la carga local:', error.message || error.toString());
-    await fallbackToGithub();
-  }
+        try {
+          // Intento local
+          const res = await fetch('./predefined_phrases/');
+          const text = await res.text();
+          const tmp = document.createElement('div');
+          tmp.innerHTML = text;
+          const links = [...tmp.querySelectorAll('a[href$=".csv"], a[href$=".txt"]')];
+          const names = links.map(a => (a.textContent || '').trim()).filter(Boolean);
+          if (names.length === 0) throw new Error('No se encontraron archivos válidos en el servidor local.');
+          for (const n of names) {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            sel.appendChild(opt);
+          }
+        } catch (error) {
+          console.warn('Fallo la carga local:', error.message || error.toString());
+          await fallbackToGithub();
+        }
 
-  async function fallbackToGithub() {
-    try {
-      const user = "haiver77";       // ejemplo: "johnmalagon"
-      const repo = "language_learning";   // ejemplo: "mi-web"
-      const branch = "main";           // o "master" según tu repo
-      const path = "predefined_phrases"; 
+        async function fallbackToGithub() {
+          try {
+            const user = "haiver77";       // ejemplo: "johnmalagon"
+            const repo = "language_learning";   // ejemplo: "mi-web"
+            const branch = "main";           // o "master" según tu repo
+            const path = "predefined_phrases";
 
-      const githubApiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
-      const res = await fetch(githubApiUrl);
-      const files = await res.json();
-      if (!Array.isArray(files)) throw new Error('Respuesta inesperada de GitHub');
+            const githubApiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+            const res = await fetch(githubApiUrl);
+            const files = await res.json();
+            if (!Array.isArray(files)) throw new Error('Respuesta inesperada de GitHub');
 
-      const validFiles = files
-        .filter(f => f.name.endsWith('.csv') || f.name.endsWith('.txt'))
-        .map(f => f.name);
+            const validFiles = files
+              .filter(f => f.name.endsWith('.csv') || f.name.endsWith('.txt'))
+              .map(f => f.name);
 
-      if (validFiles.length === 0) throw new Error('No se encontraron archivos válidos en GitHub.');
+            if (validFiles.length === 0) throw new Error('No se encontraron archivos válidos en GitHub.');
 
-      for (const name of validFiles) {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        sel.appendChild(opt);
+            for (const name of validFiles) {
+              const opt = document.createElement('option');
+              opt.value = name;
+              opt.textContent = name;
+              sel.appendChild(opt);
+            }
+          } catch (err) {
+            alert('No se pudo cargar la lista de frases desde GitHub: ' + (err.message || err.toString()));
+          }
+        }
       }
-    } catch (err) {
-      alert('No se pudo cargar la lista de frases desde GitHub: ' + (err.message || err.toString()));
-    }
-  }
-}
 
 
-  async function loadSelectedPredefined() {
-    const name = els.predefinedSelect.value;
-    if (!name) return;
-    try {
-      const res = await fetch(`./predefined_phrases/${encodeURIComponent(name)}`);
-      const text = await res.text();
-      els.csvBox.value = text.trim();
-      ensureParsed();
-      if (parsedRows.length) {
-        await selectAndShowRandomRow({ speak: false });
+      async function loadSelectedPredefined() {
+        const name = els.predefinedSelect.value;
+        if (!name) return;
+        try {
+          const res = await fetch(`./predefined_phrases/${encodeURIComponent(name)}`);
+          const text = await res.text();
+          els.csvBox.value = text.trim();
+          ensureParsed();
+          if (parsedRows.length) {
+            await selectAndShowRandomRow({ speak: false });
+          }
+        } catch {
+          // ignore
+        }
       }
-    } catch {
-      // ignore
-    }
-  }
 
-  // --- Prompt - OpenAI integration ---
-  function buildAIPrompt(level, topic, quantity, minWords) {
-    const q = Number.isFinite(Number(quantity)) ? Number(quantity) : 40;
-    const m = Number.isFinite(Number(minWords)) ? Number(minWords) : 15;
-    return `Generate a plain text list of ${q} lines about "${topic}". Each line must contain four phrases separated by semicolons (";") in this exact order: Spanish; English; Italian; Portuguese. 
-Requirements:
- - Each phrase must contain at least ${m} words.
- - Vocabulary and grammar must match CEFR level "${level}".
- - Do not include numbering, bullet points, blank lines, or any extra text before or after the list.
- - Before returning the response, confirm that each line follows the exact language order: Spanish; English; Italian; Portuguese.
- - Output only the list (no commentary, no labels, no metadata).
+      // --- Prompt - OpenAI integration ---
+      function buildAIPrompt(level, topic, quantity, minWords) {
+        const q = Number.isFinite(Number(quantity)) ? Number(quantity) : 40;
+        const m = Number.isFinite(Number(minWords)) ? Number(minWords) : 15;
+        const [l1, l2] = getSelectedLangCodes();
+        const label1 = (langMeta[l1] && langMeta[l1].label) || l1;
+        const label2 = (langMeta[l2] && langMeta[l2].label) || l2;
+        return `Generate a plain text list of ${q} lines about "${topic}". Each line must contain two phrases separated by a semicolon (";") in this exact order: ${label1}; ${label2}.
+  Requirements:
+   - Each phrase must contain at least ${m} words.
+   - Vocabulary and grammar must match CEFR level "${level}".
+   - Do not include numbering, bullet points, blank lines, or any extra text before or after the list.
+       - Before returning the response, confirm that each line follows the exact language order: ${label1}; ${label2}.
+   - Output only the list (no commentary, no labels, no metadata).
 
-Quick examples of required line format
-- "Español ejemplo con cinco palabras; English example with five words; Esempio italiano con cinque parole; Exemplo português com cinco palavras"`;
-  }
+  Quick example of required line format
+      - "Example in ${label1} with five words; Example in ${label2} with five words"`;
+      }
 
-  async function callOpenAI(token, prompt) {
-    const url = 'https://api.openai.com/v1/chat/completions';
-    const body = {
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 2000,
-    };
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || `OpenAI error ${res.status}`);
-    }
-    const j = await res.json();
-    return (j.choices && j.choices[0] && (j.choices[0].message?.content || j.choices[0].text)) || '';
-  }
+      async function callOpenAI(token, prompt) {
+        const url = 'https://api.openai.com/v1/chat/completions';
+        const body = {
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 2000,
+        };
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || `OpenAI error ${res.status}`);
+        }
+        const j = await res.json();
+        return (j.choices && j.choices[0] && (j.choices[0].message?.content || j.choices[0].text)) || '';
+      }
 
-  async function loadFromAI() {
-    const token = (els.openaiToken.value || '').trim();
-    const level = (els.aiLevel.value || 'A1');
-    const topic = (els.aiTopic.value || '').trim() || 'general';
-    const quantity = parseInt(els.aiQuantity.value || '40', 10) || 40;
-    const minWords = parseInt(els.aiMinWords?.value || '15', 10) || 15;
-    if (!token) { alert('Please enter your OpenAI token in OPEN_AI_TOKEN.'); return; }
-    els.btnLoadAI.disabled = true;
-    els.aiStatus.textContent = 'Loading…';
-    try {
-      // persist token locally for convenience
-      try { localStorage.setItem('openai_token', token); } catch {}
-      const prompt = buildAIPrompt(level, topic, quantity, minWords);
-      const content = await callOpenAI(token, prompt);
-      // Put response into csvBox
-      els.csvBox.value = (content || '').trim();
-      ensureParsed();
-      // Show first item silently so UI updates
-      if (parsedRows.length) await selectAndShowRandomRow({ speak: false });
-      els.aiStatus.textContent = 'Loaded';
-    } catch (err) {
-      console.error('OpenAI load error', err);
-      alert('OpenAI error: ' + (err.message || err));
-      els.aiStatus.textContent = 'Error';
-    } finally {
-      els.btnLoadAI.disabled = false;
-    }
-  }
+      async function loadFromAI() {
+        const token = (els.openaiToken.value || '').trim();
+        const level = (els.aiLevel.value || 'A1');
+        const topic = (els.aiTopic.value || '').trim() || 'general';
+        const quantity = parseInt(els.aiQuantity.value || '40', 10) || 40;
+        const minWords = parseInt(els.aiMinWords?.value || '15', 10) || 15;
+        if (!token) { alert('Please enter your OpenAI token in OPEN_AI_TOKEN.'); return; }
+        els.btnLoadAI.disabled = true;
+        els.aiStatus.textContent = 'Loading…';
+        try {
+          // persist token locally for convenience
+          try { localStorage.setItem('openai_token', token); } catch { }
+          const prompt = buildAIPrompt(level, topic, quantity, minWords);
+          const content = await callOpenAI(token, prompt);
+          // Put response into csvBox
+          els.csvBox.value = (content || '').trim();
+          ensureParsed();
+          // Show first item silently so UI updates
+          if (parsedRows.length) await selectAndShowRandomRow({ speak: false });
+          els.aiStatus.textContent = 'Loaded';
+        } catch (err) {
+          console.error('OpenAI load error', err);
+          alert('OpenAI error: ' + (err.message || err));
+          els.aiStatus.textContent = 'Error';
+        } finally {
+          els.btnLoadAI.disabled = false;
+        }
+      }
 
-  // --- Event wiring ---
-  function bindEvents() {
-    // Random button (global)
-    els.btnRandom.onclick = async () => { await selectAndShowRandomRow({ speak: true }); };
+      // --- Event wiring ---
+      function bindEvents() {
+        // Random button (global)
+        els.btnRandom.onclick = async () => { await selectAndShowRandomRow({ speak: true }); };
 
-    // Mode switching
-    els.modeSelect.onchange = () => {
-      // Stop timers/practices on switch
-      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-      stopSpeakingPractice();
-      stopWritingPractice();
-      renderModePanel();
-      saveConfig();
-    };
+        // Mode switching
+        els.modeSelect.onchange = () => {
+          // Stop timers/practices on switch
+          if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+          stopSpeakingPractice();
+          stopWritingPractice();
+          renderModePanel();
+          saveConfig();
+        };
 
-    // Replay per language
-    for (const k of langs) {
-      els.replay[k].onclick = () => replayLanguage(k);
-    }
+        // Replay per language
+        // Replay per slot
+        els.replay[1].onclick = () => replaySlot(1);
+        els.replay[2].onclick = () => replaySlot(2);
 
-    // Show/Hide languages
-    for (const k of langs) {
-      els.show[k].onchange = () => { applyShowVisibility(); saveConfig(); };
-    }
+        // Show/Hide slots
+        els.show[1].onchange = () => { applyShowVisibility(); saveConfig(); };
+        els.show[2].onchange = () => { applyShowVisibility(); saveConfig(); };
 
-    // Read language checkboxes
-    for (const k of langs) {
-      els.read[k].onchange = () => { saveConfig(); };
-    }
+        // Read slot checkboxes
+        els.read[1].onchange = () => { saveConfig(); };
+        els.read[2].onchange = () => { saveConfig(); };
 
-    // Font size
-    const applyFont = () => {
-      const px = Math.max(14, Math.min(100, parseInt(els.fontRange.value || '26', 10)));
-      document.documentElement.style.setProperty('--phrase-font', px + 'px');
-      els.fontValue.textContent = px + ' px';
-    };
-    els.fontRange.oninput = () => { applyFont(); saveConfig(); };
+        // Font size
+        const applyFont = () => {
+          const px = Math.max(14, Math.min(100, parseInt(els.fontRange.value || '26', 10)));
+          document.documentElement.style.setProperty('--phrase-font', px + 'px');
+          els.fontValue.textContent = px + ' px';
+        };
+        els.fontRange.oninput = () => { applyFont(); saveConfig(); };
 
-    // Theme toggle
-    els.themeToggle.onchange = () => {
-      const isDark = els.themeToggle.checked;
-      document.body.classList.toggle('theme-light', !isDark);
-      document.body.classList.toggle('theme-dark', isDark);
-      saveConfig();
-    };
+        // Theme toggle
+        els.themeToggle.onchange = () => {
+          const isDark = els.themeToggle.checked;
+          document.body.classList.toggle('theme-light', !isDark);
+          document.body.classList.toggle('theme-dark', isDark);
+          saveConfig();
+        };
 
-    // CSV changes
-    els.csvBox.oninput = () => { ensureParsed(); saveConfig(); };
+        // CSV changes
+        els.csvBox.oninput = () => { ensureParsed(); saveConfig(); };
 
-    // Predefined
-    els.btnLoadPredefined.onclick = async () => { await loadSelectedPredefined(); saveConfig(); };
-    els.predefinedSelect.onchange = () => saveConfig();
+        // Predefined
+        els.btnLoadPredefined.onclick = async () => { await loadSelectedPredefined(); saveConfig(); };
+        els.predefinedSelect.onchange = () => saveConfig();
 
-    // File input
-    els.fileInput.onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      els.csvBox.value = text.trim();
-      ensureParsed();
-      await selectAndShowRandomRow({ speak: false });
-      saveConfig();
-    };
+        // File input
+        els.fileInput.onchange = async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const text = await file.text();
+          els.csvBox.value = text.trim();
+          ensureParsed();
+          await selectAndShowRandomRow({ speak: false });
+          saveConfig();
+        };
 
-    // Voices ready
-    for (const k of langs) {
-      els.voices[k].onchange = () => saveConfig();
-    }
-    if ('onvoiceschanged' in speechSynthesis) {
-      speechSynthesis.onvoiceschanged = () => populateVoices();
-    }
-    // Rate / Pitch
-    els.rate.onchange = () => saveConfig();
-    els.pitch.onchange = () => saveConfig();
-    // AI button
-    els.btnLoadAI.onclick = loadFromAI;
-    els.aiLevel.onchange = () => saveConfig();
-    els.aiTopic.oninput = () => saveConfig();
-    els.aiQuantity.onchange = () => saveConfig();
-    if (els.aiMinWords) els.aiMinWords.onchange = () => saveConfig();
-  }
+        // Voices ready
+        els.voices[1].onchange = () => saveConfig();
+        els.voices[2].onchange = () => saveConfig();
+        // Language selectors: update labels and voices when changed
+        els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); saveConfig(); };
+        els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); saveConfig(); };
+        if ('onvoiceschanged' in speechSynthesis) {
+          speechSynthesis.onvoiceschanged = () => populateVoices();
+        }
+        // Rate / Pitch
+        els.rate.onchange = () => saveConfig();
+        els.pitch.onchange = () => saveConfig();
+        // AI button
+        els.btnLoadAI.onclick = loadFromAI;
+        els.aiLevel.onchange = () => saveConfig();
+        els.aiTopic.oninput = () => saveConfig();
+        els.aiQuantity.onchange = () => saveConfig();
+        if (els.aiMinWords) els.aiMinWords.onchange = () => saveConfig();
+      }
 
-  // --- Init sample data ---
-  function loadSamplePhrases() {
-    const sample = [
-      'Hola;Hello;Ciao;Olá',
-      'Buenos días;Good morning;Buongiorno;Bom dia',
-      '¿Cómo estás?;How are you?;Come stai?;Como você está?',
-      'Gracias;Thank you;Grazie;Obrigado',
-      'Por favor;Please;Per favore;Por favor',
-      'Lo siento;Sorry;Mi dispiace;Desculpe',
-      '¿Dónde está el baño?;Where is the bathroom?;Dov\'è il bagno?;Onde fica o banheiro?',
-      'Me gusta aprender idiomas;I like learning languages;Mi piace imparare le lingue;Gosto de aprender línguas',
-      '¿Cuánto cuesta?;How much is it?;Quanto costa?;Quanto custa?',
-      'Hasta luego;See you later;A dopo;Até mais'
-    ].join('\n');
-    els.csvBox.value = sample;
-    ensureParsed();
-  }
+      // --- Init sample data ---
+      function loadSamplePhrases() {
+        const sample = [
+          'Hola;Hello',
+          'Buenos días;Good morning',
+          '¿Cómo estás?;How are you?',
+          'Gracias;Thank you',
+          'Por favor;Please',
+          'Lo siento;Sorry',
+          '¿Dónde está el baño?;Where is the bathroom?',
+          'Me gusta aprender idiomas;I like learning languages',
+          '¿Cuánto cuesta?;How much is it?',
+          'Hasta luego;See you later'
+        ].join('\n');
+        els.csvBox.value = sample;
+        ensureParsed();
+      }
 
-  // --- Bootstrap ---
-  function init() {
-    // Load saved UI configuration first (if any)
-    loadConfig();
+      // --- Bootstrap ---
+      function init() {
+        // Load saved UI configuration first (if any)
+        loadConfig();
 
-    // Only load sample phrases when there's no saved CSV content
-    if (!savedConfig || !savedConfig.csv) loadSamplePhrases();
+        // Only load sample phrases when there's no saved CSV content
+        if (!savedConfig || !savedConfig.csv) loadSamplePhrases();
 
-    renderModePanel();
-    bindEvents();
-    applyShowVisibility();
-    populateVoices();
-    populatePredefinedList();
+        renderModePanel();
+        bindEvents();
+        // ensure language labels are in-sync before populating voices
+        updateLangLabels();
+        applyShowVisibility();
+        populateVoices();
+        populatePredefinedList();
 
-    // Initial phrase display (silent) so UI isn't empty
-    selectAndShowRandomRow({ speak: false });
+        // Initial phrase display (silent) so UI isn't empty
+        selectAndShowRandomRow({ speak: false });
 
-    // Defaults only when no saved configuration
-    if (!savedConfig) {
-      els.themeToggle.checked = true;
-      els.fontRange.value = 26;
-      els.fontValue.textContent = '26 px';
-    }
-    // restore saved OpenAI token if any
-    try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch {}
-  }
+        // Defaults only when no saved configuration
+        if (!savedConfig) {
+          els.themeToggle.checked = true;
+          els.fontRange.value = 26;
+          els.fontValue.textContent = '26 px';
+        }
+        // restore saved OpenAI token if any
+        try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch { }
+      }
 
-  // Expose minimal for debugging (optional)
-  window._trainer = { state: () => ({ currentIndex, phraseSessionId, parsedRowsCount: parsedRows.length }) };
+      // Expose minimal for debugging (optional)
+      window._trainer = { state: () => ({ currentIndex, phraseSessionId, parsedRowsCount: parsedRows.length }) };
 
-  init();
-})();
-</script>
+      init();
+    })();
+  </script>
 </body>
+
 </html>
