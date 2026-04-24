@@ -455,6 +455,9 @@
       <div class="panel">
         <div class="panel-title">Load phrases from OpenAI</div>
         <div class="inline-controls">
+          <label class="badge"><span>Topic</span>
+            <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" style="width:600px" />
+          </label>
           <label class="badge"><span>Level</span>
             <select id="aiLevel">
               <option value="ANY" selected>Any</option>
@@ -465,9 +468,6 @@
               <option value="C1">C1</option>
               <option value="C2">C2</option>
             </select>
-          </label>
-          <label class="badge"><span>Topic</span>
-            <input type="text" id="aiTopic" placeholder="e.g., comida, viajes" style="width:320px" />
           </label>
           <label class="badge"><span>Quantity</span>
             <input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:4ch" />
@@ -998,7 +998,7 @@
           const div = document.createElement('div');
           div.className = 'panel';
           div.innerHTML = `
-        <div class="panel-title">Automatic rotation</div>
+        <div class="panel-title">Wait Time</div>
         <div class="inline-controls">
           <label class="badge"><span>Interval (s)</span>
             <input id="autoInterval" type="number" min="2" step="1" value="5" style="width:90px" />
@@ -1012,19 +1012,28 @@
           const autoStatus = div.querySelector('#autoStatus');
           const autoStart = () => {
             const sec = Math.max(1, parseInt(div.querySelector('#autoInterval').value || '5', 10));
-            if (autoTimer) clearInterval(autoTimer);
+            // stop any existing timer
+            if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+            let running = true;
             autoStatus.textContent = 'Running…';
-            selectAndShowRandomRow({ speak: true });
-            autoTimer = setInterval(() => {
+
+            const runOnce = async () => {
+              if (!running) return;
+              // ensure new session token and cancel any in-progress speech before selecting
               const token = ++phraseSessionId;
-              // cancel previous speech before next cycle
               try { speechSynthesis.cancel(); } catch { }
-              selectAndShowRandomRow({ speak: true });
-            }, sec * 1000);
+              await selectAndShowRandomRow({ speak: true });
+              if (!running) return;
+              // wait the configured interval after speech finished
+              autoTimer = setTimeout(runOnce, sec * 1000);
+            };
+
+            // expose stop by replacing autoStop closure variables
+            div._autoStop = () => { running = false; if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } autoStatus.textContent = 'Stopped'; };
+            runOnce();
           };
           const autoStop = () => {
-            if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-            autoStatus.textContent = 'Stopped';
+            if (div._autoStop) { div._autoStop(); }
           };
           div.querySelector('#autoStart').onclick = autoStart;
           div.querySelector('#autoStop').onclick = autoStop;
