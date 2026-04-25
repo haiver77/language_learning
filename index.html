@@ -286,6 +286,16 @@
       color: var(--muted);
     }
 
+    .word-correct {
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    .word-incorrect {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
     .status.ok {
       color: var(--ok);
     }
@@ -662,6 +672,29 @@
         const base = Math.max(A.length, B.length);
         const pct = Math.max(0, Math.round((1 - dist / base) * 100));
         return pct;
+      }
+
+      // Compare target phrase and live transcript word-by-word and highlight
+      function compareAndHighlight(target, live, slotPos) {
+        if (!target) return;
+        const tgtTokens = (target.match(/\S+/g) || []);
+        const liveTokens = (live.match(/\S+/g) || []);
+        const container = els.text[slotPos];
+        if (!container) return;
+        // Clear and rebuild with spans for each target token
+        container.innerHTML = '';
+        for (let i = 0; i < tgtTokens.length; i++) {
+          const t = tgtTokens[i];
+          const l = liveTokens[i] || '';
+          const sim = similarityPercent(t, l);
+          const span = document.createElement('span');
+          span.textContent = t;
+          // threshold: 70% similarity means considered correct
+          if (sim >= 70) span.className = 'word-correct';
+          else span.className = 'word-incorrect';
+          container.appendChild(span);
+          if (i !== tgtTokens.length - 1) container.appendChild(document.createTextNode(' '));
+        }
       }
 
       function getSelectedLangCodes() {
@@ -1183,7 +1216,7 @@
         speakingPractice.scoreEl.textContent = '0%';
         speakingPractice.statusEl.textContent = 'Listening…';
 
-        rec.onresult = (e) => {
+          rec.onresult = (e) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           let interim = '';
@@ -1199,6 +1232,10 @@
           const pct = similarityPercent(live, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
+
+          // Highlight words in the active practice slot according to correctness
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          compareAndHighlight(target, live, slotPos);
 
           if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
@@ -1277,6 +1314,10 @@
           const pct = similarityPercent(live, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
+
+          // Highlight words in the active practice slot according to correctness
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          compareAndHighlight(target, live, slotPos);
 
           if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
