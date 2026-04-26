@@ -1099,10 +1099,7 @@
         <div class="panel-title">Speaking practice</div>
         <div class="inline-controls">
           <label class="badge" width="100px"><span></span>
-            <select id="sp-lang">
-              <option value="es">ES</option>
-              <option value="en">EN</option>
-            </select>
+            <select id="sp-lang"></select>
           </label>
           <label class="badge"><span>Min similarity %</span>
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
@@ -1122,10 +1119,25 @@
           div.querySelector('#sp-start').onclick = startSpeakingPractice;
           div.querySelector('#sp-stop').onclick = stopSpeakingPractice;
           const spLangEl = div.querySelector('#sp-lang');
-          // restore saved speaking language if available
-          if (savedConfig && savedConfig.speakingLang) {
-            try { spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang; } catch { }
-          }
+          // populate sp-lang from current language selectors
+          try {
+            const codes = getSelectedLangCodes();
+            spLangEl.innerHTML = '';
+            for (const c of codes) {
+              const opt = document.createElement('option');
+              opt.value = c;
+              opt.textContent = (langMeta[c] && langMeta[c].label) ? langMeta[c].label : c.toUpperCase();
+              spLangEl.appendChild(opt);
+            }
+            // restore saved speaking language if available and valid
+            if (savedConfig && savedConfig.speakingLang && [...spLangEl.options].some(o => o.value === savedConfig.speakingLang)) {
+              spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang;
+            } else {
+              // default to current speakingPractice.lang if valid, otherwise first language
+              if ([...spLangEl.options].some(o => o.value === speakingPractice.lang)) spLangEl.value = speakingPractice.lang;
+              else { spLangEl.selectedIndex = 0; speakingPractice.lang = spLangEl.value; }
+            }
+          } catch (e) { /* ignore */ }
           spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
           div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
         } else if (m === 'Writing Practice Mode') {
@@ -1135,10 +1147,7 @@
         <div class="panel-title">Writing practice</div>
         <div class="inline-controls">
           <label class="badge"><span>Practice language</span>
-            <select id="wr-lang">
-              <option value="es">ES</option>
-              <option value="en">EN</option>
-            </select>
+            <select id="wr-lang"></select>
           </label>
           <button id="wr-start">Start</button>
           <button id="wr-stop" class="secondary">Stop</button>
@@ -1156,10 +1165,24 @@
           div.querySelector('#wr-start').onclick = startWritingPractice;
           div.querySelector('#wr-stop').onclick = stopWritingPractice;
           const wrLangEl = div.querySelector('#wr-lang');
-          // restore saved writing language if available
-          if (savedConfig && savedConfig.writingLang) {
-            try { wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang; } catch { }
-          }
+          // populate wr-lang from current language selectors
+          try {
+            const codes = getSelectedLangCodes();
+            wrLangEl.innerHTML = '';
+            for (const c of codes) {
+              const opt = document.createElement('option');
+              opt.value = c;
+              opt.textContent = (langMeta[c] && langMeta[c].label) ? langMeta[c].label : c.toUpperCase();
+              wrLangEl.appendChild(opt);
+            }
+            // restore saved writing language if available and valid
+            if (savedConfig && savedConfig.writingLang && [...wrLangEl.options].some(o => o.value === savedConfig.writingLang)) {
+              wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang;
+            } else {
+              if ([...wrLangEl.options].some(o => o.value === writingPractice.lang)) wrLangEl.value = writingPractice.lang;
+              else { wrLangEl.selectedIndex = 0; writingPractice.lang = wrLangEl.value; }
+            }
+          } catch (e) { /* ignore */ }
           wrLangEl.onchange = e => { writingPractice.lang = e.target.value; saveConfig(); };
         }
       }
@@ -1651,8 +1674,8 @@
         els.voices[1].onchange = () => saveConfig();
         els.voices[2].onchange = () => saveConfig();
         // Language selectors: update labels and voices when changed
-        els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); saveConfig(); };
-        els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); saveConfig(); };
+        els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
+        els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
         if ('onvoiceschanged' in speechSynthesis) {
           speechSynthesis.onvoiceschanged = () => populateVoices();
         }
