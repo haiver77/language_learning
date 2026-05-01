@@ -464,7 +464,7 @@
         <div class="inline-controls">
           <div style="width:100%">
             <textarea class="textarea" id="csvBox" style="width:100%; min-height:10em; resize:vertical"></textarea>
-            
+            <label class="badge" style="display:inline-block; margin-bottom:6px"><input type="checkbox" id="wrapCsv" /> <span>Word Wrap</span></label>
           </div>
         </div>
       </div>
@@ -570,6 +570,7 @@
         btnRandom: document.getElementById('btnRandom'),
         modeContent: document.getElementById('modeContent'),
         csvBox: document.getElementById('csvBox'),
+        wrapCsv: document.getElementById('wrapCsv'),
         predefinedSelect: document.getElementById('predefinedSelect'),
         btnLoadPredefined: document.getElementById('btnLoadPredefined'),
         fileInput: document.getElementById('fileInput'),
@@ -777,6 +778,16 @@
         els.text[2].textContent = row?.[l2] || '';
       }
 
+      // Toggle CSV textarea wrapping
+      function applyCsvWrap() {
+        const ta = els.csvBox;
+        if (!ta) return;
+        const wrap = !!(els.wrapCsv && els.wrapCsv.checked);
+        try { ta.wrap = wrap ? 'soft' : 'off'; } catch (e) { /* ignore if unsupported */ }
+        ta.style.whiteSpace = wrap ? 'pre-wrap' : 'pre';
+        ta.style.overflowWrap = wrap ? 'break-word' : 'normal';
+      }
+
       function getReadOrder() {
         return [1, 2]; // read slot order
       }
@@ -829,6 +840,7 @@
             aiLevel: els.aiLevel.value, aiTopic: els.aiTopic.value, aiQuantity: els.aiQuantity.value, aiMinWords: els.aiMinWords?.value,
             predefined: els.predefinedSelect.value,
             csv: els.csvBox.value,
+            wrapCsv: !!(els.wrapCsv && els.wrapCsv.checked),
             speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
             writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
           };
@@ -870,8 +882,16 @@
           if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
           if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
           if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
+          if (typeof cfg.wrapCsv !== 'undefined') { try { els.wrapCsv.checked = !!cfg.wrapCsv; } catch (e) { } applyCsvWrap(); }
         } catch (e) { console.warn('loadConfig failed', e); }
       }
+
+      // wire up wrapCsv change to apply immediately and persist
+      try {
+        if (els.wrapCsv) {
+          els.wrapCsv.addEventListener('change', () => { applyCsvWrap(); saveConfig(); });
+        }
+      } catch (e) { /* ignore wiring errors */ }
 
       // --- Speech Synthesis: robust sequence with session token and timeouts ---
       async function speakCurrentRowSequence(sessionToken, row) {
