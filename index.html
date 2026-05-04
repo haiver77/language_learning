@@ -536,6 +536,7 @@
         <label class="badge"><span>Voice 2</span>
           <select id="voice-2"></select>
         </label>
+        <button id="refreshVoices" class="secondary" title="Refresh voices">Refresh voices</button>
         <label class="badge"><span>Rate</span>
           <input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" />
         </label>
@@ -1500,6 +1501,30 @@
         }
       }
 
+      // Attempt to force voice loading when user requests it (user gesture required on some browsers)
+      function refreshVoices() {
+        try {
+          // Try to populate immediately
+          populateVoices();
+          const vs = speechSynthesis.getVoices();
+          if (!vs || vs.length === 0) {
+            // Listen once for the voiceschanged event
+            if ('onvoiceschanged' in speechSynthesis) {
+              const once = () => { try { populateVoices(); } catch {} finally { speechSynthesis.onvoiceschanged = null; } };
+              speechSynthesis.onvoiceschanged = once;
+            }
+            // Try a silent user-initiated utterance to nudge some engines (volume 0)
+            try {
+              const u = new SpeechSynthesisUtterance('Initializing voices');
+              u.volume = 0; u.rate = 1; u.pitch = 1;
+              speechSynthesis.speak(u);
+            } catch (e) { /* ignore */ }
+            // fallback populate after short delay
+            setTimeout(() => { try { populateVoices(); } catch (e) {} }, 700);
+          }
+        } catch (e) { console.warn('refreshVoices failed', e); }
+      }
+
       // --- Predefined sets discovery & loading ---
       async function populatePredefinedList() {
         const sel = els.predefinedSelect;
@@ -1709,6 +1734,8 @@
         // Voices ready
         els.voices[1].onchange = () => saveConfig();
         els.voices[2].onchange = () => saveConfig();
+        const refreshBtn = document.getElementById('refreshVoices');
+        if (refreshBtn) refreshBtn.onclick = () => { refreshVoices(); };
         // Language selectors: update labels and voices when changed
         els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
         els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
