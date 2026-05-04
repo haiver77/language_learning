@@ -1068,7 +1068,7 @@
         <div class="panel-title">Wait Time</div>
         <div class="inline-controls">
           <label class="badge"><span>Interval (s)</span>
-            <input id="autoInterval" type="number" min="0" step="1" value="2" style="width:90px" />
+            <input id="autoInterval" type="number" min="0" step="1" value="0" style="width:90px" />
           </label>
           <button id="autoStart">Start</button>
           <button id="autoStop" class="secondary">Stop</button>
@@ -1458,15 +1458,31 @@
           let matching = voices.filter(v => v.lang && guessList.some(gl => v.lang.startsWith(gl)));
           if (matching.length === 0) matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(k));
 
+          // If still no matching voices by language, fall back to showing all available voices
+          let showedFallbackNotice = false;
+          if (matching.length === 0 && voices.length > 0) {
+            matching = voices.slice();
+            showedFallbackNotice = true;
+          }
+
           if (matching.length > 0) {
+            if (showedFallbackNotice) {
+              const note = document.createElement('option');
+              note.value = '';
+              note.disabled = true;
+              note.selected = true;
+              note.textContent = `(no language-specific voices found for ${k}; showing all voices)`;
+              sel.appendChild(note);
+            }
             for (const v of matching) {
               const opt = document.createElement('option');
-              opt.value = v.name;
-              opt.textContent = `${v.name} (${v.lang || '??'})`;
+              // prefer voiceURI when available (more likely unique), fall back to name
+              opt.value = v.voiceURI || v.name || '';
+              opt.textContent = `${v.name || '(unknown)'} (${v.lang || '??'})`;
               sel.appendChild(opt);
             }
             const guess = matching.find(v => langMeta[k] && langMeta[k].localeGuess && langMeta[k].localeGuess.some(gl => v.lang && v.lang.startsWith(gl)));
-            if (guess) sel.value = guess.name;
+            if (guess) sel.value = guess.voiceURI || guess.name;
             if (!sel.value && sel.options.length) sel.selectedIndex = 0;
             if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
             if (savedConfig && savedConfig.voices && savedConfig.voices[k]) {
@@ -1478,7 +1494,7 @@
             opt.value = '';
             opt.disabled = true;
             opt.selected = true;
-            opt.textContent = '(no matching voices available)';
+            opt.textContent = '(no voices available)';
             sel.appendChild(opt);
           }
         }
