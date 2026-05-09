@@ -1040,10 +1040,25 @@
         parsedRows = parseCSV(els.csvBox.value);
       }
 
-      function selectAndShowRandomRow({ speak = true } = {}) {
+      function selectAndShowNextRow({ speak = true, random = null } = {}) {
         ensureParsed();
         if (!parsedRows.length) return Promise.resolve();
-        currentIndex = pickRandomIndex(parsedRows.length);
+        // Decide random/sequential if not explicitly provided
+        if (random === null) {
+          const mode = els.modeSelect?.value;
+          if (mode === 'Auto Mode') random = !!(els.modeContent.querySelector('#auto-random')?.checked);
+          else if (mode === 'Speaking Practice Mode') random = !!(els.modeContent.querySelector('#sp-random')?.checked);
+          else if (mode === 'Writing Practice Mode') random = !!(els.modeContent.querySelector('#wr-random')?.checked);
+          else random = true;
+        }
+
+        if (random) {
+          currentIndex = pickRandomIndex(parsedRows.length);
+        } else {
+          if (currentIndex < 0) currentIndex = 0;
+          else currentIndex = (currentIndex + 1) % parsedRows.length;
+        }
+
         const row = parsedRows[currentIndex];
         setPhraseTexts(row);
         applyShowVisibility();
@@ -1071,6 +1086,7 @@
           <label class="badge"><span>Interval (s)</span>
             <input id="autoInterval" type="number" min="0" step="1" value="0" style="width:90px" />
           </label>
+          <label class="badge"><input type="checkbox" id="auto-random" checked /> <span>Random</span></label>
           <button id="autoStart">Start</button>
           <button id="autoStop" class="secondary">Stop</button>
           <span id="autoStatus" class="status">Stopped</span>
@@ -1090,7 +1106,7 @@
               // ensure new session token and cancel any in-progress speech before selecting
               const token = ++phraseSessionId;
               try { speechSynthesis.cancel(); } catch { }
-              await selectAndShowRandomRow({ speak: true });
+              await selectAndShowNextRow({ speak: true });
               if (!running) return;
               // wait the configured interval after speech finished
               autoTimer = setTimeout(runOnce, sec * 1000);
@@ -1122,6 +1138,7 @@
           <label class="badge" width="100px"><span></span>
             <select id="sp-lang"></select>
           </label>
+          <label class="badge"><input type="checkbox" id="sp-random" checked /> <span>Random</span></label>
           <label class="badge"><span>Min similarity %</span>
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
           </label>
@@ -1170,6 +1187,7 @@
           <label class="badge"><span>Practice language</span>
             <select id="wr-lang"></select>
           </label>
+          <label class="badge"><input type="checkbox" id="wr-random" checked /> <span>Random</span></label>
           <button id="wr-start">Start</button>
           <button id="wr-stop" class="secondary">Stop</button>
           <span id="wr-status" class="status">Idle</span>
@@ -1236,7 +1254,7 @@
         saveConfig();
 
         // User gesture initiates: select phrase and speak sequence, then start mic
-        await selectAndShowRandomRow({ speak: true });
+        await selectAndShowNextRow({ speak: true });
         if (!speakingPractice.active) return;
 
         const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
@@ -1314,7 +1332,7 @@
         const newToken = ++phraseSessionId;
         if (!speakingPractice.active) return;
         // Move to next phrase: select + speak once, await speak, then listen again
-        await selectAndShowRandomRow({ speak: true });
+        await selectAndShowNextRow({ speak: true });
         if (!speakingPractice.active) return;
         // Restart recognition for the new target
         await startSpeakingPracticeCycleOnly();
@@ -1402,7 +1420,7 @@
         saveConfig();
 
         // Select and speak once
-        await selectAndShowRandomRow({ speak: true });
+        await selectAndShowNextRow({ speak: true });
         updateCurrentWriteTarget();
         writingPractice.statusEl.textContent = 'Type what you hear…';
 
@@ -1419,7 +1437,7 @@
             writingPractice.writingBusy = true;
             // Advance to next phrase safely; ensure single playback
             try { speechSynthesis.cancel(); } catch { }
-            await selectAndShowRandomRow({ speak: true });
+            await selectAndShowNextRow({ speak: true });
             updateCurrentWriteTarget();
             e.target.value = '';
             writingPractice.writingBusy = false;
@@ -1590,7 +1608,7 @@
           els.csvBox.value = text.trim();
           ensureParsed();
           if (parsedRows.length) {
-            await selectAndShowRandomRow({ speak: false });
+            await selectAndShowNextRow({ speak: false });
           }
         } catch {
           // ignore
@@ -1658,7 +1676,7 @@
           els.csvBox.value = (content || '').trim();
           ensureParsed();
           // Show first item silently so UI updates
-          if (parsedRows.length) await selectAndShowRandomRow({ speak: false });
+          if (parsedRows.length) await selectAndShowNextRow({ speak: false });
           els.aiStatus.textContent = 'Loaded';
         } catch (err) {
           console.error('OpenAI load error', err);
@@ -1672,7 +1690,7 @@
       // --- Event wiring ---
       function bindEvents() {
         // Random button (global)
-        els.btnRandom.onclick = async () => { await selectAndShowRandomRow({ speak: true }); };
+        els.btnRandom.onclick = async () => { await selectAndShowNextRow({ speak: true }); };
 
         // Mode switching
         els.modeSelect.onchange = () => {
@@ -1727,7 +1745,7 @@
           const text = await file.text();
           els.csvBox.value = text.trim();
           ensureParsed();
-          await selectAndShowRandomRow({ speak: false });
+          await selectAndShowNextRow({ speak: false });
           saveConfig();
         };
 
@@ -1737,8 +1755,8 @@
         const refreshBtn = document.getElementById('refreshVoices');
         if (refreshBtn) refreshBtn.onclick = () => { refreshVoices(); };
         // Language selectors: update labels and voices when changed
-        els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
-        els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowRandomRow({ speak: false }); renderModePanel(); saveConfig(); };
+        els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowNextRow({ speak: false }); renderModePanel(); saveConfig(); };
+        els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowNextRow({ speak: false }); renderModePanel(); saveConfig(); };
         if ('onvoiceschanged' in speechSynthesis) {
           speechSynthesis.onvoiceschanged = () => populateVoices();
         }
@@ -1788,7 +1806,7 @@
         populatePredefinedList();
 
         // Initial phrase display (silent) so UI isn't empty
-        selectAndShowRandomRow({ speak: false });
+        selectAndShowNextRow({ speak: false });
 
         // Defaults only when no saved configuration
         if (!savedConfig) {
