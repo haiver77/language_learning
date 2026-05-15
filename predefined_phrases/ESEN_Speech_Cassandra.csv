@@ -1,6 +1,5 @@
 Cassandra es una base distribuida NoSQL;Cassandra is a distributed NoSQL database
-Pertenece al ecosistema Apache Software Foundation;It belongs to Apache Software Foundation ecosystem
-Cassandra almacena grandes volúmenes distribuidos;Cassandra stores massive distributed volumes
+Cassandra almacena masivos volúmenes distribuidos;Cassandra stores massive distributed volumes
 Su diseño prioriza disponibilidad continua siempre;Its design prioritizes continuous availability always
 Cassandra soporta arquitecturas altamente escalables modernas;Cassandra supports highly scalable modern architectures
 Muchas empresas usan Cassandra para analítica;Many companies use Cassandra for analytics
@@ -23,7 +22,7 @@ Agregar nodos incrementa capacidad fácilmente progresivamente;Adding nodes incr
 No requiere interrupciones extensas durante expansión;It requires no extensive interruptions during expansion
 Cassandra utiliza protocolo gossip para comunicación;Cassandra uses gossip protocol for communication
 Ese protocolo comparte información entre nodos;That protocol shares information between nodes
-También detecta fallos automáticamente constantemente;It also detects failures automatically constantly
+También detecta fallos automáticamente;It also detects failures automatically
 La detección rápida mejora estabilidad operativa general;Fast detection improves overall operational stability
 Cassandra soporta consistencia configurable mediante niveles;Cassandra supports configurable consistency through levels
 Los clientes definen equilibrio disponibilidad consistencia;Clients define availability consistency balance
@@ -45,7 +44,7 @@ Ese enfoque mejora desacoplamiento entre servicios considerablemente;That approa
 Cassandra ofrece escritura extremadamente rápida consistente;Cassandra offers extremely fast consistent writing
 Las operaciones escritura utilizan estructuras memtable internas;Write operations use internal memtable structures
 Posteriormente datos llegan archivos SSTable persistentes;Later data reaches persistent SSTable files
-Ese flujo optimiza rendimiento escrituras intensivas considerablemente;That flow greatly optimizes intensive write performance
+Ese flujo optimiza rendimiento de intensas operaciones de escritura;That workflow optimizes the performance of intensive write operations.
 Cassandra utiliza commit logs para durabilidad;Cassandra uses commit logs for durability
 Los logs permiten recuperación después fallos inesperados;Logs allow recovery after unexpected failures
 La plataforma ejecuta compactación automáticamente periódicamente;The platform executes compaction automatically periodically
