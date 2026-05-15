@@ -1,0 +1,63 @@
+Cassandra es una base de datos distribuida NoSQL;Cassandra is a distributed NoSQL database
+Fue diseñada para manejar enormes volúmenes de datos;It was designed to handle massive data volumes
+Muchas empresas usan Cassandra para aplicaciones críticas modernas;Many companies use Cassandra for modern critical applications
+Cassandra ofrece alta disponibilidad en diferentes centros regionales;Cassandra provides high availability across different regional centers
+Además soporta replicación automática entre múltiples nodos distribuidos;Additionally it supports automatic replication across multiple distributed nodes
+Este sistema evita puntos únicos de falla críticos;This system avoids critical single points of failure
+Por lo tanto mantiene servicios funcionando durante interrupciones inesperadas;Therefore it keeps services running during unexpected outages
+Cassandra utiliza arquitectura peer to peer completamente distribuida;Cassandra uses a fully distributed peer to peer architecture
+Cada nodo comparte responsabilidades dentro del clúster completo;Each node shares responsibilities within the complete cluster
+No existe un servidor maestro controlando operaciones internas;There is no master server controlling internal operations
+Como resultado el sistema escala horizontalmente con facilidad;As a result the system scales horizontally with ease
+Las organizaciones agregan nuevos nodos sin detener servicios activos;Organizations add new nodes without stopping active services
+Cassandra funciona correctamente con millones de operaciones simultáneas;Cassandra works correctly with millions of simultaneous operations
+Por esa razón grandes plataformas digitales utilizan Cassandra frecuentemente;For that reason large digital platforms frequently use Cassandra
+Muchas aplicaciones requieren respuestas rápidas durante tráfico extremadamente alto;Many applications require fast responses during extremely high traffic
+Cassandra maneja cargas intensivas con baja latencia constante;Cassandra handles intensive workloads with consistent low latency
+También permite almacenar datos estructurados y semiestructurados fácilmente;It also allows storing structured and semi structured data easily
+Los desarrolladores usan Cassandra para sistemas analíticos modernos empresariales;Developers use Cassandra for modern enterprise analytical systems
+Además Cassandra soporta aplicaciones financieras altamente transaccionales importantes;Additionally Cassandra supports highly transactional financial applications
+Las plataformas bancarias requieren disponibilidad continua y recuperación rápida;Banking platforms require continuous availability and fast recovery
+Cassandra ayuda mantener operaciones críticas funcionando permanentemente;Cassandra helps maintain critical operations running permanently
+Igualmente las empresas telecomunicaciones usan Cassandra para grandes registros;Likewise telecommunications companies use Cassandra for large records
+Los sistemas IoT generan enormes cantidades de información constantemente;IoT systems constantly generate enormous amounts of information
+Cassandra procesa estos datos eficientemente mediante múltiples particiones distribuidas;Cassandra processes this data efficiently through multiple distributed partitions
+Además soporta escritura rápida para dispositivos conectados continuamente;Additionally it supports fast writing for continuously connected devices
+Muchas soluciones streaming también dependen de Cassandra actualmente;Many streaming solutions also depend on Cassandra currently
+Los servicios multimedia necesitan escalabilidad durante eventos masivos globales;Multimedia services need scalability during massive global events
+Cassandra distribuye tráfico automáticamente entre servidores disponibles activos;Cassandra automatically distributes traffic among active available servers
+El modelo datos Cassandra utiliza columnas y particiones flexibles;The Cassandra data model uses flexible columns and partitions
+Las tablas organizan información usando claves partición específicas importantes;Tables organize information using important partition keys
+Cada partición contiene datos relacionados dentro mismo nodo;Each partition contains related data within the same node
+Esta estrategia mejora rendimiento durante consultas altamente concurrentes;This strategy improves performance during highly concurrent queries
+Además Cassandra utiliza lenguaje consultas llamado CQL oficialmente;Additionally Cassandra uses a query language officially called CQL
+CQL significa Cassandra Query Language para operaciones bases datos;CQL means Cassandra Query Language for database operations
+Su sintaxis parece similar al lenguaje SQL tradicional conocido;Its syntax appears similar to the traditional known SQL language
+Sin embargo Cassandra tiene limitaciones consultas comparado sistemas relacionales;However Cassandra has query limitations compared with relational systems
+Por ejemplo evita operaciones join complejas entre múltiples tablas;For example it avoids complex join operations between multiple tables
+Los arquitectos diseñan modelos datos considerando patrones acceso específicos;Architects design data models considering specific access patterns
+Este enfoque mejora considerablemente velocidad consultas y escrituras simultáneas;This approach considerably improves query speed and simultaneous writes
+Cassandra incluye componentes internos importantes para operaciones distribuidas eficientes;Cassandra includes important internal components for efficient distributed operations
+Uno componentes principales es llamado Gossip Protocol internamente;One main component is internally called Gossip Protocol
+Este mecanismo comparte información estado entre todos nodos activos;This mechanism shares status information among all active nodes
+También permite detectar fallas rápidamente dentro del clúster distribuido;It also allows quickly detecting failures within the distributed cluster
+Otro componente importante es llamado Commit Log internamente;Another important component is internally called Commit Log
+Este módulo registra cambios antes almacenarlos permanentemente disco;This module records changes before permanently storing them on disk
+Como resultado Cassandra protege información durante fallas inesperadas servidor;As a result Cassandra protects information during unexpected server failures
+Además Cassandra utiliza Memtables para almacenamiento temporal memoria principal;Additionally Cassandra uses Memtables for temporary storage in main memory
+Posteriormente los datos transfieren hacia archivos SSTables persistentes;Later the data transfers toward persistent SSTables files
+Este proceso mejora velocidad escritura considerablemente aplicaciones empresariales modernas;This process considerably improves writing speed for modern enterprise applications
+Los administradores necesitan planificar cuidadosamente despliegues Cassandra empresariales;Administrators need to carefully plan enterprise Cassandra deployments
+La infraestructura requiere suficientes recursos memoria almacenamiento y red;The infrastructure requires sufficient memory storage and network resources
+Además las configuraciones replicación dependen necesidades disponibilidad específicas;Additionally replication configurations depend on specific availability requirements
+Muchas organizaciones implementan Cassandra usando múltiples centros datos distribuidos;Many organizations implement Cassandra using multiple distributed data centers
+Esta estrategia mejora resiliencia ante desastres y fallas regionales;This strategy improves resilience against disasters and regional failures
+También permite reducir latencia usuarios diferentes ubicaciones geográficas;It also allows reducing latency for users in different geographical locations
+Cassandra puede ejecutarse plataformas nube o infraestructura local privada;Cassandra can run on cloud platforms or private local infrastructure
+Las empresas frecuentemente utilizan contenedores durante despliegues modernos automatizados;Companies frequently use containers during modern automated deployments
+Kubernetes facilita administración escalabilidad y recuperación nodos Cassandra;Kubernetes facilitates administration scalability and recovery of Cassandra nodes
+Sin embargo los equipos deben monitorear rendimiento constantemente producción;However teams must constantly monitor performance in production
+Las herramientas monitoreo ayudan identificar problemas capacidad tempranamente importantes;Monitoring tools help identify important capacity problems early
+Finalmente Cassandra representa solución poderosa para aplicaciones distribuidas modernas;Finally Cassandra represents a powerful solution for modern distributed applications
+Su arquitectura flexible permite crecimiento continuo largo plazo empresarial;Its flexible architecture allows continuous long term enterprise growth
+Además ofrece confiabilidad rendimiento y disponibilidad extremadamente elevados;Additionally it offers extremely high reliability performance and availability
