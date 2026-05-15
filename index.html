@@ -275,7 +275,22 @@
     /* hide overlay scrollbar so only the textarea shows one */
     #csvBoxViewerDisplay::-webkit-scrollbar { display: none; }
     #csvBoxViewerDisplay { -ms-overflow-style: none; scrollbar-width: none; }
-    #csvBoxViewerDisplay .ln { display:none; }
+    /* viewer-line: each overlay line reserves space for a right-side line number */
+    #csvBoxViewerDisplay .viewer-line { display:block; position:relative; padding-right: calc(var(--ln-ch, 3ch) + 16px); }
+    #csvBoxViewerDisplay .viewer-line .line-content { white-space: inherit; display:inline; }
+    #csvBoxViewerDisplay .viewer-line .ln {
+      position: absolute;
+      right: 6px;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: inherit;
+      opacity: 0.85;
+      user-select: none;
+      pointer-events: none;
+    }
     #csvColorControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap }
     #csvColorControls label { display:inline-flex; gap:6px; align-items:center; background:transparent; border-radius:8px; padding:4px }
 
@@ -862,23 +877,46 @@
         const colorB = (els.color2 && els.color2.value) || '#3ccf7a';
         const lines = (ta.value || '').split(/\r?\n/);
         const pad = String(lines.length).length;
+
+        // Build HTML lines with a right-side line number element
         const html = lines.map((ln, idx) => {
-          if (!ln.trim()) return '';
-          // capture left, separator (semicolon and any surrounding chars), and right to preserve exact spacing
+          // preserve exact spacing and separators
+          if (!ln) return `<div class="viewer-line"><span class="line-content"></span><span class="ln">${idx+1}</span></div>`;
           const m = ln.match(/^([^;]*)(;)([\s\S]*)$/);
+          let contentHtml = '';
           if (m) {
             const left = m[1] || '';
             const sep = m[2] || '';
             const right = m[3] || '';
             const leftHtml = left ? `<span class="ph1" style="color:${colorA}">${escapeHtml(left)}</span>` : '';
             const rightHtml = right ? `<span class="ph2" style="color:${colorB}">${escapeHtml(right)}</span>` : '';
-            return `${leftHtml}${escapeHtml(sep)}${rightHtml}`;
+            contentHtml = `${leftHtml}${escapeHtml(sep)}${rightHtml}`;
           } else {
-            // no separator found — render the whole line escaped
-            return escapeHtml(ln);
+            contentHtml = escapeHtml(ln);
           }
-        }).join('\n');
+          return `<div class="viewer-line"><span class="line-content">${contentHtml}</span><span class="ln">${idx+1}</span></div>`;
+        }).join('');
+
         disp.innerHTML = html;
+
+        // Reserve right padding in the textarea so numbers don't overlap user text (store original once)
+        try {
+          const cs = window.getComputedStyle(ta);
+          if (!ta.dataset._origPaddingRight) ta.dataset._origPaddingRight = cs.paddingRight || '0px';
+          // measure width of the widest line-number (monospace digits)
+          const measure = document.createElement('span');
+          measure.style.position = 'absolute';
+          measure.style.visibility = 'hidden';
+          measure.style.whiteSpace = 'nowrap';
+          measure.style.font = cs.font;
+          measure.textContent = '9'.repeat(Math.max(1, pad));
+          document.body.appendChild(measure);
+          const lnPx = measure.offsetWidth + 12; // extra spacing
+          document.body.removeChild(measure);
+          const base = parseFloat(ta.dataset._origPaddingRight) || 0;
+          ta.style.paddingRight = (base + lnPx) + 'px';
+        } catch (e) { /* ignore measurement errors */ }
+
         // ensure viewer styles match the csv textarea (fixed relationship)
         syncViewerStyles();
       }
@@ -1968,6 +2006,7 @@
           <li>Replicate "Load from AI" button style to the other buttons.</li>
           <li>Add line numbers to the CSV textbox viewer.</li>
           <li>Color code CSV entries based on language.</li>
+          <li>Leer archivos de Onedrive o Google Drive público</li>
         </ul>
       </div>
     </section>
