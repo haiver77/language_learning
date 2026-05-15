@@ -1776,8 +1776,23 @@
         try {
           const res = await fetch(`./predefined_phrases/${encodeURIComponent(name)}`);
           const text = await res.text();
+          // Update textarea value and ensure all viewers/parsers are refreshed
           els.csvBox.value = text.trim();
+          // Apply wrap settings to textarea/viewer
+          try { applyCsvWrap(); } catch (e) { /* ignore */ }
+          // Re-parse CSV and refresh overlay viewer
           ensureParsed();
+          try { renderCsvViewer(); } catch (e) { /* ignore */ }
+          // Keep overlay scroll in sync with textarea
+          try {
+            if (els.csvBoxViewerDisplay) {
+              els.csvBoxViewerDisplay.scrollTop = els.csvBox.scrollTop;
+              els.csvBoxViewerDisplay.scrollLeft = els.csvBox.scrollLeft;
+            }
+          } catch (e) { /* ignore */ }
+          // Persist selection and CSV content
+          try { saveConfig(); } catch (e) { /* ignore */ }
+
           if (parsedRows.length) {
             await selectAndShowNextRow({ speak: false });
           }
@@ -1845,7 +1860,15 @@
           const content = await callOpenAI(token, prompt);
           // Put response into csvBox
           els.csvBox.value = (content || '').trim();
+          try { applyCsvWrap(); } catch (e) { /* ignore */ }
           ensureParsed();
+          try { renderCsvViewer(); } catch (e) { /* ignore */ }
+          try {
+            if (els.csvBoxViewerDisplay) {
+              els.csvBoxViewerDisplay.scrollTop = els.csvBox.scrollTop;
+              els.csvBoxViewerDisplay.scrollLeft = els.csvBox.scrollLeft;
+            }
+          } catch (e) { /* ignore */ }
           // Show first item silently so UI updates
           if (parsedRows.length) await selectAndShowNextRow({ speak: false });
           els.aiStatus.textContent = 'Loaded';
@@ -1915,7 +1938,15 @@
           if (!file) return;
           const text = await file.text();
           els.csvBox.value = text.trim();
+          try { applyCsvWrap(); } catch (e) { /* ignore */ }
           ensureParsed();
+          try { renderCsvViewer(); } catch (e) { /* ignore */ }
+          try {
+            if (els.csvBoxViewerDisplay) {
+              els.csvBoxViewerDisplay.scrollTop = els.csvBox.scrollTop;
+              els.csvBoxViewerDisplay.scrollLeft = els.csvBox.scrollLeft;
+            }
+          } catch (e) { /* ignore */ }
           await selectAndShowNextRow({ speak: false });
           saveConfig();
         };
