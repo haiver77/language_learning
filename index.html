@@ -268,6 +268,17 @@
       resize: vertical;
     }
 
+    /* CSV viewer overlay (read-only colorized view) */
+    .viewer-wrapper { position: relative; width: 100%; }
+    #csvBox { box-sizing: border-box; width:100%; min-height:10em; resize:vertical; border-radius:10px; border:1px solid var(--border); background: var(--control-bg); color: transparent; caret-color: var(--control-fg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding:10px; position:relative; z-index:1; }
+    #csvBoxViewerDisplay { position: absolute; top:0; left:0; right:0; bottom:0; overflow:auto; white-space:pre-wrap; word-wrap:break-word; padding:10px; pointer-events:none; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; z-index:2; box-sizing: border-box; }
+    /* hide overlay scrollbar so only the textarea shows one */
+    #csvBoxViewerDisplay::-webkit-scrollbar { display: none; }
+    #csvBoxViewerDisplay { -ms-overflow-style: none; scrollbar-width: none; }
+    #csvBoxViewerDisplay .ln { display:none; }
+    #csvColorControls { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap }
+    #csvColorControls label { display:inline-flex; gap:6px; align-items:center; background:transparent; border-radius:8px; padding:4px }
+
     .progress-line {
       display: flex;
       align-items: center;
@@ -463,8 +474,16 @@
         <div class="panel-title">Phrases (CSV: ES,EN)</div>
         <div class="inline-controls">
           <div style="width:100%">
-            <textarea class="textarea" id="csvBox" style="width:100%; min-height:10em; resize:vertical"></textarea>
-            <label class="badge" style="display:inline-block; margin-bottom:6px"><input type="checkbox" id="wrapCsv" /> <span>Word Wrap</span></label>
+            <div class="viewer-wrapper" style="position:relative; margin-top:8px">
+              <textarea class="textarea" id="csvBox" style="width:100%; min-height:10em; resize:vertical; position:relative; z-index:1"></textarea>
+              <div id="csvBoxViewerDisplay" aria-hidden="true"></div>
+              <label class="badge" style="display:inline-block; margin-bottom:6px; position:relative; z-index:2; margin-top:8px"><input type="checkbox" id="wrapCsv" /> <span>Word Wrap</span></label>
+
+              <div id="csvColorControls">
+                <label class="badge"><span>Phrase 1 color</span> <input type="color" id="color1" value="#4da3ff" /></label>
+                <label class="badge"><span>Phrase 2 color</span> <input type="color" id="color2" value="#3ccf7a" /></label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -571,6 +590,9 @@
         btnRandom: document.getElementById('btnRandom'),
         modeContent: document.getElementById('modeContent'),
         csvBox: document.getElementById('csvBox'),
+        csvBoxViewerDisplay: document.getElementById('csvBoxViewerDisplay'),
+        color1: document.getElementById('color1'),
+        color2: document.getElementById('color2'),
         wrapCsv: document.getElementById('wrapCsv'),
         predefinedSelect: document.getElementById('predefinedSelect'),
         btnLoadPredefined: document.getElementById('btnLoadPredefined'),
@@ -787,6 +809,10 @@
         try { ta.wrap = wrap ? 'soft' : 'off'; } catch (e) { /* ignore if unsupported */ }
         ta.style.whiteSpace = wrap ? 'pre-wrap' : 'pre';
         ta.style.overflowWrap = wrap ? 'break-word' : 'normal';
+        // mirror wrap into viewer display
+        if (els.csvBoxViewerDisplay) {
+          els.csvBoxViewerDisplay.style.whiteSpace = wrap ? 'pre-wrap' : 'pre';
+        }
       }
 
       function getReadOrder() {
@@ -827,6 +853,76 @@
         };
       }
 
+      // --- CSV viewer rendering ---
+      function renderCsvViewer() {
+        const disp = els.csvBoxViewerDisplay;
+        const ta = els.csvBox;
+        if (!disp || !ta) return;
+        const colorA = (els.color1 && els.color1.value) || '#4da3ff';
+        const colorB = (els.color2 && els.color2.value) || '#3ccf7a';
+        const lines = (ta.value || '').split(/\r?\n/);
+        const pad = String(lines.length).length;
+        const html = lines.map((ln, idx) => {
+          if (!ln.trim()) return '';
+          // capture left, separator (semicolon and any surrounding chars), and right to preserve exact spacing
+          const m = ln.match(/^([^;]*)(;)([\s\S]*)$/);
+          if (m) {
+            const left = m[1] || '';
+            const sep = m[2] || '';
+            const right = m[3] || '';
+            const leftHtml = left ? `<span class="ph1" style="color:${colorA}">${escapeHtml(left)}</span>` : '';
+            const rightHtml = right ? `<span class="ph2" style="color:${colorB}">${escapeHtml(right)}</span>` : '';
+            return `${leftHtml}${escapeHtml(sep)}${rightHtml}`;
+          } else {
+            // no separator found — render the whole line escaped
+            return escapeHtml(ln);
+          }
+        }).join('\n');
+        disp.innerHTML = html;
+        // ensure viewer styles match the csv textarea (fixed relationship)
+        syncViewerStyles();
+      }
+
+      function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      // Keep the viewer styles matched to the actual styles used by the csv textarea
+      function syncViewerStyles() {
+        try {
+          if (!els.csvBox) return;
+          const cs = window.getComputedStyle(els.csvBox);
+          if (!cs) return;
+          const props = {
+            fontSize: cs.fontSize,
+            fontFamily: cs.fontFamily,
+            fontWeight: cs.fontWeight,
+            lineHeight: cs.lineHeight,
+            paddingTop: cs.paddingTop,
+            paddingRight: cs.paddingRight,
+            paddingBottom: cs.paddingBottom,
+            paddingLeft: cs.paddingLeft,
+            whiteSpace: cs.whiteSpace,
+            backgroundColor: cs.backgroundColor,
+            letterSpacing: cs.letterSpacing,
+          };
+          if (els.csvBoxViewerDisplay) {
+            Object.assign(els.csvBoxViewerDisplay.style, {
+              fontSize: props.fontSize,
+              fontFamily: props.fontFamily,
+              fontWeight: props.fontWeight,
+              lineHeight: props.lineHeight,
+              paddingTop: props.paddingTop,
+              paddingRight: props.paddingRight,
+              paddingBottom: props.paddingBottom,
+              paddingLeft: props.paddingLeft,
+              whiteSpace: props.whiteSpace,
+              background: 'transparent',
+              letterSpacing: props.letterSpacing,
+            });
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+
       // --- Local Storage: save / load UI configuration ---
       const STORAGE_KEY = 'lang_trainer_config_v1';
 
@@ -842,6 +938,8 @@
             predefined: els.predefinedSelect.value,
             csv: els.csvBox.value,
             wrapCsv: !!(els.wrapCsv && els.wrapCsv.checked),
+            color1: (els.color1 && els.color1.value) || '#4da3ff',
+            color2: (els.color2 && els.color2.value) || '#3ccf7a',
             speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
             writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
           };
@@ -884,15 +982,36 @@
           if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
           if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
           if (typeof cfg.wrapCsv !== 'undefined') { try { els.wrapCsv.checked = !!cfg.wrapCsv; } catch (e) { } applyCsvWrap(); }
+          if (cfg.color1) { try { if (els.color1) els.color1.value = cfg.color1; } catch (e) {} }
+          if (cfg.color2) { try { if (els.color2) els.color2.value = cfg.color2; } catch (e) {} }
         } catch (e) { console.warn('loadConfig failed', e); }
       }
 
       // wire up wrapCsv change to apply immediately and persist
       try {
         if (els.wrapCsv) {
-          els.wrapCsv.addEventListener('change', () => { applyCsvWrap(); saveConfig(); });
+          els.wrapCsv.addEventListener('change', () => { applyCsvWrap(); renderCsvViewer(); saveConfig(); });
         }
       } catch (e) { /* ignore wiring errors */ }
+
+      // Keep overlay size matched to textarea when user resizes the textarea
+      try {
+        if (window.ResizeObserver && els.csvBox && els.csvBoxViewerDisplay) {
+          const ro = new ResizeObserver(() => {
+            try {
+              const ta = els.csvBox;
+              const disp = els.csvBoxViewerDisplay;
+              disp.style.width = ta.offsetWidth + 'px';
+              disp.style.height = ta.offsetHeight + 'px';
+              // keep scroll positions matched
+              disp.scrollTop = ta.scrollTop;
+              disp.scrollLeft = ta.scrollLeft;
+              syncViewerStyles();
+            } catch (e) { /* ignore */ }
+          });
+          ro.observe(els.csvBox);
+        }
+      } catch (e) { /* ignore */ }
 
       // --- Speech Synthesis: robust sequence with session token and timeouts ---
       async function speakCurrentRowSequence(sessionToken, row) {
@@ -1519,6 +1638,19 @@
         }
       }
 
+      // Viewer scroll sync: keep overlay and textarea aligned
+      try {
+        if (els.csvBox) {
+          els.csvBox.addEventListener('input', () => { ensureParsed(); renderCsvViewer(); saveConfig(); });
+          els.csvBox.addEventListener('scroll', () => {
+            if (els.csvBoxViewerDisplay) els.csvBoxViewerDisplay.scrollTop = els.csvBox.scrollTop;
+            if (els.csvBoxViewerDisplay) els.csvBoxViewerDisplay.scrollLeft = els.csvBox.scrollLeft;
+          });
+        }
+        if (els.color1) els.color1.addEventListener('input', () => { renderCsvViewer(); saveConfig(); });
+        if (els.color2) els.color2.addEventListener('input', () => { renderCsvViewer(); saveConfig(); });
+      } catch (e) { /* ignore wiring errors */ }
+
       // Attempt to force voice loading when user requests it (user gesture required on some browsers)
       function refreshVoices() {
         try {
@@ -1769,6 +1901,8 @@
         els.aiTopic.oninput = () => saveConfig();
         els.aiQuantity.onchange = () => saveConfig();
         if (els.aiMinWords) els.aiMinWords.onchange = () => saveConfig();
+        // ensure viewer renders on initial bind
+        try { renderCsvViewer(); } catch (e) { /* ignore */ }
       }
 
       // --- Init sample data ---
