@@ -1,0 +1,123 @@
+Apigee es una plataforma API;Apigee is an API platform
+Fue creada por Google Cloud;It was created by Google Cloud
+Gestiona interfaces de programación empresariales;It manages enterprise programming interfaces
+Permite publicar APIs de forma segura;It allows publishing APIs securely
+También controla tráfico entre aplicaciones;It also controls traffic between applications
+Actúa como puerta centralizada API;It acts as centralized API gateway
+Las empresas exponen servicios mediante APIs;Companies expose services through APIs
+La plataforma protege esos servicios digitales;The platform protects those digital services
+También analiza comportamiento del tráfico;It also analyzes traffic behavior
+Facilita integración entre sistemas empresariales;It facilitates integration between enterprise systems
+Muchas organizaciones usan arquitecturas distribuidas;Many organizations use distributed architectures
+Las APIs conectan componentes independientes fácilmente;APIs connect independent components easily
+Apigee simplifica administración de esas conexiones;Apigee simplifies administration of those connections
+También mejora seguridad y monitoreo operacional;It also improves security and operational monitoring
+La plataforma soporta múltiples protocolos modernos;The platform supports multiple modern protocols
+HTTP es ampliamente utilizado actualmente;HTTP is widely used currently
+REST representa estilo arquitectónico popular;REST represents a popular architectural style
+También soporta servicios basados en SOAP;It also supports SOAP based services
+GraphQL puede integrarse mediante configuraciones adicionales;GraphQL can integrate through additional configurations
+Los desarrolladores crean proxies API reutilizables;Developers create reusable API proxies
+Un proxy representa fachada controlada externa;A proxy represents controlled external facade
+Las solicitudes pasan primero por Apigee;Requests pass first through Apigee
+Después alcanzan servicios internos protegidos;Then they reach protected internal services
+Ese enfoque mejora aislamiento arquitectónico empresarial;That approach improves enterprise architectural isolation
+También reduce exposición directa del backend;It also reduces direct backend exposure
+Las políticas controlan comportamiento del tráfico;Policies control traffic behavior
+Existen políticas para autenticación segura;There are policies for secure authentication
+También existen políticas para limitación tráfico;There are also policies for traffic limiting
+Otras transforman mensajes entre formatos diferentes;Others transform messages between different formats
+JSON es formato ampliamente utilizado actualmente;JSON is widely used currently
+XML todavía aparece en sistemas heredados;XML still appears in legacy systems
+Apigee transforma ambos formatos fácilmente;Apigee transforms both formats easily
+También puede validar estructuras de mensajes;It can also validate message structures
+Las políticas reducen necesidad programación personalizada;Policies reduce need for custom programming
+Eso acelera implementación de integraciones empresariales;That accelerates enterprise integration implementation
+La seguridad representa componente extremadamente importante;Security represents an extremely important component
+Muchas APIs contienen información empresarial sensible;Many APIs contain sensitive enterprise information
+Apigee soporta autenticación mediante OAuth;Apigee supports authentication through OAuth
+También soporta claves API tradicionales;It also supports traditional API keys
+JWT permite validación moderna identidades digitales;JWT allows modern digital identity validation
+TLS protege comunicaciones mediante cifrado seguro;TLS protects communications through secure encryption
+Las amenazas pueden bloquearse automáticamente allí;Threats can be blocked automatically there
+También existen mecanismos contra ataques volumétricos;There are also mechanisms against volumetric attacks
+La analítica proporciona información operacional valiosa;Analytics provide valuable operational information
+Los administradores observan patrones utilización fácilmente;Administrators observe usage patterns easily
+También detectan errores y comportamientos anormales;They also detect errors and abnormal behaviors
+Los dashboards muestran métricas tiempo real;Dashboards show real time metrics
+Las organizaciones mejoran decisiones mediante análisis;Organizations improve decisions through analysis
+Los desarrolladores identifican cuellos rápidamente allí;Developers identify bottlenecks quickly there
+También pueden optimizar rendimiento constantemente;They can also optimize performance constantly
+La monetización resulta posible mediante Apigee;Monetization becomes possible through Apigee
+Algunas empresas venden acceso API comercialmente;Some companies sell API access commercially
+Los planes definen límites específicos consumo;Plans define specific consumption limits
+También pueden existir diferentes niveles acceso;Different access levels can also exist
+Eso permite construir ecosistemas digitales rentables;That allows building profitable digital ecosystems
+Los portales ayudan desarrolladores externos fácilmente;Portals help external developers easily
+La documentación centraliza información técnica importante;Documentation centralizes important technical information
+También facilita pruebas mediante herramientas integradas;It also facilitates testing through integrated tools
+Los consumidores entienden APIs más rápidamente;Consumers understand APIs more quickly
+Eso mejora adopción tecnológica empresarial externa;That improves external enterprise technology adoption
+La arquitectura incluye varios componentes principales;The architecture includes several main components
+El runtime procesa solicitudes entrantes continuamente;The runtime processes incoming requests continuously
+El plano administración controla configuraciones globales;The management plane controls global configurations
+También existe componente dedicado analíticas avanzadas;There is also a component dedicated analytics
+Los entornos separan desarrollo y producción;Environments separate development and production
+Eso mejora gobernanza y estabilidad operacional;That improves governance and operational stability
+Los desarrolladores despliegan cambios in forma controlada allí;Developers deploy changes in controlled ways there
+La plataforma soporta múltiples modelos despliegue;The platform supports multiple deployment models
+Puede ejecutarse completamente nube pública;It can run completely on public cloud
+También soporta instalaciones híbridas empresariales complejas;It also supports complex enterprise hybrid installations
+Algunas organizaciones mantienen infraestructura local sensible;Some organizations maintain sensitive local infrastructure
+Otras prefieren servicios completamente administrados externamente;Others prefer fully managed external services
+Apigee soporta ambos enfoques operacionales modernos;Apigee supports both modern operational approaches
+Kubernetes puede utilizarse en implementaciones híbridas;Kubernetes can be used in hybrid implementations
+La escalabilidad ocurre mediante componentes distribuidos;Scalability happens through distributed components
+El tráfico puede crecer significativamente diariamente;Traffic can grow significantly daily
+La plataforma distribuye carga automáticamente entonces;The platform distributes load automatically then
+También soporta balanceadores y regiones múltiples;It also supports load balancers and multiple regions
+Eso mejora disponibilidad y resiliencia empresarial;That improves enterprise availability and resilience
+Los servicios continúan funcionando durante fallos;Services continue operating during failures
+El monitoreo operacional resulta extremadamente importante;Operational monitoring becomes extremely important
+Las métricas permiten detectar problemas tempranamente;Metrics allow detecting problems early
+También existen registros detallados auditoría técnica;Detailed technical audit logs also exist
+Las alertas notifican eventos críticos inmediatamente;Alerts notify critical events immediately
+Las copias respaldo protegen configuraciones empresariales;Backup copies protect enterprise configurations
+La recuperación minimiza interrupciones operacionales prolongadas;Recovery minimizes prolonged operational interruptions
+Las actualizaciones mejoran estabilidad y seguridad;Updates improve stability and security
+Sin embargo requieren pruebas previas cuidadosas;However they require careful previous testing
+Las integraciones representan capacidad fundamental importante;Integrations represent an important fundamental capability
+Apigee funciona con múltiples plataformas empresariales;Apigee works with multiple enterprise platforms
+También integra servicios mediante conectores específicos;It also integrates services through specific connectors
+Puede conectarse con sistemas heredados fácilmente;It can connect with legacy systems easily
+También trabaja con aplicaciones modernas nativas;It also works with modern native applications
+Los microservicios utilizan frecuentemente esta plataforma;Microservices frequently use this platform
+Eso facilita comunicación entre servicios independientes;That facilitates communication between independent services
+Las organizaciones financieras utilizan Apigee frecuentemente;Financial organizations use Apigee frequently
+También aparece en telecomunicaciones y comercio;It also appears in telecommunications and commerce
+Los bancos exponen servicios digitales seguros;Banks expose secure digital services
+Las tiendas integran pagos mediante APIs;Stores integrate payments through APIs
+Las empresas telecom conectan plataformas distribuidas;Telecom companies connect distributed platforms
+Los gobiernos también publican servicios ciudadanos;Governments also publish citizen services
+Cada industria necesita integraciones controladas actualmente;Every industry currently needs controlled integrations
+Existen algunas limitaciones importantes también;Some important limitations also exist
+La complejidad inicial puede volverse alta;Initial complexity can become high
+Los equipos requieren conocimientos especializados técnicos;Teams require specialized technical knowledge
+También existen costos empresariales significativos frecuentemente;Significant enterprise costs also frequently exist
+Las organizaciones pequeñas podrían preferir alternativas;Small organizations could prefer alternatives
+La personalización excesiva dificulta mantenimiento posterior;Excessive customization complicates later maintenance
+Algunas integraciones heredadas requieren trabajo adicional;Some legacy integrations require additional work
+Las buenas prácticas mejoran resultados empresariales;Good practices improve enterprise results
+Los equipos deben versionar APIs correctamente;Teams should version APIs correctly
+También necesitan documentar cambios cuidadosamente siempre;They also need to document changes carefully always
+La seguridad debe configurarse desde inicio;Security should be configured from the beginning
+El monitoreo continuo resulta completamente esencial;Continuous monitoring becomes completely essential
+Los entornos separados reducen riesgos operacionales;Separated environments reduce operational risks
+Las pruebas automatizadas mejoran estabilidad constantemente;Automated tests improve stability constantly
+Existen anti patrones comunes frecuentemente observados;Common anti patterns frequently observed exist
+Algunos equipos exponen demasiada lógica internamente;Some teams expose too much logic internally
+Otros ignoran controles seguridad fundamentales importantes;Others ignore important fundamental security controls
+También ocurre duplicación innecesaria configuraciones API;Unnecessary duplication of API configurations also occurs
+Las APIs gigantes complican mantenimiento posterior;Giant APIs complicate later maintenance
+Los cambios frecuentes rompen compatibilidad fácilmente;Frequent changes break compatibility easily
+La gobernanza adecuada evita esos problemas;Proper governance avoids those problems

@@ -1,0 +1,135 @@
+Kafka es una plataforma distribuida;Kafka is a distributed platform
+Kafka procesa eventos continuamente;Kafka processes events continuously
+Originalmente fue desarrollado internamente;It was originally developed internally
+Fue creado por LinkedIn;It was created by LinkedIn
+Actualmente pertenece a Apache Software Foundation;It currently belongs to Apache Software Foundation
+Funciona como un sistema distribuido;It works as a distributed system
+Permite transmisión masiva de mensajes;It allows massive message streaming
+También soporta procesamiento en tiempo real;It also supports real-time processing
+Muchas empresas procesan millones diariamente;Many companies process millions daily
+La plataforma maneja flujos continuos;The platform handles continuous streams
+Los productores envían eventos constantemente;Producers continuously send events
+Los consumidores leen eventos posteriormente;Consumers read events afterward
+Los mensajes permanecen almacenados temporalmente;Messages remain temporarily stored
+La arquitectura ofrece alta disponibilidad;The architecture provides high availability
+También ofrece tolerancia ante fallos;It also provides fault tolerance
+El sistema escala horizontalmente fácilmente;The system scales horizontally easily
+Kafka utiliza particiones distribuidas internamente;Kafka uses distributed partitions internally
+Cada partición contiene registros ordenados;Each partition contains ordered records
+Los registros mantienen offsets secuenciales;Records maintain sequential offsets
+Los offsets identifican posiciones específicas;Offsets identify specific positions
+Los consumidores controlan sus offsets;Consumers control their offsets
+Eso facilita reprocesamiento posterior;That enables later reprocessing
+La plataforma utiliza brokers distribuidos;The platform uses distributed brokers
+Cada broker almacena múltiples particiones;Each broker stores multiple partitions
+Los brokers forman un clúster;Brokers form a cluster
+Los clústeres distribuyen la carga;Clusters distribute the workload
+También replican datos automáticamente;They also replicate data automatically
+La replicación mejora disponibilidad general;Replication improves overall availability
+Los líderes coordinan cada partición;Leaders coordinate each partition
+Los seguidores mantienen copias sincronizadas;Followers maintain synchronized copies
+Los clientes encuentran líderes automáticamente;Clients automatically discover leaders
+El protocolo optimiza transferencia eficiente;The protocol optimizes efficient transfer
+Kafka usa comunicación basada en TCP;Kafka uses TCP-based communication
+También soporta protocolos modernos adicionales;It also supports additional modern protocols
+La plataforma minimiza latencia operacional;The platform minimizes operational latency
+Los datos se escriben secuencialmente;Data is written sequentially
+Eso mejora rendimiento significativamente;That significantly improves performance
+Kafka maneja enormes volúmenes concurrentes;Kafka handles massive concurrent volumes
+Muchas aplicaciones dependen diariamente;Many applications depend on it daily
+El sistema desacopla aplicaciones independientes;The system decouples independent applications
+Eso reduce dependencias complejas internas;That reduces complex internal dependencies
+Los servicios intercambian eventos fácilmente;Services exchange events easily
+La arquitectura favorece microservicios modernos;The architecture favors modern microservices
+También soporta integración empresarial compleja;It also supports complex enterprise integration
+Las empresas centralizan eventos críticos;Companies centralize critical events
+Los eventos representan cambios importantes;Events represent important changes
+Por ejemplo, compras o pagos;For example, purchases or payments
+También representan acciones del usuario;They also represent user actions
+Kafka facilita auditoría histórica completa;Kafka facilitates complete historical auditing
+Los registros pueden conservarse prolongadamente;Records can be retained long-term
+Eso habilita análisis posteriores avanzados;That enables advanced later analysis
+La plataforma soporta procesamiento distribuido;The platform supports distributed processing
+Kafka Streams procesa eventos continuamente;Kafka Streams continuously processes events
+También existe integración con Spark;There is also integration with Spark
+Muchas organizaciones construyen pipelines complejos;Many organizations build complex pipelines
+Los pipelines transportan datos continuamente;Pipelines continuously transport data
+Kafka Connect simplifica integraciones externas;Kafka Connect simplifies external integrations
+Existen conectores para muchas plataformas;There are connectors for many platforms
+Por ejemplo, bases relacionales comunes;For example, common relational databases
+También existen conectores cloud populares;There are also popular cloud connectors
+Los conectores reducen desarrollo personalizado;Connectors reduce custom development
+Eso acelera implementaciones empresariales;That accelerates enterprise implementations
+Kafka soporta múltiples lenguajes clientes;Kafka supports multiple client languages
+Por ejemplo, Java y Python;For example, Java and Python
+También soporta Go y Node.js;It also supports Go and Node.js
+Las APIs son relativamente consistentes;The APIs are relatively consistent
+Eso facilita adopción tecnológica amplia;That facilitates broad technological adoption
+La plataforma utiliza tópicos lógicos;The platform uses logical topics
+Cada tópico organiza eventos relacionados;Each topic organizes related events
+Los productores escriben dentro tópicos;Producers write within topics
+Los consumidores leen desde tópicos;Consumers read from topics
+Un tópico posee múltiples particiones;A topic has multiple partitions
+Eso incrementa paralelismo operativo;That increases operational parallelism
+Más particiones permiten mayor escalabilidad;More partitions allow greater scalability
+Sin embargo, agregan complejidad administrativa;However, they add administrative complexity
+La clave determina particiones específicas;The key determines specific partitions
+Eso preserva ordenamiento relacionado;That preserves related ordering
+El orden solo existe localmente;Ordering exists only locally
+No existe ordenamiento global completo;There is no complete global ordering
+Kafka requiere planificación arquitectónica cuidadosa;Kafka requires careful architectural planning
+Las configuraciones afectan rendimiento directamente;Configurations directly affect performance
+La retención consume almacenamiento considerable;Retention consumes considerable storage
+La replicación incrementa seguridad operacional;Replication increases operational security
+También incrementa uso de recursos;It also increases resource usage
+Los administradores monitorean continuamente métricas;Administrators continuously monitor metrics
+Por ejemplo, latencia y throughput;For example, latency and throughput
+También revisan consumo de disco;They also review disk consumption
+Las alertas detectan problemas tempranamente;Alerts detect problems early
+Herramientas externas simplifican observabilidad general;External tools simplify overall observability
+Muchas organizaciones usan Prometheus;Many organizations use Prometheus
+También utilizan Grafana frecuentemente;They also frequently use Grafana
+Los respaldos requieren estrategias específicas;Backups require specific strategies
+La replicación no reemplaza respaldos completos;Replication does not replace complete backups
+Los administradores prueban recuperación periódicamente;Administrators periodically test recovery
+Las actualizaciones requieren planificación cuidadosa;Updates require careful planning
+Los clústeres permiten mantenimiento gradual;Clusters allow gradual maintenance
+Eso reduce interrupciones operacionales;That reduces operational interruptions
+Kafka puede ejecutarse localmente;Kafka can run locally
+También funciona en ambientes cloud;It also works in cloud environments
+Muchas empresas utilizan contenedores modernos;Many companies use modern containers
+Otras prefieren máquinas virtuales tradicionales;Others prefer traditional virtual machines
+La plataforma funciona sobre Kubernetes;The platform works on Kubernetes
+También existe soporte administrado cloud;There is also managed cloud support
+Confluent ofrece servicios administrados;Confluent offers managed services
+Muchos proveedores cloud ofrecen alternativas;Many cloud providers offer alternatives
+La escalabilidad depende particiones correctamente;Scalability depends on partitions correctly
+También depende recursos suficientes;It also depends on sufficient resources
+Kafka utiliza almacenamiento persistente eficiente;Kafka uses efficient persistent storage
+El rendimiento depende discos rápidos;Performance depends on fast disks
+Las redes rápidas mejoran replicación;Fast networks improve replication
+Los consumidores pueden trabajar independientemente;Consumers can work independently
+Eso mejora resiliencia arquitectónica;That improves architectural resilience
+Kafka soporta procesamiento orientado eventos;Kafka supports event-driven processing
+Muchas arquitecturas modernas dependen actualmente;Many modern architectures currently depend on it
+Sin embargo, introduce complejidad operacional adicional;However, it introduces additional operational complexity
+No siempre resulta mejor alternativa;It is not always the best alternative
+Sistemas pequeños podrían simplificarse más;Small systems could be simplified more
+Algunos casos requieren colas tradicionales;Some cases require traditional queues
+Kafka prioriza throughput extremadamente alto;Kafka prioritizes extremely high throughput
+No prioriza simplicidad operacional completa;It does not prioritize complete operational simplicity
+Las malas configuraciones generan problemas;Bad configurations generate problems
+Demasiadas particiones afectan estabilidad;Too many partitions affect stability
+Mensajes enormes degradan rendimiento significativamente;Huge messages significantly degrade performance
+La retención infinita consume almacenamiento excesivo;Infinite retention consumes excessive storage
+Las claves inconsistentes rompen balanceo;Inconsistent keys break load balancing
+Los consumidores lentos generan retrasos;Slow consumers generate delays
+Las buenas prácticas mejoran estabilidad;Good practices improve stability
+Se recomienda monitoreo continuo automatizado;Continuous automated monitoring is recommended
+También conviene usar replicación adecuada;Proper replication is also advisable
+Las pruebas deben realizarse frecuentemente;Testing should be performed frequently
+La documentación facilita mantenimiento posterior;Documentation facilitates later maintenance
+Kafka continúa evolucionando constantemente;Kafka continues evolving constantly
+Muchas empresas innovan usando eventos;Many companies innovate using events
+La plataforma domina integración moderna;The platform dominates modern integration
+Actualmente impulsa arquitecturas empresariales distribuidas;It currently drives distributed enterprise architectures

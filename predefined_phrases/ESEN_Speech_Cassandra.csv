@@ -1,0 +1,131 @@
+Cassandra es una base distribuida NoSQL;Cassandra is a distributed NoSQL database
+Cassandra almacena masivos volúmenes distribuidos;Cassandra stores massive distributed volumes
+Su diseño prioriza disponibilidad continua siempre;Its design prioritizes continuous availability always
+Cassandra soporta arquitecturas altamente escalables modernas;Cassandra supports highly scalable modern architectures
+Muchas empresas usan Cassandra para analítica;Many companies use Cassandra for analytics
+También soporta aplicaciones transaccionales distribuidas;It also supports distributed transactional applications
+Cassandra elimina puntos únicos críticos completamente;Cassandra removes critical single failure points completely
+La plataforma utiliza arquitectura peer-to-peer distribuida;The platform uses distributed peer-to-peer architecture
+Todos los nodos comparten responsabilidades iguales;All nodes share equal responsibilities
+No existe servidor maestro centralizado dedicado;There is no dedicated centralized master server
+Ese enfoque mejora resiliencia operativa considerablemente;That approach improves operational resilience considerably
+Cassandra maneja enormes cantidades simultáneas eficientemente;Cassandra handles enormous simultaneous quantities efficiently
+También ofrece replicación configurable avanzada flexible;It also offers flexible advanced configurable replication
+La replicación mejora disponibilidad entre regiones globales;Replication improves availability across global regions
+Los datos permanecen accesibles durante fallos parciales;Data remains accessible during partial failures
+Cassandra utiliza modelo orientado columnas anchas;Cassandra uses wide-column oriented model
+Ese modelo optimiza consultas específicas rápidamente;That model optimizes specific queries quickly
+Las tablas contienen particiones distribuidas automáticamente;Tables contain automatically distributed partitions
+Cada partición posee múltiples columnas relacionadas;Each partition contains multiple related columns
+El modelo favorece escalabilidad horizontal masiva;The model favors massive horizontal scalability
+Agregar nodos incrementa capacidad fácilmente progresivamente;Adding nodes increases capacity easily progressively
+No requiere interrupciones extensas durante expansión;It requires no extensive interruptions during expansion
+Cassandra utiliza protocolo gossip para comunicación;Cassandra uses gossip protocol for communication
+Ese protocolo comparte información entre nodos;That protocol shares information between nodes
+También detecta fallos automáticamente;It also detects failures automatically
+La detección rápida mejora estabilidad operativa general;Fast detection improves overall operational stability
+Cassandra soporta consistencia configurable mediante niveles;Cassandra supports configurable consistency through levels
+Los clientes definen equilibrio disponibilidad consistencia;Clients define availability consistency balance
+Ese enfoque sigue principios modelo CAP;That approach follows CAP model principles
+La plataforma prioriza tolerancia particiones naturalmente;The platform prioritizes partition tolerance naturally
+Muchas aplicaciones requieren disponibilidad extremadamente alta;Many applications require extremely high availability
+Cassandra resulta adecuada para esos escenarios;Cassandra becomes suitable for those scenarios
+Empresas telecomunicaciones utilizan Cassandra frecuentemente globalmente;Telecommunications companies frequently use Cassandra globally
+También bancos aprovechan escalabilidad distribuida eficiente;Banks also leverage efficient distributed scalability
+Servicios streaming almacenan eventos continuamente usando Cassandra;Streaming services continuously store events using Cassandra
+Aplicaciones IoT generan datos enormes diariamente;IoT applications generate enormous data daily
+Cassandra procesa esos datos eficientemente constantemente;Cassandra processes those data efficiently constantly
+Redes sociales almacenan actividad usuarios rápidamente;Social networks store user activity quickly
+Plataformas comercio electrónico gestionan catálogos distribuidos;Ecommerce platforms manage distributed catalogs
+Sistemas monitoreo almacenan métricas continuamente escalables;Monitoring systems store continuously scalable metrics
+Cassandra también soporta arquitecturas microservicios modernas;Cassandra also supports modern microservices architectures
+Cada microservicio puede almacenar información independiente;Each microservice can store independent information
+Ese enfoque mejora desacoplamiento entre servicios considerablemente;That approach greatly improves service decoupling
+Cassandra ofrece escritura extremadamente rápida consistente;Cassandra offers extremely fast consistent writing
+Las operaciones escritura utilizan estructuras memtable internas;Write operations use internal memtable structures
+Posteriormente datos llegan archivos SSTable persistentes;Later data reaches persistent SSTable files
+Ese flujo optimiza rendimiento de intensas operaciones de escritura;That workflow optimizes the performance of intensive write operations.
+Cassandra utiliza commit logs para durabilidad;Cassandra uses commit logs for durability
+Los logs permiten recuperación después fallos inesperados;Logs allow recovery after unexpected failures
+La plataforma ejecuta compactación automáticamente periódicamente;The platform executes compaction automatically periodically
+Compactación combina archivos optimizando almacenamiento interno;Compaction combines files optimizing internal storage
+Existen múltiples estrategias compactación configurables disponibles;Multiple configurable compaction strategies exist available
+Cada estrategia beneficia diferentes patrones consultas;Each strategy benefits different query patterns
+Cassandra soporta centros datos geográficamente distribuidos;Cassandra supports geographically distributed data centers
+La replicación multiregión mejora continuidad empresarial global;Multiregion replication improves global business continuity
+Los usuarios acceden datos cercanos localmente rápidamente;Users access nearby local data quickly
+Ese enfoque reduce latencia considerablemente siempre;That approach considerably reduces latency always
+Cassandra incluye lenguaje consultas llamado CQL;Cassandra includes query language called CQL
+CQL posee sintaxis similar SQL tradicional;CQL has syntax similar traditional SQL
+Sin embargo existen diferencias importantes arquitectónicas;However important architectural differences exist
+Las consultas deben diseñarse previamente cuidadosamente;Queries must be designed previously carefully
+Cassandra evita joins complejos entre tablas;Cassandra avoids complex joins between tables
+También limita operaciones agregación costosas frecuentemente;It also frequently limits expensive aggregation operations
+El diseño orientado consultas resulta fundamental;Query-oriented design becomes fundamental
+Las claves partición distribuyen datos automáticamente;Partition keys distribute data automatically
+Elegir malas claves genera hotspots peligrosos;Choosing bad keys generates dangerous hotspots
+Los hotspots degradan rendimiento significativamente rápidamente;Hotspots degrade performance significantly quickly
+Diseñar particiones equilibradas resulta extremadamente importante;Designing balanced partitions becomes extremely important
+Cassandra soporta replicación síncrona configurable opcionalmente;Cassandra supports optionally configurable synchronous replication
+También soporta replicación asíncrona eficiente distribuida;It also supports efficient distributed asynchronous replication
+Las estrategias replicación dependen requerimientos empresariales;Replication strategies depend on business requirements
+Algunas aplicaciones priorizan disponibilidad constantemente globalmente;Some applications constantly prioritize availability globally
+Otras aplicaciones requieren consistencia más estricta;Other applications require stricter consistency
+Cassandra permite configurar ambos enfoques dinámicamente;Cassandra allows configuring both approaches dynamically
+La plataforma funciona ambientes cloud híbridos modernos;The platform works modern hybrid cloud environments
+También opera infraestructuras on-premise tradicionales grandes;It also operates large traditional on-premise infrastructures
+Muchos despliegues utilizan Kubernetes actualmente ampliamente;Many deployments currently widely use Kubernetes
+Contenedores simplifican automatización operacional considerablemente;Containers considerably simplify operational automation
+Cassandra requiere memoria suficiente para rendimiento óptimo;Cassandra requires sufficient memory for optimal performance
+También necesita almacenamiento rápido preferentemente SSD;It also needs preferably fast SSD storage
+Las redes distribuidas requieren baja latencia constantemente;Distributed networks constantly require low latency
+Monitorear clústeres resulta esencial operacionalmente siempre;Monitoring clusters becomes operationally essential always
+Herramientas monitoreo incluyen Prometheus frecuentemente usado;Monitoring tools include frequently used Prometheus
+Grafana visualiza métricas operacionales fácilmente gráficamente;Grafana visualizes operational metrics easily graphically
+Las métricas incluyen latencia utilización almacenamiento disponibilidad;Metrics include latency storage utilization availability
+También incluyen throughput escrituras lecturas simultáneas;They also include simultaneous write read throughput
+Respaldos regulares protegen información empresarial crítica;Regular backups protect critical business information
+Snapshots permiten recuperar información rápidamente posteriormente;Snapshots allow recovering information quickly later
+También existen herramientas reparación distribuidas integradas;Integrated distributed repair tools also exist
+Las reparaciones sincronizan réplicas inconsistentes automáticamente;Repairs synchronize inconsistent replicas automatically
+Cassandra soporta actualizaciones rolling sin interrupciones;Cassandra supports rolling updates without interruptions
+Ese enfoque mejora continuidad operacional empresarial significativamente;That approach significantly improves business operational continuity
+La plataforma posee ecosistema integración amplio actualmente;The platform currently has broad integration ecosystem
+Existen drivers múltiples lenguajes programación populares;Multiple popular programming language drivers exist
+Java utiliza driver oficial ampliamente soportado;Java uses widely supported official driver
+Python también posee integración madura estable;Python also has stable mature integration
+Cassandra integra herramientas streaming como Kafka frecuentemente;Cassandra frequently integrates streaming tools like Kafka
+También integra plataformas analíticas modernas escalables;It also integrates scalable modern analytical platforms
+Apache Spark trabaja frecuentemente junto Cassandra distribuida;Apache Spark frequently works alongside distributed Cassandra
+Spark procesa datos almacenados masivamente eficientemente;Spark processes massively stored data efficiently
+Cassandra soporta protocolos seguridad empresariales modernos;Cassandra supports modern enterprise security protocols
+Incluye autenticación autorización cifrado configurable completamente;It includes fully configurable authentication authorization encryption
+Las organizaciones protegen datos sensibles mediante políticas;Organizations protect sensitive data through policies
+Cassandra no resulta ideal consultas relacionales complejas;Cassandra is not ideal complex relational queries
+Bases relacionales manejan joins mejor tradicionalmente;Relational databases traditionally handle joins better
+Tampoco favorece transacciones ACID complejas distribuidas;Neither does it favor complex distributed ACID transactions
+El modelo requiere diseño consultas anticipadamente siempre;The model always requires designing queries beforehand
+Migraciones relacionales pueden resultar difíciles inicialmente;Relational migrations can become difficult initially
+Los equipos necesitan conocimientos distribuidos especializados avanzados;Teams need advanced specialized distributed knowledge
+También deben comprender modelo consistencia distribuida correctamente;They also must correctly understand distributed consistency model
+Errores diseño generan problemas escalabilidad posteriormente;Design errors generate scalability problems later
+Buenas prácticas mejoran estabilidad operacional considerablemente siempre;Good practices greatly improve operational stability always
+Diseñar consultas antes tablas resulta fundamental;Designing queries before tables becomes fundamental
+También conviene evitar particiones extremadamente grandes;It is also advisable avoiding extremely large partitions
+Las claves partición deben distribuir uniformemente datos;Partition keys must uniformly distribute data
+Monitorear compactación ayuda prevenir degradaciones futuras;Monitoring compaction helps prevent future degradations
+Realizar reparaciones periódicas mantiene consistencia adecuada;Performing periodic repairs maintains adequate consistency
+Automatizar respaldos mejora recuperación desastres significativamente;Automating backups significantly improves disaster recovery
+Probar fallos distribuidos fortalece resiliencia empresarial general;Testing distributed failures strengthens overall business resilience
+Kubernetes facilita despliegues Cassandra altamente automatizados;Kubernetes facilitates highly automated Cassandra deployments
+Operadores Kubernetes simplifican mantenimiento diario considerablemente;Kubernetes operators considerably simplify daily maintenance
+Muchos equipos utilizan infraestructura declarativa actualmente;Many teams currently use declarative infrastructure
+Ese enfoque mejora reproducibilidad operacional continuamente;That approach continuously improves operational reproducibility
+Cassandra continúa evolucionando mediante comunidad Apache;Cassandra continues evolving through Apache community
+Las nuevas versiones mejoran rendimiento constantemente progresivamente;New versions progressively improve performance constantly
+También fortalecen seguridad observabilidad herramientas modernas;They also strengthen security observability modern tools
+Cassandra cinco incluye múltiples mejoras internas importantes;Cassandra five includes multiple important internal improvements
+La versión optimiza rendimiento consultas considerablemente adicionalmente;The version additionally optimizes query performance considerably
+También mejora compatibilidad sistemas modernos empresariales;It also improves compatibility modern enterprise systems
+Muchas organizaciones adoptan Cassandra para escalabilidad;Many organizations adopt Cassandra for scalability
+La plataforma soporta crecimiento empresarial global continuo;The platform supports continuous global business growth
