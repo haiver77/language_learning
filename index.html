@@ -1173,24 +1173,31 @@
       }
 
       // Single-language replay (row scope only)
+      // NOTE: Do not cancel or change the global `phraseSessionId` here.
+      // Replaying must not interrupt or stop active modes (Auto/Speaking/Writing).
       function replaySlot(pos) {
         if (currentIndex < 0 || !parsedRows[currentIndex]) return;
-        const sessionToken = ++phraseSessionId;
-        try { speechSynthesis.cancel(); } catch { }
         const row = parsedRows[currentIndex];
         const [l1, l2] = getSelectedLangCodes();
         const slotToLang = { 1: l1, 2: l2 };
         const k = slotToLang[pos];
         const text = row[k] || '';
-        const vmap = getVoicesMap();
-        const voices = speechSynthesis.getVoices();
-        const v = findVoiceForLang(voices, vmap[k], k);
-        const u = new SpeechSynthesisUtterance(text);
-        if (v) u.voice = v;
-        u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
-        const { rate, pitch } = getRatePitch();
-        u.rate = rate; u.pitch = pitch;
-        speechSynthesis.speak(u);
+        // Create a standalone utterance for replay only. Do not cancel existing speech
+        // and do not modify `phraseSessionId` so modes continue uninterrupted.
+        try {
+          const vmap = getVoicesMap();
+          const voices = speechSynthesis.getVoices();
+          const v = findVoiceForLang(voices, vmap[k], k);
+          const u = new SpeechSynthesisUtterance(text);
+          if (v) u.voice = v;
+          u.lang = (v && v.lang) ? v.lang : (langMeta[k]?.localeGuess?.[0] || 'en-US');
+          const { rate, pitch } = getRatePitch();
+          u.rate = rate; u.pitch = pitch;
+          // Make this utterance fire but do not attach global session handlers.
+          speechSynthesis.speak(u);
+        } catch (e) {
+          // ignore runtime errors from speech API
+        }
       }
 
       // --- Selection & Display ---
@@ -2035,10 +2042,10 @@
         <ul id="todoList" style="margin:0; padding-left:1.2em;">
           <li>Implement toggle panels for the different page sections.</li>
           <li>Replicate "Load from AI" button style to the other buttons.</li>
-          <li>Add a section for Prompt Templates with a combobox that listed the files from prompts folder</li>
           <li>Add titles to all existing sections for better clarity.</li>
-          <li>Implement a "Load from Prompt Template" button that would load the selected prompt template into a textarea for later use.</li>
+          <li>Implement a Prompt Viewer into a textarea for later use.</li>
           <li>Force not to use built-in microphone for speech recognition, but the external microphone instead.</li>
+          <li></li>
           </ul>
       </div>
     </section>
