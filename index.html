@@ -1059,25 +1059,33 @@
         const any = readSlots[1] || readSlots[2];
         if (!any) return; // resolve immediately
 
-        // Wait for voices to be ready (up to 1000ms)
+        // Wait for voices to be ready (up to 1000ms).
+        // Fast path: if voices are already loaded (the common case after the
+        // first phrase), resolve immediately. Only wait when the list is empty,
+        // because onvoiceschanged fires only once, when the list first loads.
         await new Promise(res => {
+          if (speechSynthesis.getVoices().length > 0) { res(); return; }
           const start = performance.now();
-          const done = () => res();
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            speechSynthesis.onvoiceschanged = null;
+            res();
+          };
           const tryNow = () => {
+            if (done) return;
             if (speechSynthesis.getVoices().length > 0 || performance.now() - start > 1000) {
-              done();
+              finish();
             } else {
               setTimeout(tryNow, 100);
             }
           };
           if ('onvoiceschanged' in speechSynthesis) {
-            let fired = false;
-            const handler = () => { if (!fired) { fired = true; speechSynthesis.onvoiceschanged = null; done(); } };
-            speechSynthesis.onvoiceschanged = handler;
-            setTimeout(() => { if (!fired) { speechSynthesis.onvoiceschanged = null; done(); } }, 1000);
-          } else {
-            tryNow();
+            speechSynthesis.onvoiceschanged = finish;
           }
+          // Poll as well so we resolve as soon as voices appear, and cap at 1000ms.
+          tryNow();
         });
 
         // Cancel anything pending, then enqueue sequence
@@ -1107,11 +1115,12 @@
 
         let endedCount = 0;
         let resolved = false;
+        let resolveOuter = null;
 
         const finishResolve = () => {
           if (resolved) return;
           resolved = true;
-          // no return (Promise resolved by outer async)
+          if (typeof resolveOuter === 'function') resolveOuter();
         };
 
         const hardTimeoutMs = Math.max(12000, 12000 + Math.ceil(totalChars / 100) * 2000);
@@ -1125,50 +1134,60 @@
           }
         }, hardTimeoutMs);
 
-        // Poll speaking becomes false for >=300ms before resolve
+        // Fallback poll: only used if onend/onerror never fire. It waits for
+        // speech to actually start, then for silence, so it can't resolve early.
+        // The normal path resolves immediately via onend (see below).
+        let startedSpeaking = false;
         let lastSpeakingFalse = null;
         const poll = setInterval(() => {
           if (resolved) { clearInterval(poll); return; }
-          if (!speechSynthesis.speaking) {
+          if (speechSynthesis.speaking) {
+            startedSpeaking = true;
+            lastSpeakingFalse = null;
+          } else if (startedSpeaking) {
             if (lastSpeakingFalse == null) lastSpeakingFalse = performance.now();
             if (performance.now() - lastSpeakingFalse >= 300) {
               clearInterval(poll);
               clearTimeout(hardTimer);
               finishResolve();
             }
-          } else {
-            lastSpeakingFalse = null;
           }
         }, 100);
 
         await new Promise(resolve => {
+          // Let finishResolve() end this promise directly (no polling latency).
+          resolveOuter = () => {
+            clearInterval(poll);
+            clearTimeout(hardTimer);
+            resolve();
+          };
+          const maybeFinish = () => {
+            if (resolved) return;
+            if (endedCount >= utters.length) {
+              clearInterval(poll);
+              clearTimeout(hardTimer);
+              finishResolve();
+            }
+          };
           // Attach handlers and speak sequentially (enqueue lets them play in order)
           for (const { u } of utters) {
             u.onend = () => {
               if (resolved) return;
               if (sessionToken !== phraseSessionId) return;
               endedCount++;
-              if (endedCount === utters.length) {
-                // Let poll/300ms rule finalize; if nothing fires, poll will resolve
-              }
+              maybeFinish();
             };
             u.onerror = () => {
               if (resolved) return;
               if (sessionToken !== phraseSessionId) return;
               endedCount++;
-              // keep going; if all error/end, poll/timeout will settle
+              maybeFinish();
             };
             speechSynthesis.speak(u);
           }
-          // The resolution is managed by polling + hard timeout; to "await" until resolve:
-          const watcher = setInterval(() => {
-            if (resolved) {
-              clearInterval(watcher);
-              clearInterval(poll);
-              clearTimeout(hardTimer);
-              resolve();
-            }
-          }, 50);
+          // Resolution is driven by onend/onerror (maybeFinish), the fallback
+          // poll, or the hard timeout — each routes through finishResolve ->
+          // resolveOuter, which resolves this promise.
         });
       }
 
@@ -1260,7 +1279,9 @@
           els.modeContent.appendChild(div);
           const autoStatus = div.querySelector('#autoStatus');
           const autoStart = () => {
-            const sec = Math.max(1, parseInt(div.querySelector('#autoInterval').value || '5', 10));
+            // Allow 0 (advance immediately). Only guard against NaN/negative values.
+            const parsed = parseInt(div.querySelector('#autoInterval').value, 10);
+            const sec = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
             // stop any existing timer
             if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
             let running = true;
