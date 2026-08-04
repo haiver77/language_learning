@@ -404,6 +404,7 @@
           </select>
         </label>
         <button id="btnRandom" class="secondary" title="Show a random phrase">Random Phrase</button>
+        <button id="btnFirst" class="secondary" title="Go to the first phrase">Go to First</button>
         <div class="spacer"></div>
         <div id="modeContent" style="width:100%"></div>
       </div>
@@ -604,6 +605,7 @@
         },
         modeSelect: document.getElementById('modeSelect'),
         btnRandom: document.getElementById('btnRandom'),
+        btnFirst: document.getElementById('btnFirst'),
         modeContent: document.getElementById('modeContent'),
         csvBox: document.getElementById('csvBox'),
         csvBoxViewerDisplay: document.getElementById('csvBoxViewerDisplay'),
@@ -1243,6 +1245,21 @@
           else currentIndex = (currentIndex + 1) % parsedRows.length;
         }
 
+        const row = parsedRows[currentIndex];
+        setPhraseTexts(row);
+        applyShowVisibility();
+        const sessionToken = ++phraseSessionId;
+        if (speak) {
+          return speakCurrentRowSequence(sessionToken, row);
+        }
+        return Promise.resolve();
+      }
+
+      // Jump to the first phrase and display/speak it in the existing visualizers.
+      function goToFirstRow({ speak = true } = {}) {
+        ensureParsed();
+        if (!parsedRows.length) return Promise.resolve();
+        currentIndex = 0;
         const row = parsedRows[currentIndex];
         setPhraseTexts(row);
         applyShowVisibility();
@@ -1913,6 +1930,7 @@
       function bindEvents() {
         // Random button (global)
         els.btnRandom.onclick = async () => { await selectAndShowNextRow({ speak: true }); };
+        els.btnFirst.onclick = async () => { await goToFirstRow({ speak: true }); };
 
         // Mode switching
         els.modeSelect.onchange = () => {
