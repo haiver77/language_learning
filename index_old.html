@@ -983,7 +983,6 @@
             color2: (els.color2 && els.color2.value) || '#3ccf7a',
             speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
             writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
-            speakingWait: parseFloat((els.modeContent.querySelector('#sp-wait')?.value) || '1')
           };
           const [l1, l2] = getSelectedLangCodes();
           cfg.lang1 = l1; cfg.lang2 = l2;
@@ -1021,10 +1020,6 @@
           if (cfg.aiTopic) els.aiTopic.value = cfg.aiTopic;
           if (cfg.aiQuantity) els.aiQuantity.value = cfg.aiQuantity;
           if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
-          if (typeof cfg.speakingWait !== 'undefined') {
-            // speaking wait is stored in seconds
-            try { const v = parseFloat(cfg.speakingWait); if (!isNaN(v)) { /* will be applied when panel renders */ } } catch (e) {}
-          }
           if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
           if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
           if (typeof cfg.wrapCsv !== 'undefined') { try { els.wrapCsv.checked = !!cfg.wrapCsv; } catch (e) { } applyCsvWrap(); }
@@ -1329,7 +1324,6 @@
           };
           div.querySelector('#autoStart').onclick = autoStart;
           div.querySelector('#autoStop').onclick = autoStop;
-          
         } else if (m === 'Speaking Practice Mode') {
           const div = document.createElement('div');
           div.className = 'panel';
@@ -1350,9 +1344,6 @@
           <label class="badge"><input type="checkbox" id="sp-random" checked /> <span>Random</span></label>
           <label class="badge"><span>Min similarity %</span>
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
-          </label>
-          <label class="badge"><span>Speaking Wait (s)</span>
-            <input id="sp-wait" type="number" min="0" step="0.1" value="1" style="width:90px" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
@@ -1390,11 +1381,6 @@
           } catch (e) { /* ignore */ }
           spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
           div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
-          // wire speaking wait input to save/persist when changed (visible only in Speaking Practice Mode)
-          const spWaitEl = div.querySelector('#sp-wait');
-          if (spWaitEl) spWaitEl.onchange = () => { try { saveConfig(); } catch (e) {} };
-          // restore saved speaking wait if available
-          try { if (savedConfig && typeof savedConfig.speakingWait !== 'undefined' && spWaitEl) spWaitEl.value = savedConfig.speakingWait; } catch (e) {}
         } else if (m === 'Writing Practice Mode') {
           const div = document.createElement('div');
           div.className = 'panel';
@@ -1478,19 +1464,11 @@
         const myToken = phraseSessionId;
 
         if (speakingPractice.rec) {
-          try { if (speakingPractice.rec._restartTimer) { clearTimeout(speakingPractice.rec._restartTimer); speakingPractice.rec._restartTimer = null; } } catch (e) {}
           try { speakingPractice.rec.abort(); } catch { }
           speakingPractice.rec = null;
         }
         const rec = createRecognition(speakingPractice.lang);
         speakingPractice.rec = rec;
-        // speaking wait in ms (default 1000ms)
-        try { speakingPractice.waitMs = (parseFloat(els.modeContent.querySelector('#sp-wait')?.value || '1') || 1) * 1000; } catch (e) { speakingPractice.waitMs = 1000; }
-        rec._restartTimer = null;
-        // speaking wait in ms (default 1000ms)
-        try { speakingPractice.waitMs = (parseFloat(els.modeContent.querySelector('#sp-wait')?.value || '1') || 1) * 1000; } catch (e) { speakingPractice.waitMs = 1000; }
-        // restart timer placeholder for handling brief pauses
-        rec._restartTimer = null;
 
         if (!rec) {
           speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
@@ -1504,8 +1482,6 @@
         speakingPractice.statusEl.textContent = 'Listening…';
 
           rec.onresult = (e) => {
-          // clear any pending restart timer because we've received new results
-          try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           let interim = '';
@@ -1528,7 +1504,6 @@
 
           if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
             try { rec.abort(); } catch { }
             // Prepare next phrase safely
             safeAdvanceSpeakingPractice(myToken);
@@ -1541,14 +1516,9 @@
           speakingPractice.statusEl.textContent = 'Listening…';
         };
         rec.onend = () => {
-          // If ended unexpectedly while active and token still valid, restart after configured wait
+          // If ended unexpectedly while active and token still valid, attempt to restart
           if (speakingPractice.active && myToken === phraseSessionId) {
-            const wait = speakingPractice.waitMs || 1000;
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
-            rec._restartTimer = setTimeout(() => {
-              try { if (speakingPractice.active && myToken === phraseSessionId) rec.start(); } catch (e) {}
-              rec._restartTimer = null;
-            }, wait);
+            try { rec.start(); } catch { }
           }
         };
 
@@ -1594,8 +1564,6 @@
         speakingPractice.statusEl.textContent = 'Listening…';
 
         rec.onresult = (e) => {
-          // clear any pending restart timer because we've received new results
-          try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           let interim = '';
@@ -1618,7 +1586,6 @@
 
           if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
             try { rec.abort(); } catch { }
             safeAdvanceSpeakingPractice(myToken);
           }
@@ -1630,12 +1597,7 @@
         };
         rec.onend = () => {
           if (speakingPractice.active && myToken === phraseSessionId) {
-            const wait = speakingPractice.waitMs || 1000;
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
-            rec._restartTimer = setTimeout(() => {
-              try { if (speakingPractice.active && myToken === phraseSessionId) rec.start(); } catch (e) {}
-              rec._restartTimer = null;
-            }, wait);
+            try { rec.start(); } catch { }
           }
         };
         try { rec.start(); } catch { }
@@ -1644,7 +1606,6 @@
       function stopSpeakingPractice() {
         speakingPractice.active = false;
         if (speakingPractice.rec) {
-          try { if (speakingPractice.rec._restartTimer) { clearTimeout(speakingPractice.rec._restartTimer); speakingPractice.rec._restartTimer = null; } } catch (e) {}
           try { speakingPractice.rec.abort(); } catch { }
           speakingPractice.rec = null;
         }
