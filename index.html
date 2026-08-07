@@ -739,6 +739,11 @@
         }
       }
 
+      function resetPhraseDisplayForCurrentRow() {
+        if (currentIndex < 0 || !parsedRows[currentIndex]) return;
+        setPhraseTexts(parsedRows[currentIndex]);
+      }
+
       function getSelectedLangCodes() {
         return [els.lang1Select.value, els.lang2Select.value];
       }
@@ -1535,6 +1540,7 @@
             speakingPractice.progressEl.value = 0;
             speakingPractice.scoreEl.textContent = '0%';
             speakingPractice.statusEl.textContent = 'Listening…';
+            resetPhraseDisplayForCurrentRow();
             try { rec.abort(); } catch (e) { }
           }, wait);
         };
@@ -1665,6 +1671,7 @@
             speakingPractice.progressEl.value = 0;
             speakingPractice.scoreEl.textContent = '0%';
             speakingPractice.statusEl.textContent = 'Listening…';
+            resetPhraseDisplayForCurrentRow();
             try { rec.abort(); } catch (e) { }
           }, wait);
         };
