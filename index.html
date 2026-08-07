@@ -1484,13 +1484,12 @@
         }
         const rec = createRecognition(speakingPractice.lang);
         speakingPractice.rec = rec;
-        // speaking wait in ms (default 1000ms)
-        try { speakingPractice.waitMs = (parseFloat(els.modeContent.querySelector('#sp-wait')?.value || '1') || 1) * 1000; } catch (e) { speakingPractice.waitMs = 1000; }
+        rec._sessionFinals = '';           // finals within current start→end cycle
+        rec._sessionInterim = '';          // latest interim within current cycle
         rec._restartTimer = null;
-        // speaking wait in ms (default 1000ms)
+        rec._silenceTimer = null;
+        rec._silenceExpired = false;
         try { speakingPractice.waitMs = (parseFloat(els.modeContent.querySelector('#sp-wait')?.value || '1') || 1) * 1000; } catch (e) { speakingPractice.waitMs = 1000; }
-        // restart timer placeholder for handling brief pauses
-        rec._restartTimer = null;
 
         if (!rec) {
           speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
@@ -1503,53 +1502,86 @@
         speakingPractice.scoreEl.textContent = '0%';
         speakingPractice.statusEl.textContent = 'Listening…';
 
-          rec.onresult = (e) => {
-          // clear any pending restart timer because we've received new results
+        const updateLive = () => {
+          const live = (rec._sessionFinals + ' ' + rec._sessionInterim).replace(/\s+/g, ' ').trim();
+          speakingPractice.liveTextEl.textContent = live;
+          return live;
+        };
+
+        const clearSilenceTimer = () => {
+          try { if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; } } catch (e) {}
+        };
+
+        const restartRecognitionSoon = () => {
+          setTimeout(() => {
+            try {
+              if (speakingPractice.active && myToken === phraseSessionId && rec === speakingPractice.rec) {
+                rec.start();
+              }
+            } catch (e) { }
+          }, 0);
+        };
+
+        const scheduleSilenceReset = () => {
+          clearSilenceTimer();
+          const wait = Math.max(0, speakingPractice.waitMs || 1000);
+          rec._silenceTimer = setTimeout(() => {
+            rec._silenceTimer = null;
+            if (!speakingPractice.active || myToken !== phraseSessionId || rec !== speakingPractice.rec) return;
+            rec._silenceExpired = true;
+            rec._sessionFinals = '';
+            rec._sessionInterim = '';
+            speakingPractice.liveTextEl.textContent = '';
+            speakingPractice.progressEl.value = 0;
+            speakingPractice.scoreEl.textContent = '0%';
+            speakingPractice.statusEl.textContent = 'Listening…';
+            try { rec.abort(); } catch (e) { }
+          }, wait);
+        };
+
+        rec.onresult = (e) => {
           try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
+          clearSilenceTimer();
           let interim = '';
-          let finalText = '';
+          let newFinals = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
+            if (e.results[i].isFinal) newFinals += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
           }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
+          rec._sessionFinals += newFinals;
+          rec._sessionInterim = interim;
+          rec._silenceExpired = false;
+          const live = updateLive();
+          scheduleSilenceReset();
 
           const pct = similarityPercent(live, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
-
-          // Highlight words in the active practice slot according to correctness
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, live, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          if (pct >= speakingPractice.min && newFinals) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
             try { rec.abort(); } catch { }
-            // Prepare next phrase safely
             safeAdvanceSpeakingPractice(myToken);
           }
         };
-        rec.onerror = () => {
+        rec.onerror = (ev) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
-          // Keep listening; status note
           speakingPractice.statusEl.textContent = 'Listening…';
         };
         rec.onend = () => {
-          // If ended unexpectedly while active and token still valid, restart after configured wait
-          if (speakingPractice.active && myToken === phraseSessionId) {
-            const wait = speakingPractice.waitMs || 1000;
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
-            rec._restartTimer = setTimeout(() => {
-              try { if (speakingPractice.active && myToken === phraseSessionId) rec.start(); } catch (e) {}
-              rec._restartTimer = null;
-            }, wait);
+          if (!speakingPractice.active || myToken !== phraseSessionId) return;
+          if (rec._silenceExpired) {
+            rec._silenceExpired = false;
+            restartRecognitionSoon();
+            return;
           }
+          restartRecognitionSoon();
         };
 
         try { rec.start(); } catch { }
@@ -1582,6 +1614,13 @@
         }
         const rec = createRecognition(speakingPractice.lang);
         speakingPractice.rec = rec;
+        rec._sessionFinals = '';
+        rec._sessionInterim = '';
+        rec._restartTimer = null;
+        rec._silenceTimer = null;
+        rec._silenceExpired = false;
+        try { speakingPractice.waitMs = (parseFloat(els.modeContent.querySelector('#sp-wait')?.value || '1') || 1) * 1000; } catch (e) { speakingPractice.waitMs = 1000; }
+
         if (!rec) {
           speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
           speakingPractice.active = false;
@@ -1593,50 +1632,86 @@
         speakingPractice.scoreEl.textContent = '0%';
         speakingPractice.statusEl.textContent = 'Listening…';
 
+        const updateLive = () => {
+          const live = (rec._sessionFinals + ' ' + rec._sessionInterim).replace(/\s+/g, ' ').trim();
+          speakingPractice.liveTextEl.textContent = live;
+          return live;
+        };
+
+        const clearSilenceTimer = () => {
+          try { if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; } } catch (e) {}
+        };
+
+        const restartRecognitionSoon = () => {
+          setTimeout(() => {
+            try {
+              if (speakingPractice.active && myToken === phraseSessionId && rec === speakingPractice.rec) {
+                rec.start();
+              }
+            } catch (e) { }
+          }, 0);
+        };
+
+        const scheduleSilenceReset = () => {
+          clearSilenceTimer();
+          const wait = Math.max(0, speakingPractice.waitMs || 1000);
+          rec._silenceTimer = setTimeout(() => {
+            rec._silenceTimer = null;
+            if (!speakingPractice.active || myToken !== phraseSessionId || rec !== speakingPractice.rec) return;
+            rec._silenceExpired = true;
+            rec._sessionFinals = '';
+            rec._sessionInterim = '';
+            speakingPractice.liveTextEl.textContent = '';
+            speakingPractice.progressEl.value = 0;
+            speakingPractice.scoreEl.textContent = '0%';
+            speakingPractice.statusEl.textContent = 'Listening…';
+            try { rec.abort(); } catch (e) { }
+          }, wait);
+        };
+
         rec.onresult = (e) => {
-          // clear any pending restart timer because we've received new results
           try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
+          clearSilenceTimer();
           let interim = '';
-          let finalText = '';
+          let newFinals = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
+            if (e.results[i].isFinal) newFinals += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
           }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
+          rec._sessionFinals += newFinals;
+          rec._sessionInterim = interim;
+          rec._silenceExpired = false;
+          const live = updateLive();
+          scheduleSilenceReset();
 
           const pct = similarityPercent(live, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
-
-          // Highlight words in the active practice slot according to correctness
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, live, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          if (pct >= speakingPractice.min && newFinals) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
             try { rec.abort(); } catch { }
             safeAdvanceSpeakingPractice(myToken);
           }
         };
-        rec.onerror = () => {
+        rec.onerror = (ev) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           speakingPractice.statusEl.textContent = 'Listening…';
         };
         rec.onend = () => {
-          if (speakingPractice.active && myToken === phraseSessionId) {
-            const wait = speakingPractice.waitMs || 1000;
-            try { if (rec._restartTimer) { clearTimeout(rec._restartTimer); rec._restartTimer = null; } } catch (e) {}
-            rec._restartTimer = setTimeout(() => {
-              try { if (speakingPractice.active && myToken === phraseSessionId) rec.start(); } catch (e) {}
-              rec._restartTimer = null;
-            }, wait);
+          if (!speakingPractice.active || myToken !== phraseSessionId) return;
+          if (rec._silenceExpired) {
+            rec._silenceExpired = false;
+            restartRecognitionSoon();
+            return;
           }
+          restartRecognitionSoon();
         };
         try { rec.start(); } catch { }
       }
@@ -1645,6 +1720,7 @@
         speakingPractice.active = false;
         if (speakingPractice.rec) {
           try { if (speakingPractice.rec._restartTimer) { clearTimeout(speakingPractice.rec._restartTimer); speakingPractice.rec._restartTimer = null; } } catch (e) {}
+          try { if (speakingPractice.rec._silenceTimer) { clearTimeout(speakingPractice.rec._silenceTimer); speakingPractice.rec._silenceTimer = null; } } catch (e) {}
           try { speakingPractice.rec.abort(); } catch { }
           speakingPractice.rec = null;
         }
