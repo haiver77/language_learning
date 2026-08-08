@@ -716,6 +716,34 @@
         return pct;
       }
 
+      function normalizeRecognitionText(text) {
+        return String(text || '').replace(/\s+/g, ' ').trim();
+      }
+
+      function syncRecognitionTranscript(rec, event) {
+        const results = event?.results || rec?.results;
+        if (!results || !results.length) {
+          rec._sessionFinals = '';
+          rec._sessionInterim = '';
+          return '';
+        }
+
+        const finalParts = [];
+        let interimText = '';
+
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          const transcript = normalizeRecognitionText(result?.[0]?.transcript);
+          if (!transcript) continue;
+          if (result.isFinal) finalParts.push(transcript);
+          else interimText = transcript;
+        }
+
+        rec._sessionFinals = finalParts.join(' ');
+        rec._sessionInterim = interimText;
+        return normalizeRecognitionText([rec._sessionFinals, rec._sessionInterim].filter(Boolean).join(' '));
+      }
+
       // Compare target phrase and live transcript word-by-word and highlight
       function compareAndHighlight(target, live, slotPos) {
         if (!target) return;
@@ -1550,14 +1578,7 @@
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           clearSilenceTimer();
-          let interim = '';
-          let newFinals = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            if (e.results[i].isFinal) newFinals += e.results[i][0].transcript;
-            else interim += e.results[i][0].transcript;
-          }
-          rec._sessionFinals += newFinals;
-          rec._sessionInterim = interim;
+          const newFinals = syncRecognitionTranscript(rec, e);
           rec._silenceExpired = false;
           const live = updateLive();
           scheduleSilenceReset();
@@ -1681,14 +1702,7 @@
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           clearSilenceTimer();
-          let interim = '';
-          let newFinals = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            if (e.results[i].isFinal) newFinals += e.results[i][0].transcript;
-            else interim += e.results[i][0].transcript;
-          }
-          rec._sessionFinals += newFinals;
-          rec._sessionInterim = interim;
+          const newFinals = syncRecognitionTranscript(rec, e);
           rec._silenceExpired = false;
           const live = updateLive();
           scheduleSilenceReset();
