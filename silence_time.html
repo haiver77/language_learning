@@ -1949,10 +1949,10 @@
             } catch (e) { /* ignore */ }
             // reset spoken flag so timer only restarts after the next speech
             rec._hasSpoken = false;
-            // keep accumulated transcript across multiple short silences so
-            // subsequent speech can be concatenated; only reset the per-window
-            // capture flag so the next silence window may capture new interim
-            // text and merge it into the accumulator.
+            // clear accumulated transcript so new speech starts fresh when the
+            // silence wait fully elapses (we already cleared the visible live
+            // text above). Also reset the per-window capture flag.
+            rec._accTranscript = '';
             rec._accCaptured = false;
             rec._lastInterim = '';
             rec._finalByIndex = Object.create(null);
