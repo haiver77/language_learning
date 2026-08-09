@@ -1568,9 +1568,8 @@
         const mobileSpeech = isMobileSpeechBrowser();
         rec.lang = pickRecLang(lang);
         rec.continuous = true;
-        // Mobile browsers often emit unstable cumulative interim text.
-        // Prefer final-only results there to avoid repeated-word flooding.
-        rec.interimResults = !mobileSpeech;
+        // Use interim results (matches index.html behavior which works on phones)
+        rec.interimResults = true;
         rec.maxAlternatives = 1;
         // Per-recognition silence timer state
         rec._silenceTimer = null;
@@ -1629,14 +1628,18 @@
         speakingPractice.scoreEl.textContent = '0%';
         speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
 
-          rec.onresult = (e) => {
+        rec.onresult = (e) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
-            const transcriptState = buildRecognitionText(rec, e.results);
-            rec._accTranscript = transcriptState.finalText;
-            rec._lastInterim = transcriptState.interimSuffix;
-            const liveForCompare = transcriptState.liveText;
-            speakingPractice.liveTextEl.textContent = liveForCompare;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
+          }
+          const liveForCompare = (finalText || interim || '').trim();
+          speakingPractice.liveTextEl.textContent = liveForCompare;
 
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
@@ -1646,7 +1649,7 @@
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, liveForCompare, slotPos);
 
-          if (pct >= speakingPractice.min && transcriptState.sawFinalInEvent) {
+          if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try {
               if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
@@ -1657,7 +1660,7 @@
             safeAdvanceSpeakingPractice(myToken);
           }
           // Mark that user has spoken at least once and schedule silence-reset
-          if (transcriptState.hasSpeech) rec._hasSpoken = true;
+          if (liveForCompare) rec._hasSpoken = true;
           scheduleSilenceReset(rec);
         };
         rec.onerror = () => {
@@ -1731,10 +1734,14 @@
         rec.onresult = (e) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
-          const transcriptState = buildRecognitionText(rec, e.results);
-          rec._accTranscript = transcriptState.finalText;
-          rec._lastInterim = transcriptState.interimSuffix;
-          const liveForCompare = transcriptState.liveText;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
+          }
+          const liveForCompare = (finalText || interim || '').trim();
           speakingPractice.liveTextEl.textContent = liveForCompare;
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
@@ -1744,7 +1751,7 @@
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, liveForCompare, slotPos);
 
-          if (pct >= speakingPractice.min && transcriptState.sawFinalInEvent) {
+          if (pct >= speakingPractice.min && finalText) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try {
               if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
@@ -1754,7 +1761,7 @@
             safeAdvanceSpeakingPractice(myToken);
           }
           // Mark that user has spoken at least once and schedule silence-reset
-          if (transcriptState.hasSpeech) rec._hasSpoken = true;
+          if (liveForCompare) rec._hasSpoken = true;
           scheduleSilenceReset(rec);
         };
         rec.onerror = () => {
