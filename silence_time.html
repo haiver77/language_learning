@@ -720,6 +720,43 @@
         return (s || '').replace(/\s+/g, ' ').trim();
       }
 
+      function isMobileSpeechBrowser() {
+        try {
+          const ua = navigator.userAgent || '';
+          const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+          return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || coarse;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getRecognitionStartDelayMs() {
+        return isMobileSpeechBrowser() ? 900 : 0;
+      }
+
+      function clearRecognitionTimers(rec) {
+        if (!rec) return;
+        if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+      }
+
+      function startRecognitionWhenReady(rec, myToken) {
+        if (!rec) return;
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+        const delayMs = getRecognitionStartDelayMs();
+        if (delayMs > 0 && speakingPractice.statusEl) {
+          speakingPractice.statusEl.textContent = 'Waiting for microphone…';
+        }
+        rec._startTimer = setTimeout(() => {
+          rec._startTimer = null;
+          if (!speakingPractice.active) return;
+          if (speakingPractice.rec !== rec) return;
+          if (myToken !== phraseSessionId) return;
+          if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+          try { rec.start(); } catch { }
+        }, delayMs);
+      }
+
       function collapseRepeatedTokenPatterns(tokens) {
         const cleaned = [];
         for (const token of tokens) {
@@ -1528,12 +1565,16 @@
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return null;
         const rec = new SR();
+        const mobileSpeech = isMobileSpeechBrowser();
         rec.lang = pickRecLang(lang);
         rec.continuous = true;
-        rec.interimResults = true;
+        // Mobile browsers often emit unstable cumulative interim text.
+        // Prefer final-only results there to avoid repeated-word flooding.
+        rec.interimResults = !mobileSpeech;
         rec.maxAlternatives = 1;
         // Per-recognition silence timer state
         rec._silenceTimer = null;
+        rec._startTimer = null;
         rec._hasSpoken = false; // becomes true once user produces speech
         rec._accTranscript = '';
         rec._lastInterim = '';
@@ -1568,7 +1609,7 @@
 
         if (speakingPractice.rec) {
           try {
-            if (speakingPractice.rec._silenceTimer) { clearTimeout(speakingPractice.rec._silenceTimer); speakingPractice.rec._silenceTimer = null; }
+            clearRecognitionTimers(speakingPractice.rec);
             // prevent onend from auto-restarting this instance
             try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
             speakingPractice.rec.abort();
@@ -1586,7 +1627,7 @@
         speakingPractice.liveTextEl.textContent = '';
         speakingPractice.progressEl.value = 0;
         speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
 
           rec.onresult = (e) => {
           if (!speakingPractice.active) return;
@@ -1634,11 +1675,11 @@
             return;
           }
           if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
+            startRecognitionWhenReady(rec, myToken);
           }
         };
 
-        try { rec.start(); } catch { }
+        startRecognitionWhenReady(rec, myToken);
       }
 
       async function safeAdvanceSpeakingPractice(prevToken) {
@@ -1646,7 +1687,7 @@
         try { speechSynthesis.cancel(); } catch { }
         if (speakingPractice.rec) {
           try {
-            if (speakingPractice.rec._silenceTimer) { clearTimeout(speakingPractice.rec._silenceTimer); speakingPractice.rec._silenceTimer = null; }
+            clearRecognitionTimers(speakingPractice.rec);
             try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
             speakingPractice.rec.abort();
           } catch { }
@@ -1668,7 +1709,7 @@
 
         if (speakingPractice.rec) {
           try {
-            if (speakingPractice.rec._silenceTimer) { clearTimeout(speakingPractice.rec._silenceTimer); speakingPractice.rec._silenceTimer = null; }
+            clearRecognitionTimers(speakingPractice.rec);
             try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
             speakingPractice.rec.abort();
           } catch { }
@@ -1685,7 +1726,7 @@
         speakingPractice.liveTextEl.textContent = '';
         speakingPractice.progressEl.value = 0;
         speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
 
         rec.onresult = (e) => {
           if (!speakingPractice.active) return;
@@ -1729,10 +1770,10 @@
             return;
           }
           if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
+            startRecognitionWhenReady(rec, myToken);
           }
         };
-        try { rec.start(); } catch { }
+        startRecognitionWhenReady(rec, myToken);
       }
 
       // Schedule or restart a per-recognition silence timer which, after
@@ -1774,7 +1815,7 @@
         speakingPractice.active = false;
         if (speakingPractice.rec) {
           try {
-            if (speakingPractice.rec._silenceTimer) { clearTimeout(speakingPractice.rec._silenceTimer); speakingPractice.rec._silenceTimer = null; }
+            clearRecognitionTimers(speakingPractice.rec);
             try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
             speakingPractice.rec.abort();
           } catch { }
