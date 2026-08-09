@@ -1682,7 +1682,10 @@
             safeAdvanceSpeakingPractice(myToken);
           }
           // Mark that user has spoken at least once (only on final result)
-          if (finalText) rec._hasSpoken = true;
+          if (finalText) {
+            rec._hasSpoken = true;
+            recordLog('set _hasSpoken=true token=' + myToken + ' finalLen=' + finalText.length);
+          }
           scheduleSilenceReset(rec);
         };
         rec.onerror = (ev) => {
@@ -1816,13 +1819,18 @@
       function scheduleSilenceReset(rec) {
         try {
           if (!rec) return;
+          recordLog('scheduleSilenceReset called _hasSpoken=' + !!rec._hasSpoken + ' current=' + (speakingPractice.rec===rec));
           // only start if practice still active, this rec is current, and user has spoken
           const waitEl = els.modeContent.querySelector('#sp-wait');
           const waitSec = waitEl ? Math.max(1, Math.floor(Number(waitEl.value) || 3)) : 3;
-          if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) return;
+          if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) {
+            recordLog('scheduleSilenceReset returning early active=' + !!speakingPractice.active + ' isCurrent=' + (speakingPractice.rec===rec) + ' hasSpoken=' + !!rec._hasSpoken);
+            return;
+          }
           // clear existing timer only when we're about to set a fresh one
           if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
 
+          recordLog('setting silence timer waitSec=' + waitSec + 's');
           rec._silenceTimer = setTimeout(() => {
             try {
               if (!speakingPractice.active || speakingPractice.rec !== rec) return;
