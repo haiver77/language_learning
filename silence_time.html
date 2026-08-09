@@ -716,6 +716,97 @@
         return pct;
       }
 
+      function normalizeSpeechChunk(s) {
+        return (s || '').replace(/\s+/g, ' ').trim();
+      }
+
+      function collapseRepeatedTokenPatterns(tokens) {
+        const cleaned = [];
+        for (const token of tokens) {
+          if (!token) continue;
+          if (cleaned.length && cleaned[cleaned.length - 1] === token) continue;
+          cleaned.push(token);
+          const maxPattern = Math.min(4, Math.floor(cleaned.length / 2));
+          for (let size = 1; size <= maxPattern; size++) {
+            const a = cleaned.slice(cleaned.length - 2 * size, cleaned.length - size).join('\u0000');
+            const b = cleaned.slice(cleaned.length - size).join('\u0000');
+            if (a && a === b) {
+              cleaned.splice(cleaned.length - size, size);
+              break;
+            }
+          }
+        }
+        return cleaned;
+      }
+
+      function removeTokenOverlap(baseText, nextText) {
+        const baseTokens = normalizeSpeechChunk(baseText).split(' ').filter(Boolean);
+        const nextTokens = normalizeSpeechChunk(nextText).split(' ').filter(Boolean);
+        if (!nextTokens.length) return '';
+
+        let overlap = 0;
+        const maxOverlap = Math.min(baseTokens.length, nextTokens.length);
+        for (let size = maxOverlap; size > 0; size--) {
+          let same = true;
+          for (let i = 0; i < size; i++) {
+            if (baseTokens[baseTokens.length - size + i] !== nextTokens[i]) {
+              same = false;
+              break;
+            }
+          }
+          if (same) {
+            overlap = size;
+            break;
+          }
+        }
+
+        const cleanedTokens = collapseRepeatedTokenPatterns(nextTokens.slice(overlap));
+        if (baseTokens.length && cleanedTokens[0] === baseTokens[baseTokens.length - 1]) {
+          cleanedTokens.shift();
+        }
+        return cleanedTokens.join(' ').trim();
+      }
+
+      function buildRecognitionText(rec, results) {
+        const baseIndex = rec._resultBaseIndex || 0;
+        const interimParts = [];
+        let sawFinalInEvent = false;
+
+        rec._lastResultsLength = results.length;
+        for (let i = baseIndex; i < results.length; i++) {
+          const res = results[i];
+          const transcript = normalizeSpeechChunk(res && res[0] && res[0].transcript || '');
+          if (!transcript) continue;
+          if (res.isFinal) {
+            rec._finalByIndex[i] = transcript;
+            sawFinalInEvent = true;
+          } else {
+            interimParts.push(transcript);
+          }
+        }
+
+        const finalText = Object.keys(rec._finalByIndex)
+          .map(Number)
+          .filter(index => index >= baseIndex)
+          .sort((a, b) => a - b)
+          .map(index => rec._finalByIndex[index])
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const interimCombined = normalizeSpeechChunk(interimParts.join(' '));
+        const interimSuffix = removeTokenOverlap(finalText, interimCombined);
+        const liveText = [finalText, interimSuffix].filter(Boolean).join(' ').trim();
+
+        return {
+          finalText,
+          interimSuffix,
+          liveText,
+          sawFinalInEvent,
+          hasSpeech: !!liveText,
+        };
+      }
+
       // Compare target phrase and live transcript word-by-word and highlight
       function compareAndHighlight(target, live, slotPos) {
         if (!target) return;
@@ -1446,6 +1537,9 @@
         rec._hasSpoken = false; // becomes true once user produces speech
         rec._accTranscript = '';
         rec._lastInterim = '';
+        rec._finalByIndex = Object.create(null);
+        rec._resultBaseIndex = 0;
+        rec._lastResultsLength = 0;
         rec._suppressRestart = false; // set true when we intentionally abort to avoid onend auto-restart
         return rec;
       }
@@ -1497,44 +1591,12 @@
           rec.onresult = (e) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
-          let interim = '';
-          let finalText = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
-          }
-          interim = interim.trim();
-          finalText = finalText.trim();
+            const transcriptState = buildRecognitionText(rec, e.results);
+            rec._accTranscript = transcriptState.finalText;
+            rec._lastInterim = transcriptState.interimSuffix;
+            const liveForCompare = transcriptState.liveText;
+            speakingPractice.liveTextEl.textContent = liveForCompare;
 
-          // Accumulate transcripts while avoiding duplication caused by
-          // mobile browsers re-emitting previously-recognized text in
-          // interim results. We compute suffixes to append only the new
-          // portion.
-          const base = (rec._accTranscript || '').trim();
-          let liveForCompare = base;
-          if (finalText) {
-            // If finalText repeats the base at the start, only append the suffix
-            let suffix = finalText;
-            if (base && finalText.startsWith(base)) suffix = finalText.slice(base.length).trim();
-            if (suffix) rec._accTranscript = (base ? base + ' ' + suffix : suffix).trim();
-            rec._lastInterim = '';
-            speakingPractice.liveTextEl.textContent = rec._accTranscript;
-            liveForCompare = rec._accTranscript;
-          } else if (interim) {
-            // Interim may include the whole base; show only the new interim suffix
-            let interimSuffix = interim;
-            if (base && interim.startsWith(base)) interimSuffix = interim.slice(base.length).trim();
-            // Avoid repetitive updates when interim repeats the same suffix
-            if (interimSuffix !== rec._lastInterim) {
-              rec._lastInterim = interimSuffix;
-              speakingPractice.liveTextEl.textContent = (base ? (base + (interimSuffix ? ' ' + interimSuffix : '')) : interimSuffix).trim();
-            }
-            liveForCompare = (base + ' ' + rec._lastInterim).trim();
-          } else {
-            // no new text; leave existing display
-            liveForCompare = base;
-          }
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
@@ -1543,7 +1605,7 @@
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, liveForCompare, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          if (pct >= speakingPractice.min && transcriptState.sawFinalInEvent) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try {
               if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
@@ -1554,7 +1616,7 @@
             safeAdvanceSpeakingPractice(myToken);
           }
           // Mark that user has spoken at least once and schedule silence-reset
-          if (finalText || interim) rec._hasSpoken = true;
+          if (transcriptState.hasSpeech) rec._hasSpoken = true;
           scheduleSilenceReset(rec);
         };
         rec.onerror = () => {
@@ -1628,40 +1690,11 @@
         rec.onresult = (e) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
-          let interim = '';
-          let finalText = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
-          }
-          interim = interim.trim();
-          finalText = finalText.trim();
-
-          // Accumulate transcripts while avoiding duplication caused by
-          // mobile browsers re-emitting previously-recognized text in
-          // interim results. We compute suffixes to append only the new
-          // portion.
-          const base = (rec._accTranscript || '').trim();
-          let liveForCompare = base;
-          if (finalText) {
-            let suffix = finalText;
-            if (base && finalText.startsWith(base)) suffix = finalText.slice(base.length).trim();
-            if (suffix) rec._accTranscript = (base ? base + ' ' + suffix : suffix).trim();
-            rec._lastInterim = '';
-            speakingPractice.liveTextEl.textContent = rec._accTranscript;
-            liveForCompare = rec._accTranscript;
-          } else if (interim) {
-            let interimSuffix = interim;
-            if (base && interim.startsWith(base)) interimSuffix = interim.slice(base.length).trim();
-            if (interimSuffix !== rec._lastInterim) {
-              rec._lastInterim = interimSuffix;
-              speakingPractice.liveTextEl.textContent = (base ? (base + (interimSuffix ? ' ' + interimSuffix : '')) : interimSuffix).trim();
-            }
-            liveForCompare = (base + ' ' + rec._lastInterim).trim();
-          } else {
-            liveForCompare = base;
-          }
+          const transcriptState = buildRecognitionText(rec, e.results);
+          rec._accTranscript = transcriptState.finalText;
+          rec._lastInterim = transcriptState.interimSuffix;
+          const liveForCompare = transcriptState.liveText;
+          speakingPractice.liveTextEl.textContent = liveForCompare;
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
@@ -1670,7 +1703,7 @@
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
           compareAndHighlight(target, liveForCompare, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          if (pct >= speakingPractice.min && transcriptState.sawFinalInEvent) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
             try {
               if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
@@ -1680,7 +1713,7 @@
             safeAdvanceSpeakingPractice(myToken);
           }
           // Mark that user has spoken at least once and schedule silence-reset
-          if (finalText || interim) rec._hasSpoken = true;
+          if (transcriptState.hasSpeech) rec._hasSpoken = true;
           scheduleSilenceReset(rec);
         };
         rec.onerror = () => {
@@ -1730,6 +1763,8 @@
             // clear accumulated transcript so new speech starts fresh
             rec._accTranscript = '';
             rec._lastInterim = '';
+            rec._finalByIndex = Object.create(null);
+            rec._resultBaseIndex = rec._lastResultsLength || 0;
             rec._silenceTimer = null;
           }, waitSec * 1000);
         } catch (e) { /* ignore */ }
