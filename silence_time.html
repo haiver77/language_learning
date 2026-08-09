@@ -1445,6 +1445,7 @@
         rec._silenceTimer = null;
         rec._hasSpoken = false; // becomes true once user produces speech
         rec._accTranscript = '';
+        rec._lastInterim = '';
         rec._suppressRestart = false; // set true when we intentionally abort to avoid onend auto-restart
         return rec;
       }
@@ -1506,17 +1507,34 @@
           interim = interim.trim();
           finalText = finalText.trim();
 
-          // Accumulate transcripts so short pauses don't lose prior text.
+          // Accumulate transcripts while avoiding duplication caused by
+          // mobile browsers re-emitting previously-recognized text in
+          // interim results. We compute suffixes to append only the new
+          // portion.
+          const base = (rec._accTranscript || '').trim();
+          let liveForCompare = base;
           if (finalText) {
-            rec._accTranscript = ((rec._accTranscript || '') + ' ' + finalText).trim();
+            // If finalText repeats the base at the start, only append the suffix
+            let suffix = finalText;
+            if (base && finalText.startsWith(base)) suffix = finalText.slice(base.length).trim();
+            if (suffix) rec._accTranscript = (base ? base + ' ' + suffix : suffix).trim();
+            rec._lastInterim = '';
             speakingPractice.liveTextEl.textContent = rec._accTranscript;
+            liveForCompare = rec._accTranscript;
           } else if (interim) {
-            speakingPractice.liveTextEl.textContent = ((rec._accTranscript || '') + ' ' + interim).trim();
+            // Interim may include the whole base; show only the new interim suffix
+            let interimSuffix = interim;
+            if (base && interim.startsWith(base)) interimSuffix = interim.slice(base.length).trim();
+            // Avoid repetitive updates when interim repeats the same suffix
+            if (interimSuffix !== rec._lastInterim) {
+              rec._lastInterim = interimSuffix;
+              speakingPractice.liveTextEl.textContent = (base ? (base + (interimSuffix ? ' ' + interimSuffix : '')) : interimSuffix).trim();
+            }
+            liveForCompare = (base + ' ' + rec._lastInterim).trim();
           } else {
             // no new text; leave existing display
+            liveForCompare = base;
           }
-
-          const liveForCompare = (finalText ? rec._accTranscript : ((rec._accTranscript || '') + ' ' + interim)).trim();
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
@@ -1620,17 +1638,30 @@
           interim = interim.trim();
           finalText = finalText.trim();
 
-          // Accumulate transcripts so short pauses don't lose prior text.
+          // Accumulate transcripts while avoiding duplication caused by
+          // mobile browsers re-emitting previously-recognized text in
+          // interim results. We compute suffixes to append only the new
+          // portion.
+          const base = (rec._accTranscript || '').trim();
+          let liveForCompare = base;
           if (finalText) {
-            rec._accTranscript = ((rec._accTranscript || '') + ' ' + finalText).trim();
+            let suffix = finalText;
+            if (base && finalText.startsWith(base)) suffix = finalText.slice(base.length).trim();
+            if (suffix) rec._accTranscript = (base ? base + ' ' + suffix : suffix).trim();
+            rec._lastInterim = '';
             speakingPractice.liveTextEl.textContent = rec._accTranscript;
+            liveForCompare = rec._accTranscript;
           } else if (interim) {
-            speakingPractice.liveTextEl.textContent = ((rec._accTranscript || '') + ' ' + interim).trim();
+            let interimSuffix = interim;
+            if (base && interim.startsWith(base)) interimSuffix = interim.slice(base.length).trim();
+            if (interimSuffix !== rec._lastInterim) {
+              rec._lastInterim = interimSuffix;
+              speakingPractice.liveTextEl.textContent = (base ? (base + (interimSuffix ? ' ' + interimSuffix : '')) : interimSuffix).trim();
+            }
+            liveForCompare = (base + ' ' + rec._lastInterim).trim();
           } else {
-            // no new text; leave existing display
+            liveForCompare = base;
           }
-
-          const liveForCompare = (finalText ? rec._accTranscript : ((rec._accTranscript || '') + ' ' + interim)).trim();
           const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
@@ -1698,6 +1729,7 @@
             rec._hasSpoken = false;
             // clear accumulated transcript so new speech starts fresh
             rec._accTranscript = '';
+            rec._lastInterim = '';
             rec._silenceTimer = null;
           }, waitSec * 1000);
         } catch (e) { /* ignore */ }
