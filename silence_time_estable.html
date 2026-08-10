@@ -770,27 +770,14 @@
           speakingPractice.statusEl.textContent = 'Waiting for microphone…';
         }
         recordLog('scheduling recognition start delayMs=' + delayMs + ' token=' + myToken);
-        if (delayMs > 0) {
-          rec._startTimer = setTimeout(() => {
-            rec._startTimer = null;
-            if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
-            if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
-            if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
-            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
-            try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
-          }, delayMs);
-        } else {
-          // No delay: start immediately to avoid a scheduling tick that may
-          // introduce audible gaps when users resume speaking after short silences.
-          try {
-            if (!speakingPractice.active) { recordLog('start aborted immediate: practice not active'); return; }
-            if (speakingPractice.rec !== rec) { recordLog('start aborted immediate: rec not current'); return; }
-            if (myToken !== phraseSessionId) { recordLog('start aborted immediate: token mismatch'); return; }
-            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
-            rec.start();
-            recordLog('rec.start() invoked immediate token=' + myToken);
-          } catch (err) { recordLog('rec.start() failed immediate ' + (err && err.message)); }
-        }
+        rec._startTimer = setTimeout(() => {
+          rec._startTimer = null;
+          if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
+          if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
+          if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
+          if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+          try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
+        }, delayMs);
       }
 
       function collapseRepeatedTokenPatterns(tokens) {
