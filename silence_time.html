@@ -716,6 +716,170 @@
         return pct;
       }
 
+      function normalizeSpeechChunk(s) {
+        return (s || '').replace(/\s+/g, ' ').trim();
+      }
+
+      // Lightweight event logger for speaking-practice debugging
+      window._trainer = window._trainer || {};
+      window._trainer.logs = window._trainer.logs || [];
+      function recordLog(msg) {
+        try {
+          const t = new Date().toISOString();
+          const s = t + ' ' + String(msg || '');
+          window._trainer.logs.push(s);
+          // keep logs bounded
+          if (window._trainer.logs.length > 2000) window._trainer.logs.shift();
+          try { console.log('[SP-LOG]', s); } catch (e) {}
+          const el = document.getElementById('sp-debug-log');
+          if (el) {
+            el.textContent = window._trainer.logs.slice(-200).join('\n');
+            el.scrollTop = el.scrollHeight;
+          }
+        } catch (e) { /* ignore logging errors */ }
+      }
+
+      function isMobileSpeechBrowser() {
+        try {
+          const ua = navigator.userAgent || '';
+          const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+          return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || coarse;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getRecognitionStartDelayMs() {
+        // Start recognition immediately after TTS finishes to reduce latency.
+        return 0;
+      }
+
+      function clearRecognitionTimers(rec) {
+        if (!rec) return;
+        if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+        if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+        try { const el = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter'); if (el) el.textContent = ''; } catch (e) {}
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+      }
+
+      function startRecognitionWhenReady(rec, myToken) {
+        if (!rec) return;
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+        const delayMs = getRecognitionStartDelayMs();
+        if (delayMs > 0 && speakingPractice.statusEl) {
+          speakingPractice.statusEl.textContent = 'Waiting for microphone…';
+        }
+        recordLog('scheduling recognition start delayMs=' + delayMs + ' token=' + myToken);
+        if (delayMs > 0) {
+          rec._startTimer = setTimeout(() => {
+            rec._startTimer = null;
+            if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
+            if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
+            if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
+            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+            try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
+          }, delayMs);
+        } else {
+          // No delay: start immediately to avoid a scheduling tick that may
+          // introduce audible gaps when users resume speaking after short silences.
+          try {
+            if (!speakingPractice.active) { recordLog('start aborted immediate: practice not active'); return; }
+            if (speakingPractice.rec !== rec) { recordLog('start aborted immediate: rec not current'); return; }
+            if (myToken !== phraseSessionId) { recordLog('start aborted immediate: token mismatch'); return; }
+            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+            rec.start();
+            recordLog('rec.start() invoked immediate token=' + myToken);
+          } catch (err) { recordLog('rec.start() failed immediate ' + (err && err.message)); }
+        }
+      }
+
+      function collapseRepeatedTokenPatterns(tokens) {
+        const cleaned = [];
+        for (const token of tokens) {
+          if (!token) continue;
+          if (cleaned.length && cleaned[cleaned.length - 1] === token) continue;
+          cleaned.push(token);
+          const maxPattern = Math.min(4, Math.floor(cleaned.length / 2));
+          for (let size = 1; size <= maxPattern; size++) {
+            const a = cleaned.slice(cleaned.length - 2 * size, cleaned.length - size).join('\u0000');
+            const b = cleaned.slice(cleaned.length - size).join('\u0000');
+            if (a && a === b) {
+              cleaned.splice(cleaned.length - size, size);
+              break;
+            }
+          }
+        }
+        return cleaned;
+      }
+
+      function removeTokenOverlap(baseText, nextText) {
+        const baseTokens = normalizeSpeechChunk(baseText).split(' ').filter(Boolean);
+        const nextTokens = normalizeSpeechChunk(nextText).split(' ').filter(Boolean);
+        if (!nextTokens.length) return '';
+
+        let overlap = 0;
+        const maxOverlap = Math.min(baseTokens.length, nextTokens.length);
+        for (let size = maxOverlap; size > 0; size--) {
+          let same = true;
+          for (let i = 0; i < size; i++) {
+            if (baseTokens[baseTokens.length - size + i] !== nextTokens[i]) {
+              same = false;
+              break;
+            }
+          }
+          if (same) {
+            overlap = size;
+            break;
+          }
+        }
+
+        const cleanedTokens = collapseRepeatedTokenPatterns(nextTokens.slice(overlap));
+        if (baseTokens.length && cleanedTokens[0] === baseTokens[baseTokens.length - 1]) {
+          cleanedTokens.shift();
+        }
+        return cleanedTokens.join(' ').trim();
+      }
+
+      function buildRecognitionText(rec, results) {
+        const baseIndex = rec._resultBaseIndex || 0;
+        const interimParts = [];
+        let sawFinalInEvent = false;
+
+        rec._lastResultsLength = results.length;
+        for (let i = baseIndex; i < results.length; i++) {
+          const res = results[i];
+          const transcript = normalizeSpeechChunk(res && res[0] && res[0].transcript || '');
+          if (!transcript) continue;
+          if (res.isFinal) {
+            rec._finalByIndex[i] = transcript;
+            sawFinalInEvent = true;
+          } else {
+            interimParts.push(transcript);
+          }
+        }
+
+        const finalText = Object.keys(rec._finalByIndex)
+          .map(Number)
+          .filter(index => index >= baseIndex)
+          .sort((a, b) => a - b)
+          .map(index => rec._finalByIndex[index])
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const interimCombined = normalizeSpeechChunk(interimParts.join(' '));
+        const interimSuffix = removeTokenOverlap(finalText, interimCombined);
+        const liveText = [finalText, interimSuffix].filter(Boolean).join(' ').trim();
+
+        return {
+          finalText,
+          interimSuffix,
+          liveText,
+          sawFinalInEvent,
+          hasSpeech: !!liveText,
+        };
+      }
+
       // Compare target phrase and live transcript word-by-word and highlight
       function compareAndHighlight(target, live, slotPos) {
         if (!target) return;
@@ -1335,6 +1499,10 @@
             <span id="sp-score" class="status">0%</span>
           </div>
           <div id="sp-live" class="status" style="margin-top:8px; font-size:15px;"></div>
+          <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+            <span class="badge">Silence counter</span>
+            <span id="sp-silence-counter" class="status">0s</span>
+          </div>
         </div>
         <div class="panel-title">Speaking practice</div>
         <div class="inline-controls">
@@ -1344,6 +1512,9 @@
           <label class="badge"><input type="checkbox" id="sp-random" checked /> <span>Random</span></label>
           <label class="badge"><span>Min similarity %</span>
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
+          </label>
+          <label class="badge"><span>Silence wait (s)</span>
+            <input id="sp-wait" type="number" min="1" step="1" value="4" style="width:6ch" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
@@ -1434,10 +1605,23 @@
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return null;
         const rec = new SR();
+        const mobileSpeech = isMobileSpeechBrowser();
         rec.lang = pickRecLang(lang);
         rec.continuous = true;
+        // Use interim results (matches index.html behavior which works on phones)
         rec.interimResults = true;
         rec.maxAlternatives = 1;
+        // Per-recognition silence timer state
+        rec._silenceTimer = null;
+        rec._startTimer = null;
+        rec._hasSpoken = false; // becomes true once user produces speech
+        rec._accTranscript = '';
+        rec._accCaptured = false; // true when accTranscript captured for current silence window
+        rec._lastInterim = '';
+        rec._finalByIndex = Object.create(null);
+        rec._resultBaseIndex = 0;
+        rec._lastResultsLength = 0;
+        rec._suppressRestart = false; // set true when we intentionally abort to avoid onend auto-restart
         return rec;
       }
 
@@ -1464,7 +1648,12 @@
         const myToken = phraseSessionId;
 
         if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            // prevent onend from auto-restarting this instance
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
           speakingPractice.rec = null;
         }
         const rec = createRecognition(speakingPractice.lang);
@@ -1475,93 +1664,10 @@
           speakingPractice.active = false;
           return;
         }
-
         speakingPractice.liveTextEl.textContent = '';
         speakingPractice.progressEl.value = 0;
         speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
-
-          rec.onresult = (e) => {
-          if (!speakingPractice.active) return;
-          if (myToken !== phraseSessionId) return;
-          let interim = '';
-          let finalText = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
-          }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
-
-          const pct = similarityPercent(live, target);
-          speakingPractice.progressEl.value = pct;
-          speakingPractice.scoreEl.textContent = pct + '%';
-
-          // Highlight words in the active practice slot according to correctness
-          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, live, slotPos);
-
-          if (pct >= speakingPractice.min && finalText) {
-            speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { rec.abort(); } catch { }
-            // Prepare next phrase safely
-            safeAdvanceSpeakingPractice(myToken);
-          }
-        };
-        rec.onerror = () => {
-          if (!speakingPractice.active) return;
-          if (myToken !== phraseSessionId) return;
-          // Keep listening; status note
-          speakingPractice.statusEl.textContent = 'Listening…';
-        };
-        rec.onend = () => {
-          // If ended unexpectedly while active and token still valid, attempt to restart
-          if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
-          }
-        };
-
-        try { rec.start(); } catch { }
-      }
-
-      async function safeAdvanceSpeakingPractice(prevToken) {
-        // Cancel all previous activities, increment session, then proceed
-        try { speechSynthesis.cancel(); } catch { }
-        if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
-          speakingPractice.rec = null;
-        }
-        const newToken = ++phraseSessionId;
-        if (!speakingPractice.active) return;
-        // Move to next phrase: select + speak once, await speak, then listen again
-        await selectAndShowNextRow({ speak: true });
-        if (!speakingPractice.active) return;
-        // Restart recognition for the new target
-        await startSpeakingPracticeCycleOnly();
-      }
-
-      async function startSpeakingPracticeCycleOnly() {
-        // Start listening for current phrase without triggering TTS again
-        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
-        const myToken = phraseSessionId;
-
-        if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
-          speakingPractice.rec = null;
-        }
-        const rec = createRecognition(speakingPractice.lang);
-        speakingPractice.rec = rec;
-        if (!rec) {
-          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
-          speakingPractice.active = false;
-          return;
-        }
-
-        speakingPractice.liveTextEl.textContent = '';
-        speakingPractice.progressEl.value = 0;
-        speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
 
         rec.onresult = (e) => {
           if (!speakingPractice.active) return;
@@ -1570,47 +1676,321 @@
           let finalText = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
           }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
+          const liveRaw = (finalText || interim || '').trim();
+          // Merge previously captured fragment (if any) with the new fragment,
+          // removing overlapping tokens to avoid duplication.
+          let liveForCompare = liveRaw;
+          try {
+            if (rec && rec._accTranscript) {
+              const nextClean = removeTokenOverlap(rec._accTranscript, liveRaw);
+              liveForCompare = (rec._accTranscript + (nextClean ? (' ' + nextClean) : '')).trim();
+            }
+          } catch (e) { /* ignore */ }
+          recordLog('onresult idx=' + e.resultIndex + ' results=' + e.results.length + ' final=' + Boolean(finalText) + ' live=' + liveForCompare.slice(0,120));
+          speakingPractice.liveTextEl.textContent = liveForCompare;
 
-          const pct = similarityPercent(live, target);
+          const pct = similarityPercent(liveForCompare, target);
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
 
           // Highlight words in the active practice slot according to correctness
           const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, live, slotPos);
+          compareAndHighlight(target, liveForCompare, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          const matched = (pct >= speakingPractice.min && finalText);
+          if (matched) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { rec.abort(); } catch { }
+            try {
+                  if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; recordLog('cleared silence timer on final'); }
+              try { rec._accTranscript = ''; rec._accCaptured = false; } catch (e) {}
+              rec._suppressRestart = true;
+            } catch (e) {}
+            try { rec.abort(); } catch (e) { recordLog('abort failed ' + (e && e.message)); }
+            // Prepare next phrase safely
             safeAdvanceSpeakingPractice(myToken);
           }
+          // Mark that user has spoken at least once (only on final result)
+          if (finalText) {
+            rec._hasSpoken = true;
+            recordLog('set _hasSpoken=true token=' + myToken + ' finalLen=' + finalText.length);
+            // If this final result did not already satisfy the target, append
+            // it into the accumulated transcript so subsequent speech is
+            // concatenated across multiple short silences.
+            try {
+              if (!matched) {
+                const ft = finalText.trim();
+                if (ft) {
+                  if (!rec._accTranscript) rec._accTranscript = ft;
+                  else {
+                    const nextClean = removeTokenOverlap(rec._accTranscript, ft);
+                    if (nextClean) rec._accTranscript = (rec._accTranscript + ' ' + nextClean).trim();
+                  }
+                  rec._accCaptured = false; // allow next silence window to capture further interim
+                  recordLog('appended final to accTranscript="' + (rec._accTranscript||'').slice(0,120) + '"');
+                }
+              }
+            } catch (e) { /* ignore */ }
+          }
+          scheduleSilenceReset(rec);
         };
-        rec.onerror = () => {
+        rec.onerror = (ev) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           speakingPractice.statusEl.textContent = 'Listening…';
+          recordLog('rec.onerror token=' + myToken + ' event=' + (ev && ev.error));
         };
-        rec.onend = () => {
-          if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
+        rec.onend = (ev) => {
+          // If ended unexpectedly while active and token still valid, attempt to restart
+          // but do not restart if we intentionally aborted this instance.
+          if (rec && rec._suppressRestart) {
+            // allow suppression to be transient; clear the flag here
+            try { rec._suppressRestart = false; } catch (e) {}
+            recordLog('rec.onend suppressed token=' + myToken);
+            return;
           }
+          if (speakingPractice.active && myToken === phraseSessionId) {
+            recordLog('rec.onend token=' + myToken + ' restarting');
+            startRecognitionWhenReady(rec, myToken);
+          } else { recordLog('rec.onend token=' + myToken + ' not restarting'); }
         };
-        try { rec.start(); } catch { }
+
+        startRecognitionWhenReady(rec, myToken);
+      }
+
+      async function safeAdvanceSpeakingPractice(prevToken) {
+        // Cancel all previous activities, increment session, then proceed
+        try { speechSynthesis.cancel(); } catch { }
+        if (speakingPractice.rec) {
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
+          speakingPractice.rec = null;
+        }
+        const newToken = ++phraseSessionId;
+        if (!speakingPractice.active) return;
+        // Move to next phrase: select + speak once, await speak, then listen again
+        await selectAndShowNextRow({ speak: true });
+        if (!speakingPractice.active) return;
+        // Restart recognition for the new target (fresh start)
+        await startSpeakingPracticeCycleOnly(true);
+      }
+
+      async function startSpeakingPracticeCycleOnly(fresh = false) {
+        // Start listening for current phrase without triggering TTS again
+        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
+        const myToken = phraseSessionId;
+
+        if (speakingPractice.rec) {
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
+          speakingPractice.rec = null;
+        }
+        const rec = createRecognition(speakingPractice.lang);
+        speakingPractice.rec = rec;
+        if (!rec) {
+          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
+          speakingPractice.active = false;
+          return;
+        }
+
+        // Only clear the live transcript and progress for a fresh cycle
+        if (fresh) {
+          speakingPractice.liveTextEl.textContent = '';
+          speakingPractice.progressEl.value = 0;
+          speakingPractice.scoreEl.textContent = '0%';
+        }
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
+
+        rec.onresult = (e) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
+          }
+          const liveRaw = (finalText || interim || '').trim();
+          let liveForCompare = liveRaw;
+          try {
+            if (rec && rec._accTranscript) {
+              const nextClean = removeTokenOverlap(rec._accTranscript, liveRaw);
+              liveForCompare = (rec._accTranscript + (nextClean ? (' ' + nextClean) : '')).trim();
+            }
+          } catch (e) { /* ignore */ }
+          speakingPractice.liveTextEl.textContent = liveForCompare;
+          const pct = similarityPercent(liveForCompare, target);
+          speakingPractice.progressEl.value = pct;
+          speakingPractice.scoreEl.textContent = pct + '%';
+
+          // Highlight words in the active practice slot according to correctness
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          compareAndHighlight(target, liveForCompare, slotPos);
+
+          const matched = (pct >= speakingPractice.min && finalText);
+          if (matched) {
+            speakingPractice.statusEl.textContent = 'Great! ✅';
+            try {
+                  if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; recordLog('cleared silence timer on final'); }
+              try { rec._accTranscript = ''; rec._accCaptured = false; } catch (e) {}
+              rec._suppressRestart = true;
+            } catch (e) {}
+            try { rec.abort(); } catch (e) {}
+            safeAdvanceSpeakingPractice(myToken);
+          }
+          // Mark that user has spoken at least once (only on final result)
+          if (finalText) {
+            rec._hasSpoken = true;
+            try {
+              if (!matched) {
+                const ft = finalText.trim();
+                if (ft) {
+                  if (!rec._accTranscript) rec._accTranscript = ft;
+                  else {
+                    const nextClean = removeTokenOverlap(rec._accTranscript, ft);
+                    if (nextClean) rec._accTranscript = (rec._accTranscript + ' ' + nextClean).trim();
+                  }
+                  rec._accCaptured = false;
+                  recordLog('appended final to accTranscript="' + (rec._accTranscript||'').slice(0,120) + '"');
+                }
+              }
+            } catch (e) { /* ignore */ }
+          }
+          scheduleSilenceReset(rec);
+        };
+        rec.onerror = (ev) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          speakingPractice.statusEl.textContent = 'Listening…';
+          recordLog('rec.onerror token=' + myToken + ' event=' + (ev && ev.error));
+        };
+        rec.onend = (ev) => {
+          // If ended unexpectedly while active and token still valid, attempt to restart
+          // but do not restart if we intentionally aborted this instance.
+          if (rec && rec._suppressRestart) {
+            try { rec._suppressRestart = false; } catch (e) {}
+            recordLog('rec.onend suppressed token=' + myToken);
+            return;
+          }
+          if (speakingPractice.active && myToken === phraseSessionId) {
+            recordLog('rec.onend token=' + myToken + ' restarting');
+            startRecognitionWhenReady(rec, myToken);
+          } else { recordLog('rec.onend token=' + myToken + ' not restarting'); }
+        };
+        startRecognitionWhenReady(rec, myToken);
+      }
+
+      // Schedule or restart a per-recognition silence timer which, after
+      // the configured wait (in seconds) following user speech, clears the
+      // live transcript and resets progress/score but does NOT stop recognition.
+      function scheduleSilenceReset(rec) {
+        try {
+          if (!rec) return;
+          recordLog('scheduleSilenceReset called _hasSpoken=' + !!rec._hasSpoken + ' current=' + (speakingPractice.rec===rec));
+          // only start if practice still active, this rec is current, and user has spoken
+          const waitEl = els.modeContent.querySelector('#sp-wait');
+          const waitSec = waitEl ? Math.max(1, Math.floor(Number(waitEl.value) || 4)) : 4;
+          if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) {
+            recordLog('scheduleSilenceReset returning early active=' + !!speakingPractice.active + ' isCurrent=' + (speakingPractice.rec===rec) + ' hasSpoken=' + !!rec._hasSpoken);
+            // ensure counter cleared when we don't schedule
+            try { const el = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter'); if (el) el.textContent = ''; } catch (e) {}
+            return;
+          }
+          // clear existing timer/interval only when we're about to set a fresh one
+          if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+          if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+
+          // Capture the currently-displayed live transcript once for this
+          // silence window. Use a flag to avoid repeated captures when
+          // scheduleSilenceReset is invoked multiple times before the window
+          // expires.
+          try {
+            const cur = (speakingPractice.liveTextEl && speakingPractice.liveTextEl.textContent) || '';
+            if (cur && cur.trim() && !rec._accCaptured) {
+              const c = cur.trim();
+              if (!rec._accTranscript) rec._accTranscript = c;
+              else {
+                try {
+                  const nextClean = removeTokenOverlap(rec._accTranscript, c);
+                  if (nextClean) rec._accTranscript = (rec._accTranscript + ' ' + nextClean).trim();
+                } catch (e) { rec._accTranscript = ((rec._accTranscript || '') + ' ' + c).trim(); }
+              }
+              rec._accCaptured = true;
+              recordLog('scheduleSilenceReset captured accTranscript="' + (rec._accTranscript||'').slice(0,120) + '"');
+            }
+          } catch (e) { /* ignore */ }
+
+          recordLog('setting silence timer waitSec=' + waitSec + 's');
+          // set a deadline and an interval to update the counter UI
+          rec._silenceDeadline = Date.now() + waitSec * 1000;
+          try {
+            const counterEl = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter');
+            if (counterEl) counterEl.textContent = waitSec + 's';
+            rec._silenceInterval = setInterval(() => {
+              try {
+                if (!counterEl) return;
+                const ms = rec._silenceDeadline - Date.now();
+                if (ms <= 0) {
+                  counterEl.textContent = '0s';
+                  clearInterval(rec._silenceInterval); rec._silenceInterval = null;
+                  return;
+                }
+                counterEl.textContent = Math.ceil(ms / 1000) + 's';
+              } catch (e) { /* ignore */ }
+            }, 200);
+          } catch (e) { /* ignore */ }
+
+          rec._silenceTimer = setTimeout(() => {
+            try {
+              if (!speakingPractice.active || speakingPractice.rec !== rec) return;
+              if (speakingPractice.liveTextEl) speakingPractice.liveTextEl.textContent = '';
+              if (speakingPractice.progressEl) speakingPractice.progressEl.value = 0;
+              if (speakingPractice.scoreEl) speakingPractice.scoreEl.textContent = '0%';
+              // restore original phrase display
+              setPhraseTexts(parsedRows[currentIndex] || {});
+              applyShowVisibility();
+              recordLog('silence reset applied after ' + waitSec + 's');
+            } catch (e) { /* ignore */ }
+            // reset spoken flag so timer only restarts after the next speech
+            rec._hasSpoken = false;
+            // clear accumulated transcript so new speech starts fresh when the
+            // silence wait fully elapses (we already cleared the visible live
+            // text above). Also reset the per-window capture flag.
+            rec._accTranscript = '';
+            rec._accCaptured = false;
+            rec._lastInterim = '';
+            rec._finalByIndex = Object.create(null);
+            rec._resultBaseIndex = rec._lastResultsLength || 0;
+            // clear timer and interval
+            if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+            if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+            try { const el = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter'); if (el) el.textContent = ''; } catch (e) {}
+          }, waitSec * 1000);
+        } catch (e) { /* ignore */ }
       }
 
       function stopSpeakingPractice() {
         speakingPractice.active = false;
         if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
           speakingPractice.rec = null;
         }
         try { speechSynthesis.cancel(); } catch { }
         if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Stopped';
+        recordLog('stopSpeakingPractice called');
       }
 
       // --- Writing Practice Flow ---
@@ -2066,6 +2446,8 @@
         }
         // restore saved OpenAI token if any
         try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch { }
+
+        // Debug panel removed
       }
 
       // Expose minimal for debugging (optional)
