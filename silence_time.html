@@ -867,26 +867,87 @@
         };
       }
 
-      // Compare target phrase and live transcript word-by-word and highlight
+      function validateSpokenWords(target, spoken, threshold = 70) {
+        const targetTokens = (target.match(/\S+/g) || []);
+        const spokenTokens = (spoken.match(/\S+/g) || []);
+        const matchedTarget = new Array(targetTokens.length).fill(false);
+        const spokenCorrect = new Array(spokenTokens.length).fill(false);
+
+        let cursor = 0;
+        for (let i = 0; i < spokenTokens.length; i++) {
+          const s = spokenTokens[i];
+          let bestIdx = -1;
+          let bestSim = -1;
+
+          // Primary pass: find the best match ahead of the cursor.
+          for (let j = cursor; j < targetTokens.length; j++) {
+            const sim = similarityPercent(s, targetTokens[j]);
+            if (sim >= threshold && sim > bestSim) {
+              bestSim = sim;
+              bestIdx = j;
+              if (sim === 100) break;
+            }
+          }
+
+          if (bestIdx >= 0) {
+            spokenCorrect[i] = true;
+            matchedTarget[bestIdx] = true;
+            cursor = bestIdx + 1;
+            continue;
+          }
+
+          // Repeat-tolerant fallback: if the spoken word exists anywhere
+          // in the target phrase, keep it as correct without moving cursor.
+          for (let j = 0; j < targetTokens.length; j++) {
+            if (similarityPercent(s, targetTokens[j]) >= threshold) {
+              spokenCorrect[i] = true;
+              break;
+            }
+          }
+        }
+
+        const matchedCount = matchedTarget.reduce((acc, ok) => acc + (ok ? 1 : 0), 0);
+        const score = targetTokens.length ? Math.round((matchedCount / targetTokens.length) * 100) : 0;
+
+        return {
+          targetTokens,
+          spokenTokens,
+          matchedTarget,
+          spokenCorrect,
+          score,
+        };
+      }
+
+      // Compare target phrase and live transcript using forward matching and highlight target words.
       function compareAndHighlight(target, live, slotPos) {
-        if (!target) return;
-        const tgtTokens = (target.match(/\S+/g) || []);
-        const liveTokens = (live.match(/\S+/g) || []);
+        const validation = validateSpokenWords(target, live, 70);
         const container = els.text[slotPos];
-        if (!container) return;
-        // Clear and rebuild with spans for each target token
+        if (!container) return validation;
         container.innerHTML = '';
-        for (let i = 0; i < tgtTokens.length; i++) {
-          const t = tgtTokens[i];
-          const l = liveTokens[i] || '';
-          const sim = similarityPercent(t, l);
+        for (let i = 0; i < validation.targetTokens.length; i++) {
           const span = document.createElement('span');
-          span.textContent = t;
-          // threshold: 70% similarity means considered correct
-          if (sim >= 70) span.className = 'word-correct';
-          else span.className = 'word-incorrect';
+          span.textContent = validation.targetTokens[i];
+          span.className = validation.matchedTarget[i] ? 'word-correct' : 'word-incorrect';
           container.appendChild(span);
-          if (i !== tgtTokens.length - 1) container.appendChild(document.createTextNode(' '));
+          if (i !== validation.targetTokens.length - 1) container.appendChild(document.createTextNode(' '));
+        }
+        return validation;
+      }
+
+      function renderLiveValidation(live, spokenCorrect) {
+        if (!speakingPractice.liveTextEl) return;
+        const liveTokens = (live.match(/\S+/g) || []);
+        if (!liveTokens.length) {
+          speakingPractice.liveTextEl.textContent = '';
+          return;
+        }
+        speakingPractice.liveTextEl.innerHTML = '';
+        for (let i = 0; i < liveTokens.length; i++) {
+          const span = document.createElement('span');
+          span.textContent = liveTokens[i];
+          span.className = spokenCorrect && spokenCorrect[i] ? 'word-correct' : 'word-incorrect';
+          speakingPractice.liveTextEl.appendChild(span);
+          if (i !== liveTokens.length - 1) speakingPractice.liveTextEl.appendChild(document.createTextNode(' '));
         }
       }
 
@@ -1696,14 +1757,13 @@
             rec._lastSpeechTs = Date.now();
           }
 
-          speakingPractice.liveTextEl.textContent = liveForCompare;
-
-          const pct = similarityPercent(liveForCompare, target);
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          const validation = compareAndHighlight(target, liveForCompare, slotPos);
+          renderLiveValidation(liveForCompare, validation.spokenCorrect);
+          const pct = validation.score;
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
 
-          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, liveForCompare, slotPos);
 
           const matched = (pct >= speakingPractice.min && finalText);
           if (matched) {
@@ -1822,13 +1882,13 @@
             rec._lastSpeechTs = Date.now();
           }
 
-          speakingPractice.liveTextEl.textContent = liveForCompare;
-          const pct = similarityPercent(liveForCompare, target);
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          const validation = compareAndHighlight(target, liveForCompare, slotPos);
+          renderLiveValidation(liveForCompare, validation.spokenCorrect);
+          const pct = validation.score;
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
 
-          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, liveForCompare, slotPos);
 
           const matched = (pct >= speakingPractice.min && finalText);
           if (matched) {
