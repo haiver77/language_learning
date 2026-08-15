@@ -5,14 +5,13 @@
 
 1. Do not add, remove, replace, or modify any words from the original English text.
 2. Remove all existing semicolons (;) before processing the document.
-3. Reorganize the text so that:
+3. Add the punctuation marks you consider necessary to make the text clear.
+4. Organize the text in lines so that:
    - Sentences and ideas are not split across lines.
    - Each line contains a complete thought whenever possible.
-4. Each resulting line must contain more than 10 words and fewer than 40 words.
-5. Add the punctuation marks you consider necessary to make the text clear.
+5. Each resulting line must contain more than 10 words and fewer than 40 words.
 6. For every line, prepend its Spanish translation.
 7. Use a semicolon (;) as the separator between the Spanish translation and the original English text.
-
 
 # Output Format
 
