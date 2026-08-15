@@ -770,14 +770,27 @@
           speakingPractice.statusEl.textContent = 'Waiting for microphone…';
         }
         recordLog('scheduling recognition start delayMs=' + delayMs + ' token=' + myToken);
-        rec._startTimer = setTimeout(() => {
-          rec._startTimer = null;
-          if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
-          if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
-          if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
-          if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
-          try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
-        }, delayMs);
+        if (delayMs > 0) {
+          rec._startTimer = setTimeout(() => {
+            rec._startTimer = null;
+            if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
+            if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
+            if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
+            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+            try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
+          }, delayMs);
+        } else {
+          // No delay: start immediately to avoid a scheduling tick that may
+          // introduce audible gaps when users resume speaking after short silences.
+          try {
+            if (!speakingPractice.active) { recordLog('start aborted immediate: practice not active'); return; }
+            if (speakingPractice.rec !== rec) { recordLog('start aborted immediate: rec not current'); return; }
+            if (myToken !== phraseSessionId) { recordLog('start aborted immediate: token mismatch'); return; }
+            if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+            rec.start();
+            recordLog('rec.start() invoked immediate token=' + myToken);
+          } catch (err) { recordLog('rec.start() failed immediate ' + (err && err.message)); }
+        }
       }
 
       function collapseRepeatedTokenPatterns(tokens) {
@@ -1501,7 +1514,7 @@
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
           </label>
           <label class="badge"><span>Silence wait (s)</span>
-            <input id="sp-wait" type="number" min="1" step="1" value="3" style="width:6ch" />
+            <input id="sp-wait" type="number" min="1" step="1" value="4" style="width:6ch" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
@@ -1885,7 +1898,7 @@
           recordLog('scheduleSilenceReset called _hasSpoken=' + !!rec._hasSpoken + ' current=' + (speakingPractice.rec===rec));
           // only start if practice still active, this rec is current, and user has spoken
           const waitEl = els.modeContent.querySelector('#sp-wait');
-          const waitSec = waitEl ? Math.max(1, Math.floor(Number(waitEl.value) || 3)) : 3;
+          const waitSec = waitEl ? Math.max(1, Math.floor(Number(waitEl.value) || 4)) : 4;
           if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) {
             recordLog('scheduleSilenceReset returning early active=' + !!speakingPractice.active + ' isCurrent=' + (speakingPractice.rec===rec) + ' hasSpoken=' + !!rec._hasSpoken);
             // ensure counter cleared when we don't schedule
@@ -2434,26 +2447,7 @@
         // restore saved OpenAI token if any
         try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch { }
 
-        // --- Debug panel for speaking-practice ---
-        try {
-          const dbg = document.createElement('div');
-          dbg.className = 'row';
-          dbg.style.marginTop = '8px';
-          dbg.innerHTML = `
-            <div class="panel">
-              <div class="panel-title">SP Debug</div>
-              <div style="display:flex;gap:8px;margin-bottom:8px">
-                <button id="spDbgToggle">Toggle Log</button>
-                <button id="spDbgClear">Clear</button>
-                <button id="spDbgDownload">Download</button>
-              </div>
-              <pre id="sp-debug-log" style="max-height:200px;overflow:auto;background:var(--control-bg);color:var(--control-fg);padding:8px;border-radius:6px;margin:0"></pre>
-            </div>`;
-          document.querySelector('.container')?.appendChild(dbg);
-          document.getElementById('spDbgToggle').onclick = () => { const el = document.getElementById('sp-debug-log'); if (!el) return; el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
-          document.getElementById('spDbgClear').onclick = () => { window._trainer.logs = []; const el = document.getElementById('sp-debug-log'); if (el) el.textContent = ''; };
-          document.getElementById('spDbgDownload').onclick = () => { const data = (window._trainer.logs || []).join('\n'); const blob = new Blob([data], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'sp_debug.log'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); };
-        } catch (e) { /* ignore debug panel errors */ }
+        // Debug panel removed
       }
 
       // Expose minimal for debugging (optional)
