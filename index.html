@@ -716,26 +716,238 @@
         return pct;
       }
 
-      // Compare target phrase and live transcript word-by-word and highlight
+      function normalizeSpeechChunk(s) {
+        return (s || '').replace(/\s+/g, ' ').trim();
+      }
+
+      // Lightweight event logger for speaking-practice debugging
+      window._trainer = window._trainer || {};
+      window._trainer.logs = window._trainer.logs || [];
+      function recordLog(msg) {
+        try {
+          const t = new Date().toISOString();
+          const s = t + ' ' + String(msg || '');
+          window._trainer.logs.push(s);
+          // keep logs bounded
+          if (window._trainer.logs.length > 2000) window._trainer.logs.shift();
+          try { console.log('[SP-LOG]', s); } catch (e) {}
+          const el = document.getElementById('sp-debug-log');
+          if (el) {
+            el.textContent = window._trainer.logs.slice(-200).join('\n');
+            el.scrollTop = el.scrollHeight;
+          }
+        } catch (e) { /* ignore logging errors */ }
+      }
+
+      function isMobileSpeechBrowser() {
+        try {
+          const ua = navigator.userAgent || '';
+          const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+          return /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || coarse;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getRecognitionStartDelayMs() {
+        // Start recognition immediately after TTS finishes to reduce latency.
+        return 0;
+      }
+
+      function clearRecognitionTimers(rec) {
+        if (!rec) return;
+        if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+        if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+        try { const el = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter'); if (el) el.textContent = ''; } catch (e) {}
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+      }
+
+      function startRecognitionWhenReady(rec, myToken) {
+        if (!rec) return;
+        if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
+        const delayMs = getRecognitionStartDelayMs();
+        if (delayMs > 0 && speakingPractice.statusEl) {
+          speakingPractice.statusEl.textContent = 'Waiting for microphone…';
+        }
+        recordLog('scheduling recognition start delayMs=' + delayMs + ' token=' + myToken);
+        rec._startTimer = setTimeout(() => {
+          rec._startTimer = null;
+          if (!speakingPractice.active) { recordLog('start aborted: practice not active'); return; }
+          if (speakingPractice.rec !== rec) { recordLog('start aborted: rec not current'); return; }
+          if (myToken !== phraseSessionId) { recordLog('start aborted: token mismatch'); return; }
+          if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Listening…';
+          try { rec.start(); recordLog('rec.start() invoked token=' + myToken); } catch (err) { recordLog('rec.start() failed ' + (err && err.message)); }
+        }, delayMs);
+      }
+
+      function collapseRepeatedTokenPatterns(tokens) {
+        const cleaned = [];
+        for (const token of tokens) {
+          if (!token) continue;
+          if (cleaned.length && cleaned[cleaned.length - 1] === token) continue;
+          cleaned.push(token);
+          const maxPattern = Math.min(4, Math.floor(cleaned.length / 2));
+          for (let size = 1; size <= maxPattern; size++) {
+            const a = cleaned.slice(cleaned.length - 2 * size, cleaned.length - size).join('\u0000');
+            const b = cleaned.slice(cleaned.length - size).join('\u0000');
+            if (a && a === b) {
+              cleaned.splice(cleaned.length - size, size);
+              break;
+            }
+          }
+        }
+        return cleaned;
+      }
+
+      function removeTokenOverlap(baseText, nextText) {
+        const baseTokens = normalizeSpeechChunk(baseText).split(' ').filter(Boolean);
+        const nextTokens = normalizeSpeechChunk(nextText).split(' ').filter(Boolean);
+        if (!nextTokens.length) return '';
+
+        let overlap = 0;
+        const maxOverlap = Math.min(baseTokens.length, nextTokens.length);
+        for (let size = maxOverlap; size > 0; size--) {
+          let same = true;
+          for (let i = 0; i < size; i++) {
+            if (baseTokens[baseTokens.length - size + i] !== nextTokens[i]) {
+              same = false;
+              break;
+            }
+          }
+          if (same) {
+            overlap = size;
+            break;
+          }
+        }
+
+        const cleanedTokens = collapseRepeatedTokenPatterns(nextTokens.slice(overlap));
+        if (baseTokens.length && cleanedTokens[0] === baseTokens[baseTokens.length - 1]) {
+          cleanedTokens.shift();
+        }
+        return cleanedTokens.join(' ').trim();
+      }
+
+      function buildRecognitionText(rec, results) {
+        const baseIndex = rec._resultBaseIndex || 0;
+        const interimParts = [];
+        let sawFinalInEvent = false;
+
+        rec._lastResultsLength = results.length;
+        for (let i = baseIndex; i < results.length; i++) {
+          const res = results[i];
+          const transcript = normalizeSpeechChunk(res && res[0] && res[0].transcript || '');
+          if (!transcript) continue;
+          if (res.isFinal) {
+            rec._finalByIndex[i] = transcript;
+            sawFinalInEvent = true;
+          } else {
+            interimParts.push(transcript);
+          }
+        }
+
+        const finalText = Object.keys(rec._finalByIndex)
+          .map(Number)
+          .filter(index => index >= baseIndex)
+          .sort((a, b) => a - b)
+          .map(index => rec._finalByIndex[index])
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const interimCombined = normalizeSpeechChunk(interimParts.join(' '));
+        const interimSuffix = removeTokenOverlap(finalText, interimCombined);
+        const liveText = [finalText, interimSuffix].filter(Boolean).join(' ').trim();
+
+        return {
+          finalText,
+          interimSuffix,
+          liveText,
+          sawFinalInEvent,
+          hasSpeech: !!liveText,
+        };
+      }
+
+      function validateSpokenWords(target, spoken, threshold = 70) {
+        const targetTokens = (target.match(/\S+/g) || []);
+        const spokenTokens = (spoken.match(/\S+/g) || []);
+        const matchedTarget = new Array(targetTokens.length).fill(false);
+        const spokenCorrect = new Array(spokenTokens.length).fill(false);
+
+        let cursor = 0;
+        for (let i = 0; i < spokenTokens.length; i++) {
+          const s = spokenTokens[i];
+          let bestIdx = -1;
+          let bestSim = -1;
+
+          // Primary pass: find the best match ahead of the cursor.
+          for (let j = cursor; j < targetTokens.length; j++) {
+            const sim = similarityPercent(s, targetTokens[j]);
+            if (sim >= threshold && sim > bestSim) {
+              bestSim = sim;
+              bestIdx = j;
+              if (sim === 100) break;
+            }
+          }
+
+          if (bestIdx >= 0) {
+            spokenCorrect[i] = true;
+            matchedTarget[bestIdx] = true;
+            cursor = bestIdx + 1;
+            continue;
+          }
+
+          // Repeat-tolerant fallback: if the spoken word exists anywhere
+          // in the target phrase, keep it as correct without moving cursor.
+          for (let j = 0; j < targetTokens.length; j++) {
+            if (similarityPercent(s, targetTokens[j]) >= threshold) {
+              spokenCorrect[i] = true;
+              break;
+            }
+          }
+        }
+
+        const matchedCount = matchedTarget.reduce((acc, ok) => acc + (ok ? 1 : 0), 0);
+        const score = targetTokens.length ? Math.round((matchedCount / targetTokens.length) * 100) : 0;
+
+        return {
+          targetTokens,
+          spokenTokens,
+          matchedTarget,
+          spokenCorrect,
+          score,
+        };
+      }
+
+      // Compare target phrase and live transcript using forward matching and highlight target words.
       function compareAndHighlight(target, live, slotPos) {
-        if (!target) return;
-        const tgtTokens = (target.match(/\S+/g) || []);
-        const liveTokens = (live.match(/\S+/g) || []);
+        const validation = validateSpokenWords(target, live, 70);
         const container = els.text[slotPos];
-        if (!container) return;
-        // Clear and rebuild with spans for each target token
+        if (!container) return validation;
         container.innerHTML = '';
-        for (let i = 0; i < tgtTokens.length; i++) {
-          const t = tgtTokens[i];
-          const l = liveTokens[i] || '';
-          const sim = similarityPercent(t, l);
+        for (let i = 0; i < validation.targetTokens.length; i++) {
           const span = document.createElement('span');
-          span.textContent = t;
-          // threshold: 70% similarity means considered correct
-          if (sim >= 70) span.className = 'word-correct';
-          else span.className = 'word-incorrect';
+          span.textContent = validation.targetTokens[i];
+          span.className = validation.matchedTarget[i] ? 'word-correct' : 'word-incorrect';
           container.appendChild(span);
-          if (i !== tgtTokens.length - 1) container.appendChild(document.createTextNode(' '));
+          if (i !== validation.targetTokens.length - 1) container.appendChild(document.createTextNode(' '));
+        }
+        return validation;
+      }
+
+      function renderLiveValidation(live, spokenCorrect) {
+        if (!speakingPractice.liveTextEl) return;
+        const liveTokens = (live.match(/\S+/g) || []);
+        if (!liveTokens.length) {
+          speakingPractice.liveTextEl.textContent = '';
+          return;
+        }
+        speakingPractice.liveTextEl.innerHTML = '';
+        for (let i = 0; i < liveTokens.length; i++) {
+          const span = document.createElement('span');
+          span.textContent = liveTokens[i];
+          span.className = spokenCorrect && spokenCorrect[i] ? 'word-correct' : 'word-incorrect';
+          speakingPractice.liveTextEl.appendChild(span);
+          if (i !== liveTokens.length - 1) speakingPractice.liveTextEl.appendChild(document.createTextNode(' '));
         }
       }
 
@@ -1335,6 +1547,10 @@
             <span id="sp-score" class="status">0%</span>
           </div>
           <div id="sp-live" class="status" style="margin-top:8px; font-size:15px;"></div>
+          <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+            <span class="badge">Silence counter</span>
+            <span id="sp-silence-counter" class="status">0s</span>
+          </div>
         </div>
         <div class="panel-title">Speaking practice</div>
         <div class="inline-controls">
@@ -1344,6 +1560,9 @@
           <label class="badge"><input type="checkbox" id="sp-random" checked /> <span>Random</span></label>
           <label class="badge"><span>Min similarity %</span>
             <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
+          </label>
+          <label class="badge"><span>Silence wait (s)</span>
+            <input id="sp-wait" type="number" min="1" step="1" value="3" style="width:6ch" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
@@ -1430,14 +1649,42 @@
       }
 
       // --- Speaking Practice Flow ---
+      function getSpeechSilenceWaitSeconds() {
+        const waitEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-wait') : null;
+        return waitEl ? Math.max(1, Math.floor(Number(waitEl.value) || 3)) : 3;
+      }
+
+      function resetSpeechUiAfterSilence() {
+        if (speakingPractice.liveTextEl) speakingPractice.liveTextEl.textContent = '';
+        if (speakingPractice.progressEl) speakingPractice.progressEl.value = 0;
+        if (speakingPractice.scoreEl) speakingPractice.scoreEl.textContent = '0%';
+        setPhraseTexts(parsedRows[currentIndex] || {});
+        applyShowVisibility();
+      }
+
       function createRecognition(lang) {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SR) return null;
         const rec = new SR();
+        const mobileSpeech = isMobileSpeechBrowser();
         rec.lang = pickRecLang(lang);
         rec.continuous = true;
+        // Use interim results (matches index.html behavior which works on phones)
         rec.interimResults = true;
         rec.maxAlternatives = 1;
+        // Per-recognition silence timer state
+        rec._silenceTimer = null;
+        rec._silenceInterval = null;
+        rec._startTimer = null;
+        rec._hasSpoken = false;
+        rec._accTranscript = '';
+        rec._accCaptured = false;
+        rec._lastSpeechTs = 0;
+        rec._lastInterim = '';
+        rec._finalByIndex = Object.create(null);
+        rec._resultBaseIndex = 0;
+        rec._lastResultsLength = 0;
+        rec._suppressRestart = false;
         return rec;
       }
 
@@ -1453,10 +1700,8 @@
         speakingPractice.min = parseInt(els.modeContent.querySelector('#sp-min')?.value || '90', 10) || 90;
         speakingPractice.statusEl.textContent = 'Starting…';
 
-        // persist chosen speaking language
         saveConfig();
 
-        // User gesture initiates: select phrase and speak sequence, then start mic
         await selectAndShowNextRow({ speak: true });
         if (!speakingPractice.active) return;
 
@@ -1464,7 +1709,11 @@
         const myToken = phraseSessionId;
 
         if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
           speakingPractice.rec = null;
         }
         const rec = createRecognition(speakingPractice.lang);
@@ -1475,93 +1724,14 @@
           speakingPractice.active = false;
           return;
         }
-
+        rec._lastSpeechTs = 0;
+        rec._hasSpoken = false;
+        rec._accTranscript = '';
+        rec._accCaptured = false;
         speakingPractice.liveTextEl.textContent = '';
         speakingPractice.progressEl.value = 0;
         speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
-
-          rec.onresult = (e) => {
-          if (!speakingPractice.active) return;
-          if (myToken !== phraseSessionId) return;
-          let interim = '';
-          let finalText = '';
-          for (let i = e.resultIndex; i < e.results.length; i++) {
-            const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
-          }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
-
-          const pct = similarityPercent(live, target);
-          speakingPractice.progressEl.value = pct;
-          speakingPractice.scoreEl.textContent = pct + '%';
-
-          // Highlight words in the active practice slot according to correctness
-          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, live, slotPos);
-
-          if (pct >= speakingPractice.min && finalText) {
-            speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { rec.abort(); } catch { }
-            // Prepare next phrase safely
-            safeAdvanceSpeakingPractice(myToken);
-          }
-        };
-        rec.onerror = () => {
-          if (!speakingPractice.active) return;
-          if (myToken !== phraseSessionId) return;
-          // Keep listening; status note
-          speakingPractice.statusEl.textContent = 'Listening…';
-        };
-        rec.onend = () => {
-          // If ended unexpectedly while active and token still valid, attempt to restart
-          if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
-          }
-        };
-
-        try { rec.start(); } catch { }
-      }
-
-      async function safeAdvanceSpeakingPractice(prevToken) {
-        // Cancel all previous activities, increment session, then proceed
-        try { speechSynthesis.cancel(); } catch { }
-        if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
-          speakingPractice.rec = null;
-        }
-        const newToken = ++phraseSessionId;
-        if (!speakingPractice.active) return;
-        // Move to next phrase: select + speak once, await speak, then listen again
-        await selectAndShowNextRow({ speak: true });
-        if (!speakingPractice.active) return;
-        // Restart recognition for the new target
-        await startSpeakingPracticeCycleOnly();
-      }
-
-      async function startSpeakingPracticeCycleOnly() {
-        // Start listening for current phrase without triggering TTS again
-        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
-        const myToken = phraseSessionId;
-
-        if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
-          speakingPractice.rec = null;
-        }
-        const rec = createRecognition(speakingPractice.lang);
-        speakingPractice.rec = rec;
-        if (!rec) {
-          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
-          speakingPractice.active = false;
-          return;
-        }
-
-        speakingPractice.liveTextEl.textContent = '';
-        speakingPractice.progressEl.value = 0;
-        speakingPractice.scoreEl.textContent = '0%';
-        speakingPractice.statusEl.textContent = 'Listening…';
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
 
         rec.onresult = (e) => {
           if (!speakingPractice.active) return;
@@ -1570,47 +1740,279 @@
           let finalText = '';
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const res = e.results[i];
-            if (res.isFinal) finalText += res[0].transcript;
-            else interim += res[0].transcript;
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
           }
-          const live = (finalText || interim || '').trim();
-          speakingPractice.liveTextEl.textContent = live;
+          const liveRaw = (finalText || interim || '').trim();
+          let liveForCompare = liveRaw;
+          try {
+            if (rec && rec._accTranscript) {
+              const nextClean = removeTokenOverlap(rec._accTranscript, liveRaw);
+              liveForCompare = (rec._accTranscript + (nextClean ? (' ' + nextClean) : '')).trim();
+            }
+          } catch (e) { /* ignore */ }
 
-          const pct = similarityPercent(live, target);
+          if (finalText || interim) {
+            rec._hasSpoken = true;
+            rec._lastSpeechTs = Date.now();
+          }
+
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          const validation = compareAndHighlight(target, liveForCompare, slotPos);
+          renderLiveValidation(liveForCompare, validation.spokenCorrect);
+          const pct = validation.score;
           speakingPractice.progressEl.value = pct;
           speakingPractice.scoreEl.textContent = pct + '%';
 
-          // Highlight words in the active practice slot according to correctness
-          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
-          compareAndHighlight(target, live, slotPos);
 
-          if (pct >= speakingPractice.min && finalText) {
+          const matched = (pct >= speakingPractice.min && finalText);
+          if (matched) {
             speakingPractice.statusEl.textContent = 'Great! ✅';
-            try { rec.abort(); } catch { }
+            try {
+              if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+              if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+              rec._accTranscript = '';
+              rec._accCaptured = false;
+              rec._suppressRestart = true;
+            } catch (e) {}
+            try { rec.abort(); } catch (e) {}
             safeAdvanceSpeakingPractice(myToken);
           }
+
+          if (finalText) {
+            try {
+              if (!matched) {
+                const ft = finalText.trim();
+                if (ft) {
+                  if (!rec._accTranscript) rec._accTranscript = ft;
+                  else {
+                    const nextClean = removeTokenOverlap(rec._accTranscript, ft);
+                    if (nextClean) rec._accTranscript = (rec._accTranscript + ' ' + nextClean).trim();
+                  }
+                  rec._accCaptured = false;
+                }
+              }
+            } catch (e) { /* ignore */ }
+          }
+          scheduleSilenceReset(rec);
         };
-        rec.onerror = () => {
+        rec.onerror = (ev) => {
           if (!speakingPractice.active) return;
           if (myToken !== phraseSessionId) return;
           speakingPractice.statusEl.textContent = 'Listening…';
         };
-        rec.onend = () => {
+        rec.onend = (ev) => {
+          if (rec && rec._suppressRestart) {
+            try { rec._suppressRestart = false; } catch (e) {}
+            return;
+          }
           if (speakingPractice.active && myToken === phraseSessionId) {
-            try { rec.start(); } catch { }
+            startRecognitionWhenReady(rec, myToken);
           }
         };
-        try { rec.start(); } catch { }
+
+        startRecognitionWhenReady(rec, myToken);
+      }
+
+      async function safeAdvanceSpeakingPractice(prevToken) {
+        try { speechSynthesis.cancel(); } catch { }
+        if (speakingPractice.rec) {
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
+          speakingPractice.rec = null;
+        }
+        const newToken = ++phraseSessionId;
+        if (!speakingPractice.active) return;
+        await selectAndShowNextRow({ speak: true });
+        if (!speakingPractice.active) return;
+        await startSpeakingPracticeCycleOnly(true);
+      }
+
+      async function startSpeakingPracticeCycleOnly(fresh = false) {
+        const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
+        const myToken = phraseSessionId;
+
+        if (speakingPractice.rec) {
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
+          speakingPractice.rec = null;
+        }
+        const rec = createRecognition(speakingPractice.lang);
+        speakingPractice.rec = rec;
+        if (!rec) {
+          speakingPractice.statusEl.textContent = 'Speech recognition not supported in this browser.';
+          speakingPractice.active = false;
+          return;
+        }
+
+        if (fresh) {
+          speakingPractice.liveTextEl.textContent = '';
+          speakingPractice.progressEl.value = 0;
+          speakingPractice.scoreEl.textContent = '0%';
+        }
+        speakingPractice.statusEl.textContent = getRecognitionStartDelayMs() > 0 ? 'Waiting for microphone…' : 'Listening…';
+
+        rec.onresult = (e) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          let interim = '';
+          let finalText = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) finalText += (res[0] && res[0].transcript) || '';
+            else interim += (res[0] && res[0].transcript) || '';
+          }
+          const liveRaw = (finalText || interim || '').trim();
+          let liveForCompare = liveRaw;
+          try {
+            if (rec && rec._accTranscript) {
+              const nextClean = removeTokenOverlap(rec._accTranscript, liveRaw);
+              liveForCompare = (rec._accTranscript + (nextClean ? (' ' + nextClean) : '')).trim();
+            }
+          } catch (e) { /* ignore */ }
+
+          if (finalText || interim) {
+            rec._hasSpoken = true;
+            rec._lastSpeechTs = Date.now();
+          }
+
+          const slotPos = (getSelectedLangCodes()[0] === speakingPractice.lang) ? 1 : 2;
+          const validation = compareAndHighlight(target, liveForCompare, slotPos);
+          renderLiveValidation(liveForCompare, validation.spokenCorrect);
+          const pct = validation.score;
+          speakingPractice.progressEl.value = pct;
+          speakingPractice.scoreEl.textContent = pct + '%';
+
+
+          const matched = (pct >= speakingPractice.min && finalText);
+          if (matched) {
+            speakingPractice.statusEl.textContent = 'Great! ✅';
+            try {
+              if (rec._silenceTimer) clearTimeout(rec._silenceTimer);
+              if (rec._silenceInterval) clearInterval(rec._silenceInterval);
+              rec._silenceTimer = null;
+              rec._silenceInterval = null;
+              rec._accTranscript = '';
+              rec._accCaptured = false;
+              rec._suppressRestart = true;
+            } catch (e) {}
+            try { rec.abort(); } catch (e) {}
+            safeAdvanceSpeakingPractice(myToken);
+          }
+          if (finalText) {
+            try {
+              if (!matched) {
+                const ft = finalText.trim();
+                if (ft) {
+                  if (!rec._accTranscript) rec._accTranscript = ft;
+                  else {
+                    const nextClean = removeTokenOverlap(rec._accTranscript, ft);
+                    if (nextClean) rec._accTranscript = (rec._accTranscript + ' ' + nextClean).trim();
+                  }
+                  rec._accCaptured = false;
+                }
+              }
+            } catch (e) { /* ignore */ }
+          }
+          scheduleSilenceReset(rec);
+        };
+        rec.onerror = (ev) => {
+          if (!speakingPractice.active) return;
+          if (myToken !== phraseSessionId) return;
+          speakingPractice.statusEl.textContent = 'Listening…';
+        };
+        rec.onend = (ev) => {
+          if (rec && rec._suppressRestart) {
+            try { rec._suppressRestart = false; } catch (e) {}
+            return;
+          }
+          if (speakingPractice.active && myToken === phraseSessionId) {
+            startRecognitionWhenReady(rec, myToken);
+          }
+        };
+        startRecognitionWhenReady(rec, myToken);
+      }
+
+      function scheduleSilenceReset(rec) {
+        try {
+          if (!rec) return;
+          if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) {
+            try {
+              const el = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
+              if (el) el.textContent = '';
+            } catch (e) {}
+            return;
+          }
+
+          const waitSec = getSpeechSilenceWaitSeconds();
+          if (rec._silenceTimer) clearTimeout(rec._silenceTimer);
+          if (rec._silenceInterval) clearInterval(rec._silenceInterval);
+
+          rec._lastSpeechTs = Date.now();
+          rec._silenceDeadline = rec._lastSpeechTs + waitSec * 1000;
+
+          const counterEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
+          if (counterEl) counterEl.textContent = waitSec + 's';
+
+          rec._silenceInterval = setInterval(() => {
+            try {
+              if (!counterEl) return;
+              const ms = rec._silenceDeadline - Date.now();
+              if (ms <= 0) {
+                counterEl.textContent = '0s';
+                clearInterval(rec._silenceInterval); rec._silenceInterval = null;
+                return;
+              }
+              counterEl.textContent = Math.ceil(ms / 1000) + 's';
+            } catch (e) {}
+          }, 200);
+
+          rec._silenceTimer = setTimeout(() => {
+            try {
+              if (!speakingPractice.active || speakingPractice.rec !== rec) return;
+              if (Date.now() - rec._lastSpeechTs < waitSec * 1000) {
+                scheduleSilenceReset(rec);
+                return;
+              }
+              resetSpeechUiAfterSilence();
+            } catch (e) {}
+
+            rec._hasSpoken = false;
+            rec._lastSpeechTs = 0;
+            rec._accTranscript = '';
+            rec._accCaptured = false;
+            rec._lastInterim = '';
+            rec._finalByIndex = Object.create(null);
+            rec._resultBaseIndex = rec._lastResultsLength || 0;
+            if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
+            if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
+            try {
+              const el = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
+              if (el) el.textContent = '';
+            } catch (e) {}
+          }, waitSec * 1000);
+        } catch (e) { /* ignore */ }
       }
 
       function stopSpeakingPractice() {
         speakingPractice.active = false;
         if (speakingPractice.rec) {
-          try { speakingPractice.rec.abort(); } catch { }
+          try {
+            clearRecognitionTimers(speakingPractice.rec);
+            try { speakingPractice.rec._suppressRestart = true; } catch (e) {}
+            speakingPractice.rec.abort();
+          } catch { }
           speakingPractice.rec = null;
         }
         try { speechSynthesis.cancel(); } catch { }
         if (speakingPractice.statusEl) speakingPractice.statusEl.textContent = 'Stopped';
+        recordLog('stopSpeakingPractice called');
       }
 
       // --- Writing Practice Flow ---
@@ -2066,6 +2468,27 @@
         }
         // restore saved OpenAI token if any
         try { const t = localStorage.getItem('openai_token'); if (t) els.openaiToken.value = t; } catch { }
+
+        // --- Debug panel for speaking-practice ---
+        try {
+          const dbg = document.createElement('div');
+          dbg.className = 'row';
+          dbg.style.marginTop = '8px';
+          dbg.innerHTML = `
+            <div class="panel">
+              <div class="panel-title">SP Debug</div>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <button id="spDbgToggle">Toggle Log</button>
+                <button id="spDbgClear">Clear</button>
+                <button id="spDbgDownload">Download</button>
+              </div>
+              <pre id="sp-debug-log" style="max-height:200px;overflow:auto;background:var(--control-bg);color:var(--control-fg);padding:8px;border-radius:6px;margin:0"></pre>
+            </div>`;
+          document.querySelector('.container')?.appendChild(dbg);
+          document.getElementById('spDbgToggle').onclick = () => { const el = document.getElementById('sp-debug-log'); if (!el) return; el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
+          document.getElementById('spDbgClear').onclick = () => { window._trainer.logs = []; const el = document.getElementById('sp-debug-log'); if (el) el.textContent = ''; };
+          document.getElementById('spDbgDownload').onclick = () => { const data = (window._trainer.logs || []).join('\n'); const blob = new Blob([data], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'sp_debug.log'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); };
+        } catch (e) { /* ignore debug panel errors */ }
       }
 
       // Expose minimal for debugging (optional)
