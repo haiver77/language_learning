@@ -1001,6 +1001,12 @@
               </div>
             </div>
             <div class="panel">
+              <div class="panel-title">Language to practice</div>
+              <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
+                <label class="badge"><span>Practice language</span><select id="practiceLangSelect"></select></label>
+              </div>
+            </div>
+            <div class="panel">
               <div class="panel-title">Reproduction</div>
               <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:90px" /></label>
             </div>
@@ -1071,6 +1077,7 @@
         },
         lang1Select: document.getElementById('lang1Select'),
         lang2Select: document.getElementById('lang2Select'),
+        practiceLangSelect: document.getElementById('practiceLangSelect'),
         langTag: {
           1: document.getElementById('lang-tag-1'),
           2: document.getElementById('lang-tag-2'),
@@ -1404,6 +1411,50 @@
         return [els.lang1Select.value, els.lang2Select.value];
       }
 
+      function populatePracticeLanguageOptions() {
+        const el = els.practiceLangSelect;
+        if (!el) return;
+        const [l1, l2] = getSelectedLangCodes();
+        const values = [l1, l2];
+        const prev = (el.value && values.includes(el.value)) ? el.value : values[0];
+        el.innerHTML = '';
+        for (const code of values) {
+          const option = document.createElement('option');
+          option.value = code;
+          option.textContent = (langMeta[code] && langMeta[code].label) ? langMeta[code].label : code.toUpperCase();
+          el.appendChild(option);
+        }
+        if (values.includes(prev)) {
+          el.value = prev;
+        } else {
+          el.value = values[0];
+        }
+      }
+
+      function getPracticeLanguage() {
+        const [l1, l2] = getSelectedLangCodes();
+        const candidate = (els.practiceLangSelect && els.practiceLangSelect.value) || speakingPractice.lang || writingPractice.lang || l1;
+        return [l1, l2].includes(candidate) ? candidate : l1;
+      }
+
+      function syncPracticeLanguageSelection(newLang) {
+        const [l1, l2] = getSelectedLangCodes();
+        const valid = [l1, l2].includes(newLang) ? newLang : l1;
+        if (els.practiceLangSelect && [...els.practiceLangSelect.options].some(option => option.value === valid)) {
+          els.practiceLangSelect.value = valid;
+        }
+        speakingPractice.lang = valid;
+        writingPractice.lang = valid;
+        const spLangEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-lang') : null;
+        const wrLangEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#wr-lang') : null;
+        if (spLangEl && [...spLangEl.options].some(option => option.value === valid)) {
+          spLangEl.value = valid;
+        }
+        if (wrLangEl && [...wrLangEl.options].some(option => option.value === valid)) {
+          wrLangEl.value = valid;
+        }
+      }
+
       function updateLangLabels() {
         const [l1, l2] = getSelectedLangCodes();
         els.langTag[1].textContent = (langMeta[l1] && langMeta[l1].label) || l1.toUpperCase();
@@ -1412,6 +1463,8 @@
         els.readLabel[2].textContent = (langMeta[l2] && langMeta[l2].label) || l2.toUpperCase();
         els.showLabel[1].textContent = (langMeta[l1] && langMeta[l1].label) || l1.toUpperCase();
         els.showLabel[2].textContent = (langMeta[l2] && langMeta[l2].label) || l2.toUpperCase();
+        populatePracticeLanguageOptions();
+        syncPracticeLanguageSelection(getPracticeLanguage());
       }
 
       function parseCSV(text) {
@@ -1646,6 +1699,7 @@
             wrapCsv: !!(els.wrapCsv && els.wrapCsv.checked),
             color1: (els.color1 && els.color1.value) || '#4da3ff',
             color2: (els.color2 && els.color2.value) || '#3ccf7a',
+            practiceLang: getPracticeLanguage(),
             speakingLang: (els.modeContent.querySelector('#sp-lang')?.value) || speakingPractice.lang,
             writingLang: (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang,
           };
@@ -1690,6 +1744,12 @@
           if (typeof cfg.wrapCsv !== 'undefined') { try { els.wrapCsv.checked = !!cfg.wrapCsv; } catch (e) { } applyCsvWrap(); }
           if (cfg.color1) { try { if (els.color1) els.color1.value = cfg.color1; } catch (e) {} }
           if (cfg.color2) { try { if (els.color2) els.color2.value = cfg.color2; } catch (e) {} }
+          if (cfg.practiceLang) {
+            const [l1, l2] = getSelectedLangCodes();
+            const allowed = [l1, l2];
+            const nextLang = allowed.includes(cfg.practiceLang) ? cfg.practiceLang : allowed[0];
+            syncPracticeLanguageSelection(nextLang);
+          }
         } catch (e) { console.warn('loadConfig failed', e); }
       }
 
@@ -2095,16 +2155,18 @@
               opt.textContent = (langMeta[c] && langMeta[c].label) ? langMeta[c].label : c.toUpperCase();
               spLangEl.appendChild(opt);
             }
-            // restore saved speaking language if available and valid
-            if (savedConfig && savedConfig.speakingLang && [...spLangEl.options].some(o => o.value === savedConfig.speakingLang)) {
+            // restore settings-driven practice language first, else keep mode-specific fallback
+            const selectedPracticeLang = getPracticeLanguage();
+            if ([...spLangEl.options].some(o => o.value === selectedPracticeLang)) {
+              spLangEl.value = selectedPracticeLang; speakingPractice.lang = selectedPracticeLang;
+            } else if (savedConfig && savedConfig.speakingLang && [...spLangEl.options].some(o => o.value === savedConfig.speakingLang)) {
               spLangEl.value = savedConfig.speakingLang; speakingPractice.lang = savedConfig.speakingLang;
             } else {
-              // default to current speakingPractice.lang if valid, otherwise first language
               if ([...spLangEl.options].some(o => o.value === speakingPractice.lang)) spLangEl.value = speakingPractice.lang;
               else { spLangEl.selectedIndex = 0; speakingPractice.lang = spLangEl.value; }
             }
           } catch (e) { /* ignore */ }
-          spLangEl.onchange = e => { speakingPractice.lang = e.target.value; saveConfig(); };
+          spLangEl.onchange = e => { speakingPractice.lang = e.target.value; if (els.practiceLangSelect) els.practiceLangSelect.value = e.target.value; saveConfig(); };
           div.querySelector('#sp-min').oninput = e => { speakingPractice.min = Math.max(50, Math.min(100, parseInt(e.target.value || '90', 10))); };
         } else if (m === 'Writing Practice Mode') {
           const div = document.createElement('div');
@@ -2162,15 +2224,17 @@
               opt.textContent = (langMeta[c] && langMeta[c].label) ? langMeta[c].label : c.toUpperCase();
               wrLangEl.appendChild(opt);
             }
-            // restore saved writing language if available and valid
-            if (savedConfig && savedConfig.writingLang && [...wrLangEl.options].some(o => o.value === savedConfig.writingLang)) {
+            const selectedPracticeLang = getPracticeLanguage();
+            if ([...wrLangEl.options].some(o => o.value === selectedPracticeLang)) {
+              wrLangEl.value = selectedPracticeLang; writingPractice.lang = selectedPracticeLang;
+            } else if (savedConfig && savedConfig.writingLang && [...wrLangEl.options].some(o => o.value === savedConfig.writingLang)) {
               wrLangEl.value = savedConfig.writingLang; writingPractice.lang = savedConfig.writingLang;
             } else {
               if ([...wrLangEl.options].some(o => o.value === writingPractice.lang)) wrLangEl.value = writingPractice.lang;
               else { wrLangEl.selectedIndex = 0; writingPractice.lang = wrLangEl.value; }
             }
           } catch (e) { /* ignore */ }
-          wrLangEl.onchange = e => { writingPractice.lang = e.target.value; saveConfig(); };
+          wrLangEl.onchange = e => { writingPractice.lang = e.target.value; if (els.practiceLangSelect) els.practiceLangSelect.value = e.target.value; saveConfig(); };
         }
       }
 
@@ -3059,6 +3123,12 @@
         // Language selectors: update labels and voices when changed
         els.lang1Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowNextRow({ speak: false }); renderModePanel(); saveConfig(); };
         els.lang2Select.onchange = () => { updateLangLabels(); populateVoices(); ensureParsed(); selectAndShowNextRow({ speak: false }); renderModePanel(); saveConfig(); };
+        if (els.practiceLangSelect) {
+          els.practiceLangSelect.onchange = () => {
+            syncPracticeLanguageSelection(els.practiceLangSelect.value);
+            saveConfig();
+          };
+        }
         if ('onvoiceschanged' in speechSynthesis) {
           speechSynthesis.onvoiceschanged = () => populateVoices();
         }
