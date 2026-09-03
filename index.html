@@ -192,21 +192,23 @@
     .toggle-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 18px;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      padding: 0;
       border: 2px solid var(--border);
       background: var(--surface);
-      border-radius: 999px;
+      border-radius: 14px;
       color: var(--ink);
       font-weight: 800;
       box-shadow: 0 4px 16px rgba(17,24,39,0.04);
       cursor: pointer;
+      font-size: 1.8rem;
+      line-height: 1;
     }
 
     .toggle-pill input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--primary);
+      display: none;
     }
 
     .action-btn,
@@ -445,6 +447,7 @@
       border-top: 2px solid rgba(17,24,39,0.15);
       box-shadow: 0 -10px 22px rgba(13,17,25,0.08);
       z-index: 120;
+      overflow: hidden;
     }
 
     .nav-item {
@@ -452,22 +455,35 @@
       border: none;
       background: transparent;
       color: var(--ink);
-      font-size: clamp(0.8rem, 2vw, 1.05rem);
+      font-size: clamp(0.7rem, 1.7vw, 1.02rem);
       font-weight: 800;
-      min-height: 78px;
+      min-height: 72px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      padding: 8px 6px 10px;
+      gap: 2px;
+      padding: 6px 2px 8px;
       cursor: pointer;
       transition: background .15s ease, color .15s ease;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .nav-item .icon {
-      font-size: clamp(1.5rem, 2.6vw, 2rem);
+      font-size: clamp(1.3rem, 2.1vw, 1.9rem);
       line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item span:last-child {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.1;
     }
 
     .nav-item.active {
@@ -499,11 +515,17 @@
       }
 
       .bottom-nav {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0;
       }
 
       .nav-item {
-        min-height: 72px;
+        min-height: 64px;
+        padding: 6px 0 7px;
+      }
+
+      .nav-item span:last-child {
+        display: none;
       }
     }
   </style>
@@ -534,9 +556,9 @@
         </section>
 
         <div class="transport-bar" aria-label="Phrase controls">
-          <label class="toggle-pill" for="randomToggle">
+          <label class="toggle-pill" for="randomToggle" title="Toggle random mode" aria-label="Toggle random mode">
             <input type="checkbox" id="randomToggle" checked />
-            <span>Random</span>
+            <span aria-hidden="true">🔀</span>
           </label>
           <button id="btnFirst" class="action-btn secondary" type="button" title="Go to first phrase">⏮</button>
           <button id="btnStopAuto" class="action-btn secondary" type="button" title="Stop auto replay">⏹</button>
