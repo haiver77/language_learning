@@ -25,6 +25,40 @@
       --phrase-font: 20px;
     }
 
+    body.theme-dark {
+      --bg: #111827;
+      --panel: #0f172a;
+      --surface: #111827;
+      --surface-soft: #1f2937;
+      --surface-strong: #374151;
+      --ink: #e5e7eb;
+      --muted: #94a3b8;
+      --border: #334155;
+      --primary: #60a5fa;
+      --primary-soft: rgba(96, 165, 250, 0.18);
+      --success: #34d399;
+      --success-soft: rgba(52, 211, 153, 0.16);
+      --danger: #f87171;
+      --shadow: rgba(2, 6, 23, 0.44);
+    }
+
+    body.theme-light {
+      --bg: #e6e9ed;
+      --panel: #f4f5f7;
+      --surface: #ffffff;
+      --surface-soft: #edf0f2;
+      --surface-strong: #dfe5eb;
+      --ink: #1a1d22;
+      --muted: #58606d;
+      --border: #d1d6dc;
+      --primary: #2b8cff;
+      --primary-soft: #daf0ff;
+      --success: #2cc39c;
+      --success-soft: #dffaf2;
+      --danger: #ef5b5b;
+      --shadow: rgba(17, 24, 39, 0.18);
+    }
+
     * { box-sizing: border-box; }
 
     html, body {
@@ -50,10 +84,10 @@
     .app-shell {
       width: min(100%, 760px);
       min-height: 100vh;
-      background: #f2f3f4;
-      border-left: 4px solid #121212;
-      border-right: 4px solid #121212;
-      box-shadow: 0 24px 50px rgba(0,0,0,.18);
+      background: var(--panel);
+      border-left: 4px solid var(--surface-strong);
+      border-right: 4px solid var(--surface-strong);
+      box-shadow: 0 24px 50px var(--shadow);
       position: relative;
       overflow: hidden;
     }
@@ -154,14 +188,15 @@
 
     .phrase-line {
       display: grid;
-      grid-template-columns: 96px minmax(0, 1fr) 52px;
+      grid-template-columns: 20px minmax(0, 1fr) 52px;
       align-items: center;
-      gap: 10px;
+      justify-items: start;
+      gap: 4px;
       min-height: 150px;
       background: rgba(255,255,255,0.62);
       border: 3px solid var(--success);
       border-radius: 28px;
-      padding: 18px 18px 18px 14px;
+      padding: 18px 18px 18px 10px;
       box-shadow: inset 0 0 0 1px rgba(17,24,39,0.04);
     }
 
@@ -177,9 +212,13 @@
       line-height: 1;
       user-select: none;
       padding-left: 0;
+      width: 100%;
+      margin-left: 0;
     }
 
     .phrase-text {
+      width: 100%;
+      justify-self: start;
       color: var(--ink);
       font-size: var(--phrase-font, 30px);
       font-weight: 900;
@@ -189,6 +228,8 @@
       white-space: normal;
       line-height: 1.12;
       overflow-wrap: anywhere;
+      margin-left: 0;
+      padding-left: 0;
     }
 
     .replay-btn {
@@ -539,6 +580,16 @@
       font-weight: 700;
     }
 
+    .word-correct {
+      color: var(--success);
+      font-weight: 800;
+    }
+
+    .word-incorrect {
+      color: var(--danger);
+      font-weight: 800;
+    }
+
     .sheet progress {
       width: min(100%, 300px);
       height: 18px;
@@ -603,8 +654,13 @@
 
     @media (max-width: 560px) {
       .phrase-line {
-        grid-template-columns: 72px minmax(0,1fr) 46px;
+        grid-template-columns: 20px minmax(0,1fr) 46px;
+        gap: 4px;
         min-height: 130px;
+      }
+
+      .lang-tag {
+        width: 100%;
       }
 
       .transport-bar {
@@ -2725,6 +2781,7 @@
         const sheet = document.getElementById('bottomSheet');
         const sheetBackdrop = document.getElementById('sheetBackdrop');
         const navItems = document.querySelectorAll('.nav-item');
+        const fullPageSheets = new Set(['settings', 'load']);
         const openSheet = (sheetKey) => {
           const isAlreadyOpen = sheet && sheet.classList.contains('open') && document.querySelector('.sheet-panel.active')?.dataset.panel === sheetKey;
           if (isAlreadyOpen) {
@@ -2736,11 +2793,11 @@
           });
           navItems.forEach(item => item.classList.toggle('active', item.dataset.sheet === sheetKey));
           if (sheet) {
-            sheet.classList.toggle('settings-page', sheetKey === 'settings');
+            sheet.classList.toggle('settings-page', fullPageSheets.has(sheetKey));
             sheet.classList.add('open');
           }
           if (sheetBackdrop) {
-            sheetBackdrop.classList.toggle('visible', sheetKey !== 'settings');
+            sheetBackdrop.classList.toggle('visible', !fullPageSheets.has(sheetKey));
           }
         };
         const closeSheet = () => {
