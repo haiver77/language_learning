@@ -78,17 +78,20 @@
       margin: 0;
     }
 
-    .speaking-practice-panel {
+    .speaking-practice-panel,
+    .writing-practice-panel {
       display: none;
       width: 100%;
       margin: 0 0 14px;
     }
 
-    .speaking-practice-panel.visible {
+    .speaking-practice-panel.visible,
+    .writing-practice-panel.visible {
       display: block;
     }
 
-    .speaking-practice-card {
+    .speaking-practice-card,
+    .writing-practice-card {
       background: rgba(255,255,255,0.7);
       border: 3px solid rgba(36, 180, 123, 0.9);
       border-radius: 26px;
@@ -96,7 +99,8 @@
       box-shadow: inset 0 0 0 1px rgba(17,24,39,0.04);
     }
 
-    .speaking-practice-card .status-row {
+    .speaking-practice-card .status-row,
+    .writing-practice-card .status-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -293,8 +297,8 @@
       display: none;
       transform: translateX(-50%) translateY(calc(100% + 20px));
       width: min(92vw, 760px);
-      height: clamp(360px, 62vh, 430px);
-      max-height: calc(100vh - 16px);
+      height: min(94vh, calc(100vh - 12px));
+      max-height: calc(100vh - 12px);
       background: rgba(247, 248, 250, 0.98);
       border-radius: 30px 30px 0 0;
       box-shadow: 0 -20px 40px rgba(9, 16, 29, 0.22);
@@ -308,6 +312,20 @@
       visibility: hidden;
     }
 
+    .sheet.settings-page {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      border: none;
+      transform: translateY(100%);
+    }
+
     .sheet.open {
       display: block;
       transform: translateX(-50%) translateY(0);
@@ -315,6 +333,10 @@
       opacity: 1;
       visibility: visible;
       transition: transform .25s ease, opacity .2s ease, visibility 0s linear 0s;
+    }
+
+    .sheet.settings-page.open {
+      transform: translateY(0);
     }
 
     .sheet-grab {
@@ -328,7 +350,8 @@
     .sheet-panel {
       display: none;
       padding: 12px 14px 18px;
-      max-height: calc(72vh - 24px);
+      height: calc(100% - 52px);
+      max-height: calc(100% - 52px);
       overflow-y: auto;
     }
 
@@ -389,16 +412,29 @@
 
     .sheet .checks {
       display: grid;
-      grid-template-columns: repeat(2, minmax(120px, 1fr));
-      gap: 10px 12px;
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+      gap: 12px;
     }
 
     .sheet .check {
-      font-size: 1.2rem;
-      font-weight: 700;
-      display: inline-flex;
+      font-size: 1.3rem;
+      font-weight: 800;
+      display: flex;
       align-items: center;
+      justify-content: flex-start;
       gap: 12px;
+      min-height: 54px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.75);
+    }
+
+    .sheet .check input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      accent-color: var(--primary);
     }
 
     .badge {
@@ -626,6 +662,7 @@
           </div>
         </section>
         <div id="speakingPracticePanel" class="speaking-practice-panel" aria-live="polite"></div>
+        <div id="writingPracticePanel" class="writing-practice-panel" aria-live="polite"></div>
 
         <div class="transport-bar" aria-label="Phrase controls">
           <label class="toggle-pill" for="randomToggle" title="Toggle random mode" aria-label="Toggle random mode">
@@ -667,13 +704,6 @@
           <div class="sheet-header">Voices</div>
           <section class="row" id="row-tts">
             <div class="panel">
-              <div class="panel-title">Languages</div>
-              <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
-                <label class="badge"><span>Language 1</span><select id="lang1Select"><option value="es" selected>Spanish</option><option value="en">English</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="de">German</option><option value="fr">French</option></select></label>
-                <label class="badge"><span>Language 2</span><select id="lang2Select"><option value="es">Spanish</option><option value="en" selected>English</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="de">German</option><option value="fr">French</option></select></label>
-              </div>
-            </div>
-            <div class="panel">
               <div class="panel-title">Voices</div>
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
                 <label class="badge"><span>Voice 1</span><select id="voice-1"></select></label>
@@ -689,7 +719,7 @@
               </div>
             </div>
             <div class="panel">
-              <div class="panel-title">Read Language</div>
+              <div class="panel-title">Read Aloud Languages</div>
               <div class="checks">
                 <label class="check"><input type="checkbox" id="read-1" checked /> <span id="read-label-1">L1</span></label>
                 <label class="check"><input type="checkbox" id="read-2" /> <span id="read-label-2">L2</span></label>
@@ -783,6 +813,13 @@
           <div class="sheet-header">Settings</div>
           <section class="row" id="row-settings">
             <div class="panel">
+              <div class="panel-title">Languages</div>
+              <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
+                <label class="badge"><span>Language 1</span><select id="lang1Select"><option value="es" selected>Spanish</option><option value="en">English</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="de">German</option><option value="fr">French</option></select></label>
+                <label class="badge"><span>Language 2</span><select id="lang2Select"><option value="es">Spanish</option><option value="en" selected>English</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="de">German</option><option value="fr">French</option></select></label>
+              </div>
+            </div>
+            <div class="panel">
               <div class="panel-title">Reproduction</div>
               <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:90px" /></label>
             </div>
@@ -835,6 +872,7 @@
         btnFirst: document.getElementById('btnFirst'),
         modeContent: document.getElementById('modeContent'),
         speakingPracticePanel: document.getElementById('speakingPracticePanel'),
+        writingPracticePanel: document.getElementById('writingPracticePanel'),
         csvBox: document.getElementById('csvBox'),
         csvBoxViewerDisplay: document.getElementById('csvBoxViewerDisplay'),
         color1: document.getElementById('color1'),
@@ -900,6 +938,8 @@
         lang: 'es',
         inputEl: null,
         statusEl: null,
+        scoreEl: null,
+        remainingEl: null,
         writingBusy: false,
         currentWriteTarget: '',
       };
@@ -1714,7 +1754,13 @@
       function updateModeTitle() {
         const mode = els.modeSelect?.value;
         if (!els.brand) return;
-        els.brand.textContent = mode === 'Speaking Practice Mode' ? 'Speaking Practice' : 'Language Practice';
+        if (mode === 'Speaking Practice Mode') {
+          els.brand.textContent = 'Speaking Practice';
+        } else if (mode === 'Writing Practice Mode') {
+          els.brand.textContent = 'Writing Practice';
+        } else {
+          els.brand.textContent = 'Language Practice';
+        }
       }
 
       // --- Modes UI ---
@@ -1727,7 +1773,15 @@
         els.modeContent.innerHTML = '';
         els.modeContent.style.display = 'block';
         const host = els.speakingPracticePanel;
-        if (host) host.innerHTML = '';
+        if (host) {
+          host.innerHTML = '';
+          host.classList.remove('visible');
+        }
+        const writingHost = els.writingPracticePanel;
+        if (writingHost) {
+          writingHost.innerHTML = '';
+          writingHost.classList.remove('visible');
+        }
         if (m === 'Manual Mode') {
           const div = document.createElement('div');
           div.className = 'panel';
@@ -1881,15 +1935,35 @@
           <button id="wr-stop" class="secondary">Stop</button>
           <span id="wr-status" class="status">Idle</span>
         </div>
-        <div class="panel" style="margin-top:10px">
-          <div class="panel-title">Type the phrase</div>
-          <input id="wr-input" type="text" placeholder="Type here…" style="width: 100%" />
-        </div>
       `;
           els.modeContent.appendChild(div);
+          els.modeContent.style.display = 'none';
 
-          writingPractice.inputEl = div.querySelector('#wr-input');
-          writingPractice.statusEl = div.querySelector('#wr-status');
+          const hostPanel = document.createElement('div');
+          hostPanel.className = 'writing-practice-card';
+          hostPanel.innerHTML = `
+            <div class="panel-title">Dictation</div>
+            <div class="progress-line">
+              <progress id="wr-progress-host" value="0" max="100"></progress>
+              <span id="wr-score-host" class="status">0%</span>
+            </div>
+            <div class="status-row">
+              <span id="wr-status-host" class="status">Waiting…</span>
+              <span id="wr-remaining-host" class="status">0 / 0</span>
+            </div>
+            <div style="margin-top:10px;">
+              <input id="wr-input-host" type="text" placeholder="Type here…" style="width:100%; min-height:48px;" />
+            </div>
+          `;
+          if (writingHost) {
+            writingHost.appendChild(hostPanel);
+            writingHost.classList.add('visible');
+          }
+
+          writingPractice.inputEl = hostPanel.querySelector('#wr-input-host');
+          writingPractice.statusEl = hostPanel.querySelector('#wr-status-host');
+          writingPractice.scoreEl = hostPanel.querySelector('#wr-score-host');
+          writingPractice.remainingEl = hostPanel.querySelector('#wr-remaining-host');
           div.querySelector('#wr-start').onclick = startWritingPractice;
           div.querySelector('#wr-stop').onclick = stopWritingPractice;
           const wrLangEl = div.querySelector('#wr-lang');
@@ -2286,7 +2360,7 @@
       async function startWritingPractice() {
         if (writingPractice.active) return;
         writingPractice.active = true;
-        writingPractice.statusEl.textContent = 'Starting…';
+        if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Starting…';
         writingPractice.lang = (els.modeContent.querySelector('#wr-lang')?.value) || writingPractice.lang || 'es';
         // persist chosen writing language
         saveConfig();
@@ -2294,17 +2368,26 @@
         // Select and speak once
         await selectAndShowNextRow({ speak: true });
         updateCurrentWriteTarget();
-        writingPractice.statusEl.textContent = 'Type what you hear…';
+        if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Type what you hear…';
+        if (writingPractice.remainingEl) {
+          const remaining = writingPractice.currentWriteTarget ? Math.max(0, writingPractice.currentWriteTarget.trim().split(/\s+/).filter(Boolean).length) : 0;
+          writingPractice.remainingEl.textContent = `${remaining} / ${remaining}`;
+        }
+        if (writingPractice.scoreEl) writingPractice.scoreEl.textContent = '0%';
 
         // Attach oninput handler referencing mutable target
         const input = writingPractice.inputEl;
-        input.value = '';
-        input.disabled = false;
+        if (input) {
+          input.value = '';
+          input.disabled = false;
+        }
 
         const onInput = async (e) => {
           if (!writingPractice.active || writingPractice.writingBusy) return;
           const user = normalizeForCompare(e.target.value);
           const target = normalizeForCompare(writingPractice.currentWriteTarget);
+          const pct = target ? Math.round((user.length && target.indexOf(user) === 0 ? Math.min(user.length / target.length, 1) : 0) * 100) : 0;
+          if (writingPractice.scoreEl) writingPractice.scoreEl.textContent = `${Math.max(0, Math.min(100, pct))}%`;
           if (user && user === target) {
             writingPractice.writingBusy = true;
             // Advance to next phrase safely; ensure single playback
@@ -2316,7 +2399,7 @@
           }
         };
         // Store handler so we can disable/enable without stale closure
-        input.oninput = onInput;
+        if (input) input.oninput = onInput;
       }
 
       function stopWritingPractice() {
@@ -2327,12 +2410,17 @@
         }
         try { speechSynthesis.cancel(); } catch { }
         if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Stopped';
+        if (writingPractice.scoreEl) writingPractice.scoreEl.textContent = '0%';
       }
 
       function updateCurrentWriteTarget() {
         const row = parsedRows[currentIndex] || {};
         const k = writingPractice.lang;
         writingPractice.currentWriteTarget = row[k] || '';
+        if (writingPractice.remainingEl && writingPractice.currentWriteTarget) {
+          const total = writingPractice.currentWriteTarget.trim().split(/\s+/).filter(Boolean).length;
+          writingPractice.remainingEl.textContent = `${total} / ${total}`;
+        }
       }
 
       // --- Voices population ---
@@ -2610,11 +2698,19 @@
             panel.classList.toggle('active', panel.dataset.panel === sheetKey);
           });
           navItems.forEach(item => item.classList.toggle('active', item.dataset.sheet === sheetKey));
-          if (sheet) sheet.classList.add('open');
-          if (sheetBackdrop) sheetBackdrop.classList.add('visible');
+          if (sheet) {
+            sheet.classList.toggle('settings-page', sheetKey === 'settings');
+            sheet.classList.add('open');
+          }
+          if (sheetBackdrop) {
+            sheetBackdrop.classList.toggle('visible', sheetKey !== 'settings');
+          }
         };
         const closeSheet = () => {
-          if (sheet) sheet.classList.remove('open');
+          if (sheet) {
+            sheet.classList.remove('open');
+            sheet.classList.remove('settings-page');
+          }
           if (sheetBackdrop) sheetBackdrop.classList.remove('visible');
           navItems.forEach(item => item.classList.remove('active'));
           document.querySelectorAll('.sheet-panel').forEach(panel => panel.classList.remove('active'));
