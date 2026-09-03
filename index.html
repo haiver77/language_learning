@@ -399,6 +399,35 @@
       overflow-y: auto;
     }
 
+    .sheet-panel[data-panel="csv"] {
+      display: none;
+      height: 100%;
+      max-height: none;
+      padding: 8px 12px 10px;
+    }
+
+    .sheet-panel[data-panel="csv"].active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sheet-panel[data-panel="csv"] .row {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-bottom: 0;
+      padding: 8px;
+    }
+
+    .sheet-panel[data-panel="csv"] .panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 8px;
+    }
+
     .sheet-panel.active {
       display: block;
     }
@@ -516,6 +545,95 @@
 
     .sheet .textarea {
       min-height: 120px;
+    }
+
+    .sheet #csvBox {
+      position: absolute;
+      inset: 0;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      resize: none;
+      z-index: 1;
+      color: transparent;
+      caret-color: var(--ink);
+      background: rgba(255,255,255,0.74);
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .csv-editor-shell {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      gap: 10px;
+    }
+
+    .viewer-wrapper {
+      position: relative;
+      flex: 1 1 auto;
+      width: 100%;
+      min-height: 220px;
+      height: min(74vh, 760px);
+      max-height: calc(100vh - 300px);
+      margin-top: 0;
+      min-width: 0;
+    }
+
+    .csv-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 0;
+    }
+
+    #csvBoxViewerDisplay {
+      position: absolute;
+      inset: 0;
+      overflow: auto;
+      white-space: pre;
+      word-wrap: break-word;
+      padding: 10px;
+      pointer-events: none;
+      z-index: 2;
+      box-sizing: border-box;
+      background: transparent;
+      color: transparent;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    #csvBoxViewerDisplay::-webkit-scrollbar {
+      display: none;
+    }
+
+    #csvBoxViewerDisplay .viewer-line {
+      display: block;
+      position: relative;
+      padding-right: calc(var(--ln-ch, 3ch) + 18px);
+      min-height: 1.4em;
+    }
+
+    #csvBoxViewerDisplay .viewer-line .line-content {
+      white-space: inherit;
+      display: inline;
+    }
+
+    #csvBoxViewerDisplay .viewer-line .ln {
+      position: absolute;
+      right: 6px;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      font-size: inherit;
+      opacity: 0.85;
+      user-select: none;
+      pointer-events: none;
     }
 
     .sheet #modeSelect {
@@ -852,16 +970,20 @@
           <div class="sheet-header">CSV Viewer</div>
           <section class="row" id="row-csv">
             <div class="panel">
-              <div class="viewer-wrapper" style="position:relative; margin-top:8px">
-                <textarea class="textarea" id="csvBox" style="width:100%; min-height:10em; resize:vertical; position:relative; z-index:1"></textarea>
-                <div id="csvBoxViewerDisplay" aria-hidden="true"></div>
-                <label class="badge" style="display:inline-flex; margin-top:8px;">
-                  <input type="checkbox" id="wrapCsv" />
-                  <span>Word Wrap</span>
-                </label>
-                <div id="csvColorControls" style="margin-top:8px;">
-                  <label class="badge"><span>Phrase 1 color</span><input type="color" id="color1" value="#4da3ff" /></label>
-                  <label class="badge"><span>Phrase 2 color</span><input type="color" id="color2" value="#3ccf7a" /></label>
+              <div class="csv-editor-shell">
+                <div class="viewer-wrapper">
+                  <textarea class="textarea" id="csvBox" style="width:100%; min-height:10em; resize:none; position:absolute; inset:0; z-index:1"></textarea>
+                  <div id="csvBoxViewerDisplay" aria-hidden="true"></div>
+                </div>
+                <div class="csv-toolbar">
+                  <label class="badge" style="display:inline-flex;">
+                    <input type="checkbox" id="wrapCsv" />
+                    <span>Word Wrap</span>
+                  </label>
+                  <div id="csvColorControls">
+                    <label class="badge"><span>Phrase 1 color</span><input type="color" id="color1" value="#4da3ff" /></label>
+                    <label class="badge"><span>Phrase 2 color</span><input type="color" id="color2" value="#3ccf7a" /></label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1483,6 +1605,10 @@
             whiteSpace: cs.whiteSpace,
             backgroundColor: cs.backgroundColor,
             letterSpacing: cs.letterSpacing,
+            boxSizing: cs.boxSizing,
+            width: cs.width,
+            height: cs.height,
+            overflow: cs.overflow,
           };
           if (els.csvBoxViewerDisplay) {
             Object.assign(els.csvBoxViewerDisplay.style, {
@@ -2781,7 +2907,7 @@
         const sheet = document.getElementById('bottomSheet');
         const sheetBackdrop = document.getElementById('sheetBackdrop');
         const navItems = document.querySelectorAll('.nav-item');
-        const fullPageSheets = new Set(['settings', 'load']);
+        const fullPageSheets = new Set(['settings', 'load', 'csv']);
         const openSheet = (sheetKey) => {
           const isAlreadyOpen = sheet && sheet.classList.contains('open') && document.querySelector('.sheet-panel.active')?.dataset.panel === sheetKey;
           if (isAlreadyOpen) {
@@ -2820,19 +2946,10 @@
             els.modeSelect.value = modeValue;
             document.querySelectorAll('.mode-option').forEach((item) => item.classList.toggle('active', item === button));
             renderModePanel();
-            closeSheet();
           };
         });
 
         if (sheetBackdrop) sheetBackdrop.onclick = closeSheet;
-        if (sheet) {
-          sheet.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target instanceof HTMLElement && (target.closest('button') || target.closest('select') || target.closest('input') || target.closest('textarea'))) {
-              closeSheet();
-            }
-          });
-        }
 
         // Random button (global)
         if (els.btnRandom) els.btnRandom.onclick = async () => { await selectAndShowNextRow({ speak: true }); };
