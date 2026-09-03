@@ -1,3 +1,5 @@
+🏋️ 📢  👀  🤖 📝 ⚙️ 🔀⏮️⏹️▶️    ⬅️➡️
+
 # Context of current application
 
 Language Learning Practice Modes
