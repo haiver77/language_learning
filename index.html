@@ -572,6 +572,7 @@
       width: fit-content;
       min-width: 0;
       max-width: 100%;
+      display: inline-block;
     }
 
     #aiTopic {
@@ -971,6 +972,7 @@
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
                 <label class="badge"><span>Rate</span><input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:80px" /></label>
                 <label class="badge"><span>Pitch</span><input type="number" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:80px" /></label>
+                <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:auto; min-width:0;" /></label>
               </div>
             </div>
             <div class="panel">
@@ -1083,10 +1085,6 @@
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
                 <label class="badge"><span>Practice language</span><select id="practiceLangSelect"></select></label>
               </div>
-            </div>
-            <div class="panel">
-              <div class="panel-title">Reproduction</div>
-              <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:90px" /></label>
             </div>
             <div class="panel">
               <div class="panel-title">Speaking Practice</div>
