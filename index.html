@@ -487,18 +487,17 @@
     }
 
     #row-load {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      display: flex;
+      flex-direction: column;
       gap: 12px;
       align-items: stretch;
     }
 
     #row-load .panel {
-      background: var(--surface-soft);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 18px 20px;
-      min-height: 120px;
+      border-radius: 18px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -1057,13 +1056,16 @@
               <div id="aiStatus" class="status" style="margin-top:8px;">Idle</div>
             </div>
           </section>
-          <section class="row" id="row-load">
+          <section class="row">
             <div class="panel">
               <div class="panel-title">Load from file</div>
               <div class="inline-controls" style="gap:10px;">
                 <input type="file" id="fileInput" accept=".csv,.txt" />
               </div>
             </div>
+          </section>
+
+          <section class="row">
             <div class="panel">
               <div class="panel-title">Predefined Sets</div>
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap;">
