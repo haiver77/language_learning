@@ -562,7 +562,8 @@
     }
 
     .sheet select,
-    .sheet input[type="number"] {
+    .sheet input[type="number"],
+    .sheet input[type="file"] {
       font-size: 12px;
     }
 
@@ -570,6 +571,27 @@
       width: auto;
       min-width: 180px;
       height: 20px;
+    }
+
+    .tiny-button {
+      min-height: 32px;
+      height: 32px;
+      padding: 6px 12px;
+      font-size: 12px;
+      line-height: 1.2;
+      border-radius: 10px;
+    }
+
+    .title-with-action {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .title-with-action .panel-title {
+      margin-bottom: 0;
     }
 
     .sheet .textarea {
@@ -909,11 +931,13 @@
           <div class="sheet-header">Voices</div>
           <section class="row" id="row-tts">
             <div class="panel">
-              <div class="panel-title">Voices</div>
+              <div class="title-with-action">
+                <div class="panel-title">Voices</div>
+                <button id="refreshVoices" class="secondary tiny-button" title="Refresh voices">Refresh voices</button>
+              </div>
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
                 <label class="badge"><span>Voice 1</span><select id="voice-1"></select></label>
                 <label class="badge"><span>Voice 2</span><select id="voice-2"></select></label>
-                <button id="refreshVoices" class="secondary" title="Refresh voices">Refresh voices</button>
               </div>
             </div>
             <div class="panel">
@@ -971,9 +995,9 @@
                 <label class="badge"><span>Min words</span><input type="number" id="aiMinWords" min="1" max="500" value="15" style="width:7ch" /></label>
               </div>
               <div class="inline-controls" style="margin-top:10px; gap:10px;">
-                <label class="badge" style="width:100%; justify-content:flex-start;"><span>OPEN_AI_TOKEN</span><input type="password" id="openaiToken" placeholder="sk-..." style="width:100%; min-width:160px;" /></label>
+                <label class="badge" style="width:100%; justify-content:flex-start;"><span>OPEN_AI_TOKEN</span><input type="password" id="openaiToken" placeholder="sk-..." style="width:100%; min-width:160px; font-size:12px;" /></label>
               </div>
-              <button id="btnLoadAI" style="margin-top:12px; width:100%;">Load from AI</button>
+              <button id="btnLoadAI" class="tiny-button" style="margin-top:12px; width:100%;">Load from AI</button>
               <div id="aiStatus" class="status" style="margin-top:8px;">Idle</div>
             </div>
           </section>
@@ -982,7 +1006,7 @@
               <div class="panel-title">Load from file</div>
               <div class="inline-controls" style="gap:10px;">
                 <input type="file" id="fileInput" accept=".csv,.txt" />
-                <button id="btnLoadPredefined" class="secondary" type="button">Load</button>
+                <button id="btnLoadPredefined" class="secondary tiny-button" type="button">Load</button>
               </div>
             </div>
             <div class="panel">
