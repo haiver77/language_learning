@@ -3101,20 +3101,20 @@
           sheet.style.transform = '';
         };
 
-        const dragHandle = sheet ? sheet.querySelector('.sheet-grab') : null;
-        if (dragHandle) {
-          dragHandle.addEventListener('pointerdown', (event) => {
-            if (!sheet || !sheet.classList.contains('open')) return;
+        if (sheet) {
+          sheet.addEventListener('pointerdown', (event) => {
+            if (!sheet.classList.contains('open')) return;
+            if (event.target.closest('button, input, select, textarea, label, a')) return;
             dragState.active = true;
             dragState.startY = event.clientY;
             dragState.currentY = event.clientY;
             sheet.style.transition = 'none';
-            dragHandle.setPointerCapture?.(event.pointerId);
+            sheet.setPointerCapture?.(event.pointerId);
           });
-          dragHandle.addEventListener('pointermove', handleSheetDrag);
-          dragHandle.addEventListener('pointerup', stopSheetDrag);
-          dragHandle.addEventListener('pointercancel', stopSheetDrag);
-          dragHandle.addEventListener('pointerleave', () => {
+          sheet.addEventListener('pointermove', handleSheetDrag);
+          sheet.addEventListener('pointerup', stopSheetDrag);
+          sheet.addEventListener('pointercancel', stopSheetDrag);
+          sheet.addEventListener('pointerleave', () => {
             if (dragState.active && dragState.currentY > dragState.startY) {
               stopSheetDrag();
             }
