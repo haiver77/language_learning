@@ -231,6 +231,21 @@
       padding-left: 0;
     }
 
+    .phrase-word {
+      display: inline;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 0 0.08em;
+      transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .phrase-word:hover,
+    .phrase-word:focus-visible {
+      background: rgba(74, 130, 224, 0.12);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
     .replay-btn {
       width: 40px;
       height: 40px;
@@ -1738,8 +1753,71 @@
 
       function setPhraseTexts(row) {
         const [l1, l2] = getSelectedLangCodes();
-        els.text[1].textContent = row?.[l1] || '';
-        els.text[2].textContent = row?.[l2] || '';
+        renderPhraseText(1, row?.[l1] || '');
+        renderPhraseText(2, row?.[l2] || '');
+      }
+
+      function renderPhraseText(slot, text) {
+        const el = els.text[slot];
+        if (!el) return;
+        el.textContent = '';
+
+        const tokens = String(text || '').match(/\S+|\s+|[.,!?;:]/g) || [];
+        if (!tokens.length) return;
+
+        tokens.forEach((token) => {
+          if (/^\s+$/.test(token)) {
+            el.appendChild(document.createTextNode(token));
+            return;
+          }
+
+          const cleanWord = token.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+          if (!cleanWord) {
+            el.appendChild(document.createTextNode(token));
+            return;
+          }
+
+          const wordEl = document.createElement('span');
+          wordEl.className = 'phrase-word';
+          wordEl.textContent = token;
+          wordEl.tabIndex = 0;
+          wordEl.setAttribute('role', 'button');
+          wordEl.setAttribute('aria-label', `Read aloud ${cleanWord}`);
+          wordEl.dataset.word = cleanWord;
+          wordEl.dataset.lang = getSelectedLangCodes()[slot];
+          wordEl.addEventListener('click', handlePhraseWordClick);
+          wordEl.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              handlePhraseWordClick(event);
+            }
+          });
+          el.appendChild(wordEl);
+        });
+      }
+
+      function handlePhraseWordClick(event) {
+        const target = event.currentTarget || event.target;
+        const word = target?.dataset?.word || (target && target.textContent ? target.textContent.trim() : '');
+        const langCode = target?.dataset?.lang || getSelectedLangCodes()[1];
+        const spokenText = String(word || '').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+
+        if (!spokenText) return;
+
+        try {
+          const voices = speechSynthesis.getVoices();
+          const vmap = getVoicesMap();
+          const v = findVoiceForLang(voices, vmap[langCode], langCode);
+          const u = new SpeechSynthesisUtterance(spokenText);
+          if (v) u.voice = v;
+          u.lang = (v && v.lang) ? v.lang : (langMeta[langCode]?.localeGuess?.[0] || 'en-US');
+          const { rate, pitch } = getRatePitch();
+          u.rate = rate;
+          u.pitch = pitch;
+          speechSynthesis.speak(u);
+        } catch (e) {
+          // ignore runtime errors from speech API
+        }
       }
 
       // Toggle CSV textarea wrapping
