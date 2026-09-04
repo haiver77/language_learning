@@ -297,9 +297,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 52px;
+      min-width: 96px;
+      width: auto;
       height: 52px;
-      padding: 0;
+      padding: 0 12px;
       border: 2px solid var(--border);
       background: var(--surface);
       border-radius: 14px;
@@ -310,6 +311,47 @@
       font-size: 14px;
       line-height: 1;
       font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+
+    .toggle-pill .toggle-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .toggle-pill .toggle-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .toggle-pill .toggle-caption {
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .toggle-pill.is-on {
+      border-color: rgba(34, 197, 94, 0.8);
+      background: rgba(34, 197, 94, 0.12);
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
+    }
+
+    .toggle-pill.is-on .toggle-caption {
+      color: var(--success, #16a34a);
+    }
+
+    .toggle-pill.is-off {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .toggle-pill.is-off .toggle-caption {
+      color: var(--muted);
     }
 
     .toggle-pill input {
@@ -1059,9 +1101,12 @@
         <div id="writingPracticePanel" class="writing-practice-panel" aria-live="polite"></div>
 
         <div class="transport-bar" aria-label="Phrase controls">
-          <label class="toggle-pill" for="randomToggle" title="Toggle random mode" aria-label="Toggle random mode">
+          <label class="toggle-pill is-on" for="randomToggle" title="Random mode active: random phrase selection" aria-label="Toggle random phrase order">
             <input type="checkbox" id="randomToggle" checked />
-            <span aria-hidden="true">🔀</span>
+            <span class="toggle-state">
+              <span class="toggle-icon" aria-hidden="true">🔀</span>
+              <span class="toggle-caption">Random</span>
+            </span>
           </label>
           <button id="btnFirst" class="action-btn secondary" type="button" title="Go to first phrase">⏮️</button>
           <button id="btnStopAuto" class="action-btn secondary" type="button" title="Stop auto replay">⏹️</button>
@@ -2027,6 +2072,11 @@
           if (cfg.aiQuantity) els.aiQuantity.value = cfg.aiQuantity;
           if (cfg.aiMinWords) els.aiMinWords.value = cfg.aiMinWords;
           if (cfg.predefined) els.predefinedSelect.value = cfg.predefined;
+          if (typeof cfg.randomEnabled === 'boolean') {
+            if (els.randomToggle) { els.randomToggle.checked = cfg.randomEnabled; }
+            syncRandomToggleVisualState();
+            syncRandomModeCheckboxes();
+          }
           if (cfg.csv) { els.csvBox.value = cfg.csv; ensureParsed(); }
           if (typeof cfg.wrapCsv !== 'undefined') { try { els.wrapCsv.checked = !!cfg.wrapCsv; } catch (e) { } applyCsvWrap(); }
           if (cfg.color1) { try { if (els.color1) els.color1.value = cfg.color1; } catch (e) {} }
@@ -2238,17 +2288,58 @@
         parsedRows = parseCSV(els.csvBox.value);
       }
 
+      function syncRandomToggleVisualState() {
+        const toggle = els.randomToggle;
+        const pill = toggle && toggle.closest('.toggle-pill');
+        if (!toggle || !pill) return;
+        const isOn = !!toggle.checked;
+        pill.classList.toggle('is-on', isOn);
+        pill.classList.toggle('is-off', !isOn);
+        const caption = pill.querySelector('.toggle-caption');
+        const icon = pill.querySelector('.toggle-icon');
+        if (caption) caption.textContent = isOn ? 'Random' : 'Sequence';
+        if (icon) icon.textContent = isOn ? '🔀' : '➡️';
+        pill.setAttribute('title', isOn ? 'Random mode active: random phrase selection' : 'Sequential mode active: next phrase in CSV order');
+        pill.setAttribute('aria-label', isOn ? 'Random phrase order enabled' : 'Sequential phrase order enabled');
+      }
+
+      function syncRandomModeCheckboxes() {
+        const enabled = !!(els.randomToggle && els.randomToggle.checked);
+        const selectors = ['#auto-random', '#sp-random', '#wr-random'];
+        selectors.forEach((selector) => {
+          const input = els.modeContent?.querySelector(selector);
+          if (input) input.checked = enabled;
+        });
+      }
+
+      function bindRandomModeCheckboxes() {
+        const selectors = ['#auto-random', '#sp-random', '#wr-random'];
+        selectors.forEach((selector) => {
+          const input = els.modeContent?.querySelector(selector);
+          if (!input) return;
+          input.onchange = () => {
+            if (els.randomToggle) els.randomToggle.checked = !!input.checked;
+            syncRandomToggleVisualState();
+            saveConfig();
+          };
+        });
+      }
+
+      function getRandomSelectionEnabled() {
+        if (els.randomToggle) return !!els.randomToggle.checked;
+        const mode = els.modeSelect?.value;
+        if (mode === 'Auto Mode') return !!(els.modeContent?.querySelector('#auto-random')?.checked);
+        if (mode === 'Speaking Practice Mode') return !!(els.modeContent?.querySelector('#sp-random')?.checked);
+        if (mode === 'Writing Practice Mode') return !!(els.modeContent?.querySelector('#wr-random')?.checked);
+        return true;
+      }
+
       function selectAndShowNextRow({ speak = true, random = null } = {}) {
         ensureParsed();
         if (!parsedRows.length) return Promise.resolve();
-        // Decide random/sequential if not explicitly provided
+        // Decide random/sequential if not explicitly provided; global toggle is the shared source of truth.
         if (random === null) {
-          const mode = els.modeSelect?.value;
-          if (els.randomToggle) random = !!els.randomToggle.checked;
-          if (mode === 'Auto Mode') random = !!(els.modeContent.querySelector('#auto-random')?.checked ?? random);
-          else if (mode === 'Speaking Practice Mode') random = !!(els.modeContent.querySelector('#sp-random')?.checked ?? random);
-          else if (mode === 'Writing Practice Mode') random = !!(els.modeContent.querySelector('#wr-random')?.checked ?? random);
-          else if (typeof random !== 'boolean') random = true;
+          random = getRandomSelectionEnabled();
         }
 
         if (random) {
@@ -2371,6 +2462,8 @@
         });
         els.modeContent.innerHTML = '';
         els.modeContent.style.display = 'block';
+        syncRandomToggleVisualState();
+        bindRandomModeCheckboxes();
         const host = els.speakingPracticePanel;
         if (host) {
           host.innerHTML = '';
@@ -2401,6 +2494,7 @@
         </div>
       `;
           els.modeContent.appendChild(div);
+          syncRandomModeCheckboxes();
           const autoStatus = div.querySelector('#autoStatus');
           const autoStart = () => {
             // Allow 0 (advance immediately). Only guard against NaN/negative values.
@@ -3435,10 +3529,9 @@
           await speakCurrentRowSequence(++phraseSessionId, parsedRows[currentIndex]);
         };
         document.getElementById('randomToggle').onchange = () => {
-          const modeSelect = els.modeSelect; if (modeSelect && modeSelect.value === 'Auto Mode') {
-            const autoRandom = els.modeContent.querySelector('#auto-random');
-            if (autoRandom) autoRandom.checked = document.getElementById('randomToggle').checked;
-          }
+          syncRandomToggleVisualState();
+          syncRandomModeCheckboxes();
+          saveConfig();
         };
 
         // Mode switching
@@ -3454,6 +3547,8 @@
           closeSheet();
           saveConfig();
         };
+
+        bindRandomModeCheckboxes();
 
         // Replay per language
         // Replay per slot
