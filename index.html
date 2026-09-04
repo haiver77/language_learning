@@ -1367,6 +1367,7 @@
       let currentIndex = -1;             // Index in parsedRows
       let phraseSessionId = 0;           // Monotonic token
       let autoTimer = null;              // Auto mode interval
+      let manualPlaybackLoop = { active: false };
       let speakingPractice = {
         active: false,
         rec: null,
@@ -2326,6 +2327,22 @@
         return true;
       }
 
+      function showCurrentDisplayedRow({ speak = true } = {}) {
+        ensureParsed();
+        if (!parsedRows.length) return Promise.resolve();
+        if (currentIndex < 0) currentIndex = 0;
+
+        const row = parsedRows[currentIndex];
+        if (!row) return Promise.resolve();
+        setPhraseTexts(row);
+        applyShowVisibility();
+        const sessionToken = ++phraseSessionId;
+        if (speak) {
+          return speakCurrentRowSequence(sessionToken, row);
+        }
+        return Promise.resolve();
+      }
+
       function selectAndShowNextRow({ speak = true, random = null } = {}) {
         ensureParsed();
         if (!parsedRows.length) return Promise.resolve();
@@ -2349,6 +2366,40 @@
           return speakCurrentRowSequence(sessionToken, row);
         }
         return Promise.resolve();
+      }
+
+      function stopManualPlaybackLoop() {
+        manualPlaybackLoop.active = false;
+      }
+
+      async function startManualPlaybackLoop() {
+        ensureParsed();
+        if (!parsedRows.length) return;
+        if (manualPlaybackLoop.active) return;
+        manualPlaybackLoop.active = true;
+
+        while (manualPlaybackLoop.active) {
+          if (currentIndex < 0) currentIndex = 0;
+          let row = parsedRows[currentIndex];
+          if (!row) {
+            currentIndex = 0;
+            row = parsedRows[currentIndex];
+          }
+          if (!row) break;
+
+          setPhraseTexts(row);
+          applyShowVisibility();
+          await speakCurrentRowSequence(++phraseSessionId, row);
+          if (!manualPlaybackLoop.active) break;
+
+          if (getRandomSelectionEnabled()) {
+            currentIndex = pickRandomIndex(parsedRows.length);
+          } else {
+            currentIndex = (currentIndex + 1) % parsedRows.length;
+          }
+        }
+
+        manualPlaybackLoop.active = false;
       }
 
       // Jump to the first phrase and display/speak it in the existing visualizers.
@@ -2499,12 +2550,22 @@
 
             const runOnce = async () => {
               if (!running) return;
-              // ensure new session token and cancel any in-progress speech before selecting
-              const token = ++phraseSessionId;
-              try { speechSynthesis.cancel(); } catch { }
-              await selectAndShowNextRow({ speak: true });
+              await showCurrentDisplayedRow({ speak: true });
               if (!running) return;
-              // wait the configured interval after speech finished
+              const random = getRandomSelectionEnabled();
+              if (random) {
+                currentIndex = pickRandomIndex(parsedRows.length);
+              } else {
+                if (currentIndex < 0) currentIndex = 0;
+                else currentIndex = (currentIndex + 1) % parsedRows.length;
+              }
+              if (parsedRows.length) {
+                const row = parsedRows[currentIndex];
+                if (row) {
+                  setPhraseTexts(row);
+                  applyShowVisibility();
+                }
+              }
               autoTimer = setTimeout(runOnce, sec * 1000);
             };
 
@@ -2730,7 +2791,7 @@
 
         saveConfig();
 
-        await selectAndShowNextRow({ speak: true });
+        await showCurrentDisplayedRow({ speak: true });
         if (!speakingPractice.active) return;
 
         const target = (parsedRows[currentIndex] || {})[speakingPractice.lang] || '';
@@ -2854,7 +2915,13 @@
         }
         const newToken = ++phraseSessionId;
         if (!speakingPractice.active) return;
-        await selectAndShowNextRow({ speak: true });
+        if (getRandomSelectionEnabled()) {
+          currentIndex = pickRandomIndex(parsedRows.length);
+        } else {
+          if (currentIndex < 0) currentIndex = 0;
+          else currentIndex = (currentIndex + 1) % parsedRows.length;
+        }
+        await showCurrentDisplayedRow({ speak: true });
         if (!speakingPractice.active) return;
         await startSpeakingPracticeCycleOnly(true);
       }
@@ -3044,8 +3111,8 @@
         // persist chosen writing language
         saveConfig();
 
-        // Select and speak once
-        await selectAndShowNextRow({ speak: true });
+        // Select and speak once from the currently displayed phrase, then continue in order
+        await showCurrentDisplayedRow({ speak: true });
         updateCurrentWriteTarget();
         if (writingPractice.statusEl) writingPractice.statusEl.textContent = 'Type what you hear…';
         if (writingPractice.remainingEl) {
@@ -3071,7 +3138,13 @@
             writingPractice.writingBusy = true;
             // Advance to next phrase safely; ensure single playback
             try { speechSynthesis.cancel(); } catch { }
-            await selectAndShowNextRow({ speak: true });
+            if (getRandomSelectionEnabled()) {
+              currentIndex = pickRandomIndex(parsedRows.length);
+            } else {
+              if (currentIndex < 0) currentIndex = 0;
+              else currentIndex = (currentIndex + 1) % parsedRows.length;
+            }
+            await showCurrentDisplayedRow({ speak: true });
             updateCurrentWriteTarget();
             e.target.value = '';
             writingPractice.writingBusy = false;
@@ -3365,35 +3438,44 @@
       function startSelectedMode() {
         const mode = els.modeSelect?.value || 'Manual Mode';
         if (mode === 'Speaking Practice Mode') {
+          stopManualPlaybackLoop();
           startSpeakingPractice();
           return;
         }
         if (mode === 'Writing Practice Mode') {
+          stopManualPlaybackLoop();
           startWritingPractice();
           return;
         }
         if (mode === 'Auto Mode') {
+          stopManualPlaybackLoop();
           const startBtn = els.modeContent?.querySelector('#autoStart');
           if (startBtn) startBtn.click();
           return;
         }
-        selectAndShowNextRow({ speak: true });
+        stopManualPlaybackLoop();
+        startManualPlaybackLoop();
       }
 
       function stopSelectedMode() {
         const mode = els.modeSelect?.value || 'Manual Mode';
         if (mode === 'Speaking Practice Mode') {
+          stopManualPlaybackLoop();
           stopSpeakingPractice();
           return;
         }
         if (mode === 'Writing Practice Mode') {
+          stopManualPlaybackLoop();
           stopWritingPractice();
           return;
         }
         if (mode === 'Auto Mode') {
+          stopManualPlaybackLoop();
           const stopBtn = els.modeContent?.querySelector('#autoStop');
           if (stopBtn) stopBtn.click();
+          return;
         }
+        stopManualPlaybackLoop();
       }
 
       // --- Event wiring ---
