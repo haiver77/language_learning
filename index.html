@@ -997,9 +997,9 @@
             <div class="panel">
               <div class="panel-title">Options</div>
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap">
-                <label class="badge"><span>Rate</span><input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:70px; min-width:70px; max-width:70px;" /></label>
-                <label class="badge"><span>Pitch</span><input type="number" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:70px; min-width:70px; max-width:70px;" /></label>
-                <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:70px; min-width:70px; max-width:70px;" /></label>
+                <label class="badge"><span>Rate</span><input type="number" id="rate" min="0.5" max="2" step="0.1" value="1.0" style="width:50px; min-width:50px; max-width:50px;" /></label>
+                <label class="badge"><span>Pitch</span><input type="number" id="pitch" min="0" max="2" step="0.1" value="1.0" style="width:50px; min-width:50px; max-width:50px;" /></label>
+                <label class="badge"><span>Interval (Sec)</span><input type="number" id="autoInterval" min="0" step="1" value="0" style="width:50px; min-width:50px; max-width:50px;" /></label>
               </div>
             </div>
             <div class="panel">
@@ -1046,8 +1046,8 @@
               <textarea class="textarea" id="aiTopic" placeholder="e.g., travel, food, greetings"></textarea>
               <div class="inline-controls" style="margin-top:10px; gap:10px;">
                 <label class="badge"><span>Level</span><select id="aiLevel"><option value="ANY" selected>Any</option><option value="A1">A1</option><option value="A2">A2</option><option value="B1">B1</option><option value="B2">B2</option><option value="C1">C1</option><option value="C2">C2</option></select></label>
-                <label class="badge"><span>Quantity</span><input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:7ch" /></label>
-                <label class="badge"><span>Min words</span><input type="number" id="aiMinWords" min="1" max="500" value="15" style="width:7ch" /></label>
+                <label class="badge"><span>Quantity</span><input type="number" id="aiQuantity" min="1" max="500" value="40" style="width:50px; min-width:50px; max-width:50px;" /></label>
+                <label class="badge"><span>Min words</span><input type="number" id="aiMinWords" min="1" max="500" value="15" style="width:50px; min-width:50px; max-width:50px;" /></label>
               </div>
               <div class="inline-controls" style="margin-top:10px; gap:10px;">
                 <label class="badge" style="width:100%; justify-content:flex-start;"><span>OPEN_AI_TOKEN</span><input type="password" id="openaiToken" placeholder="sk-..." style="width:100%; min-width:160px; font-size:12px;" /></label>
@@ -1119,8 +1119,8 @@
             <div class="panel">
               <div class="panel-title">Speaking Practice</div>
               <div class="inline-controls" style="gap:10px; flex-wrap:wrap;">
-                <label class="badge"><span>Min. Similarity (%)</span><input type="number" id="sp-min" min="50" max="100" step="1" value="90" style="width:8ch" /></label>
-                <label class="badge"><span>Silence Wait (sec)</span><input type="number" id="sp-wait" min="1" step="1" value="3" style="width:6ch" /></label>
+                <label class="badge"><span>Min. Similarity (%)</span><input type="number" id="sp-min" min="50" max="100" step="1" value="90" style="width:50px; min-width:50px; max-width:50px;" /></label>
+                <label class="badge"><span>Silence Wait (sec)</span><input type="number" id="sp-wait" min="1" step="1" value="3" style="width:50px; min-width:50px; max-width:50px;" /></label>
               </div>
             </div>
           </section>
@@ -2151,7 +2151,7 @@
         <div class="panel-title">Wait Time</div>
         <div class="inline-controls">
           <label class="badge"><span>Interval (s)</span>
-            <input id="autoInterval" type="number" min="0" step="1" value="0" style="width:90px" />
+            <input id="autoInterval" type="number" min="0" step="1" value="0" style="width:50px; min-width:50px; max-width:50px;" />
           </label>
           <label class="badge"><input type="checkbox" id="auto-random" checked /> <span>Random</span></label>
           <button id="autoStart">Start</button>
@@ -2213,10 +2213,10 @@
           </label>
           <label class="badge"><input type="checkbox" id="sp-random" checked /> <span>Random</span></label>
           <label class="badge"><span>Min similarity %</span>
-            <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:8ch" />
+            <input id="sp-min" type="number" min="50" max="100" step="1" value="90" style="width:50px; min-width:50px; max-width:50px;" />
           </label>
           <label class="badge"><span>Silence wait (s)</span>
-            <input id="sp-wait" type="number" min="1" step="1" value="3" style="width:6ch" />
+            <input id="sp-wait" type="number" min="1" step="1" value="3" style="width:50px; min-width:50px; max-width:50px;" />
           </label>
           <button id="sp-start">Start</button>
           <button id="sp-stop" class="secondary">Stop</button>
