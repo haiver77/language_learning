@@ -412,6 +412,12 @@
       border-radius: 999px;
       background: rgba(18, 20, 24, 0.2);
       margin: 10px auto 0;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .sheet-grab:active {
+      cursor: grabbing;
     }
 
     .sheet-panel {
@@ -3052,6 +3058,8 @@
           if (sheet) {
             sheet.classList.toggle('settings-page', fullPageSheets.has(sheetKey));
             sheet.classList.add('open');
+            sheet.style.transition = '';
+            sheet.style.transform = '';
           }
           if (sheetBackdrop) {
             sheetBackdrop.classList.toggle('visible', !fullPageSheets.has(sheetKey));
@@ -3061,11 +3069,58 @@
           if (sheet) {
             sheet.classList.remove('open');
             sheet.classList.remove('settings-page');
+            sheet.style.transition = '';
+            sheet.style.transform = '';
           }
           if (sheetBackdrop) sheetBackdrop.classList.remove('visible');
           navItems.forEach(item => item.classList.remove('active'));
           document.querySelectorAll('.sheet-panel').forEach(panel => panel.classList.remove('active'));
         };
+
+        const dragState = { active: false, startY: 0, currentY: 0 };
+        const handleSheetDrag = (event) => {
+          if (!sheet || !sheet.classList.contains('open') || !dragState.active) return;
+          dragState.currentY = event.clientY;
+          const delta = Math.max(0, dragState.currentY - dragState.startY);
+          if (sheet.classList.contains('settings-page')) {
+            sheet.style.transform = 'translateY(' + delta + 'px)';
+          } else {
+            sheet.style.transform = 'translateX(-50%) translateY(' + delta + 'px)';
+          }
+        };
+
+        const stopSheetDrag = () => {
+          if (!dragState.active || !sheet) return;
+          const delta = Math.max(0, dragState.currentY - dragState.startY);
+          dragState.active = false;
+          sheet.style.transition = '';
+          if (delta > Math.min(140, window.innerHeight * 0.2)) {
+            closeSheet();
+            return;
+          }
+          sheet.style.transform = '';
+        };
+
+        const dragHandle = sheet ? sheet.querySelector('.sheet-grab') : null;
+        if (dragHandle) {
+          dragHandle.addEventListener('pointerdown', (event) => {
+            if (!sheet || !sheet.classList.contains('open')) return;
+            dragState.active = true;
+            dragState.startY = event.clientY;
+            dragState.currentY = event.clientY;
+            sheet.style.transition = 'none';
+            dragHandle.setPointerCapture?.(event.pointerId);
+          });
+          dragHandle.addEventListener('pointermove', handleSheetDrag);
+          dragHandle.addEventListener('pointerup', stopSheetDrag);
+          dragHandle.addEventListener('pointercancel', stopSheetDrag);
+          dragHandle.addEventListener('pointerleave', () => {
+            if (dragState.active && dragState.currentY > dragState.startY) {
+              stopSheetDrag();
+            }
+          });
+        }
+
         navItems.forEach(item => {
           item.onclick = () => openSheet(item.dataset.sheet);
         });
