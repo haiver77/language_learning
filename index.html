@@ -1192,6 +1192,7 @@
         scoreEl: null,
         progressEl: null,
         statusEl: null,
+        silenceCounterEl: null,
       };
       let writingPractice = {
         active: false,
@@ -1282,11 +1283,17 @@
         return 0;
       }
 
+      function setSilenceCounterText(value) {
+        const modeCounterEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
+        if (modeCounterEl) modeCounterEl.textContent = value;
+        if (speakingPractice.silenceCounterEl) speakingPractice.silenceCounterEl.textContent = value;
+      }
+
       function clearRecognitionTimers(rec) {
         if (!rec) return;
         if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
         if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
-        try { const el = els.modeContent && els.modeContent.querySelector && els.modeContent.querySelector('#sp-silence-counter'); if (el) el.textContent = ''; } catch (e) {}
+        setSilenceCounterText('');
         if (rec._startTimer) { clearTimeout(rec._startTimer); rec._startTimer = null; }
       }
 
@@ -2208,11 +2215,7 @@
           speakingPractice.statusEl = hostPanel.querySelector('#sp-status-host');
 
           const spSilenceHost = hostPanel.querySelector('#sp-silence-counter-host');
-          if (spSilenceHost && speakingPractice.silenceCounterEl) {
-            speakingPractice.silenceCounterEl = spSilenceHost;
-          } else if (spSilenceHost) {
-            speakingPractice.silenceCounterEl = spSilenceHost;
-          }
+          speakingPractice.silenceCounterEl = spSilenceHost || speakingPractice.silenceCounterEl;
 
           div.querySelector('#sp-start').onclick = startSpeakingPractice;
           div.querySelector('#sp-stop').onclick = stopSpeakingPractice;
@@ -2605,10 +2608,7 @@
         try {
           if (!rec) return;
           if (!speakingPractice.active || speakingPractice.rec !== rec || !rec._hasSpoken) {
-            try {
-              const el = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
-              if (el) el.textContent = '';
-            } catch (e) {}
+            setSilenceCounterText('');
             return;
           }
 
@@ -2619,19 +2619,17 @@
           rec._lastSpeechTs = Date.now();
           rec._silenceDeadline = rec._lastSpeechTs + waitSec * 1000;
 
-          const counterEl = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
-          if (counterEl) counterEl.textContent = waitSec + 's';
+          setSilenceCounterText(waitSec + 's');
 
           rec._silenceInterval = setInterval(() => {
             try {
-              if (!counterEl) return;
               const ms = rec._silenceDeadline - Date.now();
               if (ms <= 0) {
-                counterEl.textContent = '0s';
+                setSilenceCounterText('0s');
                 clearInterval(rec._silenceInterval); rec._silenceInterval = null;
                 return;
               }
-              counterEl.textContent = Math.ceil(ms / 1000) + 's';
+              setSilenceCounterText(Math.ceil(ms / 1000) + 's');
             } catch (e) {}
           }, 200);
 
@@ -2654,10 +2652,7 @@
             rec._resultBaseIndex = rec._lastResultsLength || 0;
             if (rec._silenceTimer) { clearTimeout(rec._silenceTimer); rec._silenceTimer = null; }
             if (rec._silenceInterval) { clearInterval(rec._silenceInterval); rec._silenceInterval = null; }
-            try {
-              const el = els.modeContent && els.modeContent.querySelector ? els.modeContent.querySelector('#sp-silence-counter') : null;
-              if (el) el.textContent = '';
-            } catch (e) {}
+            setSilenceCounterText('');
           }, waitSec * 1000);
         } catch (e) { /* ignore */ }
       }
